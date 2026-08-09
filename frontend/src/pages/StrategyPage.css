@@ -1,8 +1,35 @@
+.stp-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
 .stp-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 16px;
+}
+
+.stp-loaderr {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #fdecec;
+  border: 1px solid #f3d0cd;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.stp-noprice {
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .stp-item {

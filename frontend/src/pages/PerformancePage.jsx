@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import AiFeedback from "../components/AiFeedback";
 import AsyncState from "../components/AsyncState";
 import DataTable from "../components/DataTable";
+import EntityForm from "../components/EntityForm";
+import { EditButton } from "../components/EntityModal";
 import MetricCard, { MetricRow } from "../components/MetricCard";
+import Modal from "../components/Modal";
 import Panel from "../components/Panel";
-import { fetchAiDigest, fetchPerformanceSummary, listAiFeedback } from "../api/trading";
-import { rate, won } from "../lib/format";
+import {
+  fetchAiDigest,
+  fetchPerformanceSummary,
+  listAiFeedback,
+  listPerformanceRecords,
+  listSecurities,
+  performanceRecord,
+} from "../api/trading";
+import { PERFORMANCE_RECORD_FIELDS } from "../forms/specs";
+import { isoDate, rate, won } from "../lib/format";
 import { useAsyncAll } from "../lib/useAsync";
+import { useMultiForm } from "../lib/useMultiForm";
 import "./PerformancePage.css";
 
 /**
@@ -49,8 +61,28 @@ export default function PerformancePage() {
         }),
       aiDigest: () => fetchAiDigest(),
       aiFeedback: () => listAiFeedback(),
+      records: () => listPerformanceRecords({ no_page: 1 }),
+      securities: () => listSecurities(),
     },
     [periodType, dateFrom, dateTo]
+  );
+
+  const kinds = useMemo(
+    () => ({
+      RECORD: { title: "성과 기록", fields: PERFORMANCE_RECORD_FIELDS, api: performanceRecord, wide: true },
+    }),
+    []
+  );
+  const form = useMultiForm(kinds, reload);
+
+  const optionsMap = useMemo(
+    () => ({
+      securities: (data?.securities || []).map((s) => ({
+        value: s.id,
+        label: `${s.name} (${s.symbol})`,
+      })),
+    }),
+    [data]
   );
 
   const perf = data?.perf;
@@ -191,6 +223,76 @@ export default function PerformancePage() {
             </Panel>
 
             <Panel
+              title="성과 기록"
+              meta={`${data.records.length}건`}
+              note="이 테이블이 위의 집계 재료다. 기간이 조회 범위와 겹치기만 하면 집계에 들어간다(진행 중인 이번 달도 포함)."
+              actions={
+                <button
+                  className="btn is-sm"
+                  onClick={() =>
+                    form.openCreate("RECORD", { period_start: dateFrom, period_end: dateTo })
+                  }
+                >
+                  + 성과 기록
+                </button>
+              }
+            >
+              <DataTable
+                rows={data.records}
+                empty="성과 기록이 없다."
+                columns={[
+                  {
+                    key: "security",
+                    label: "종목",
+                    render: (r) =>
+                      r.security_detail ? (
+                        <span className="num">
+                          {r.security_detail.name} {r.security_detail.symbol}
+                        </span>
+                      ) : null,
+                  },
+                  { key: "period_type", label: "기간", render: (r) => r.period_type_label },
+                  {
+                    key: "period",
+                    label: "구간",
+                    render: (r) => (
+                      <span className="num">
+                        {isoDate(r.period_start)} ~ {isoDate(r.period_end)}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "net_profit",
+                    label: "순손익",
+                    align: "right",
+                    render: (r) => (
+                      <span className={r.net_profit >= 0 ? "pos" : "neg"}>{won(r.net_profit)}</span>
+                    ),
+                  },
+                  {
+                    key: "return_rate",
+                    label: "수익률",
+                    align: "right",
+                    render: (r) => rate(r.return_rate),
+                  },
+                  {
+                    key: "total_cost",
+                    label: "비용",
+                    align: "right",
+                    render: (r) => won(r.total_cost),
+                  },
+                  {
+                    key: "_edit",
+                    label: "",
+                    align: "right",
+                    width: 60,
+                    render: (r) => <EditButton onClick={() => form.openEdit("RECORD", r.id)} />,
+                  },
+                ]}
+              />
+            </Panel>
+
+            <Panel
               title="AI 피드백"
               meta={
                 data.aiDigest
@@ -204,6 +306,23 @@ export default function PerformancePage() {
           </>
         )}
       </AsyncState>
+
+      {form.isOpen && (
+        <Modal
+          title={`성과 기록 ${form.isEdit ? "수정" : "추가"}`}
+          onClose={form.close}
+          wide
+        >
+          <EntityForm
+            fields={PERFORMANCE_RECORD_FIELDS}
+            instance={form.instance}
+            optionsMap={optionsMap}
+            onSubmit={form.submit}
+            onCancel={form.close}
+            onDelete={form.isEdit ? form.remove : undefined}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import "./SplitTable.css";
  */
 const TYPE_ORDER = ["BUY_SPLIT", "ADD_ON", "SELL_SPLIT", "TAKE_PROFIT", "STOP_LOSS"];
 
-export default function SplitTable({ methods }) {
+export default function SplitTable({ methods, onEditMethod }) {
   const groups = methods || {};
   const keys = Object.keys(groups).sort(
     (a, b) => (TYPE_ORDER.indexOf(a) + 99) % 99 - ((TYPE_ORDER.indexOf(b) + 99) % 99)
@@ -49,6 +49,7 @@ export default function SplitTable({ methods }) {
                   <th style={{ textAlign: "right" }}>기준가 대비</th>
                   <th style={{ textAlign: "right" }}>수량 비중</th>
                   <th>업종</th>
+                  {onEditMethod && <th aria-label="수정" />}
                 </tr>
               </thead>
               <tbody>
@@ -64,6 +65,17 @@ export default function SplitTable({ methods }) {
                       {r.quantity_ratio == null ? "—" : `${Number(r.quantity_ratio).toFixed(0)}%`}
                     </td>
                     <td>{r.sector || "—"}</td>
+                    {onEditMethod && (
+                      <td style={{ textAlign: "right" }}>
+                        <button
+                          type="button"
+                          className="row-edit"
+                          onClick={() => onEditMethod(r)}
+                        >
+                          수정
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

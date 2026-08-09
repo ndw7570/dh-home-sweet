@@ -205,3 +205,40 @@
 .ct-orphan-reason {
   color: var(--text-muted);
 }
+
+.ct-orphan-fix {
+  margin-left: 8px;
+}
+
+/* 수정·추가 버튼은 평소엔 물러나 있다가 그 행에 마우스를 올리면 또렷해진다.
+   트리가 목적이 계획을 읽는 것이라, 버튼이 먼저 눈에 들어오면 안 된다. */
+.ct-tools {
+  display: inline-flex;
+  gap: 5px;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.ct-row:hover .ct-tools,
+.ct-tools:focus-within {
+  opacity: 1;
+}
+
+/* 계층이 끊긴 자리의 '+' 는 항상 보인다. 숨기면 고칠 기회를 놓친다. */
+.ct-tools .row-edit.is-urgent {
+  color: var(--warning);
+  border-color: #f0dcb4;
+  background: var(--warning-bg);
+  font-weight: 500;
+}
+
+.ct-node:has(> .ct-row .ct-broken) .ct-tools {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .ct-tools {
+    opacity: 1;
+  }
+}

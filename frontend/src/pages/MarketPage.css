@@ -78,4 +78,20 @@
 .mp-empty {
   padding: 24px 4px;
   color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 70ch;
+}
+
+.mp-loaderr {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #fdecec;
+  border: 1px solid #f3d0cd;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.mp-head .row-edit {
+  margin-left: 4px;
 }

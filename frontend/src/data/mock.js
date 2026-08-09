@@ -17,7 +17,7 @@ export const cascade = {
   "only_active": true,
   "tree": [
     {
-      "id": 2,
+      "id": 3,
       "level": "YEAR",
       "title": "2026 반도체 사이클 상반기 비중확대",
       "market": "KOSPI",
@@ -32,13 +32,13 @@ export const cascade = {
       "direction_label": "매수",
       "status_label": "진행중",
       "account": {
-        "id": 2,
+        "id": 3,
         "broker_name": "미래에셋증권",
         "account_number": "****8901"
       },
       "children": [
         {
-          "id": 2,
+          "id": 3,
           "level": "QUARTER",
           "title": "2026 3분기 반도체 비중 55%",
           "direction": "LONG",
@@ -67,7 +67,7 @@ export const cascade = {
           "direction_label": "매수",
           "children": [
             {
-              "id": 3,
+              "id": 5,
               "level": "MONTH",
               "title": "8월 기본 시나리오",
               "scenario_planning": "BASE",
@@ -85,7 +85,7 @@ export const cascade = {
               "predicted_trend_label": "상승",
               "securities": [
                 {
-                  "id": 4,
+                  "id": 7,
                   "symbol": "005930",
                   "name": "삼성전자",
                   "market": "KOSPI",
@@ -93,7 +93,7 @@ export const cascade = {
                   "current_price": 71500.0
                 },
                 {
-                  "id": 5,
+                  "id": 8,
                   "symbol": "000660",
                   "name": "SK하이닉스",
                   "market": "KOSPI",
@@ -103,11 +103,11 @@ export const cascade = {
               ],
               "children": [
                 {
-                  "id": 4,
+                  "id": 9,
                   "level": "WEEK",
                   "title": "삼성전자 이번 주 3분할 1차",
                   "security": {
-                    "id": 4,
+                    "id": 7,
                     "symbol": "005930",
                     "name": "삼성전자",
                     "market": "KOSPI",
@@ -128,7 +128,7 @@ export const cascade = {
                   "predicted_trend_label": "상승",
                   "children": [
                     {
-                      "id": 3,
+                      "id": 5,
                       "level": "DAY",
                       "title": "오늘 1차 매수",
                       "scenario_planning": "BASE",
@@ -145,11 +145,11 @@ export const cascade = {
                   ]
                 },
                 {
-                  "id": 5,
+                  "id": 10,
                   "level": "WEEK",
                   "title": "SK하이닉스 관망",
                   "security": {
-                    "id": 5,
+                    "id": 8,
                     "symbol": "000660",
                     "name": "SK하이닉스",
                     "market": "KOSPI",
@@ -170,7 +170,7 @@ export const cascade = {
                   "predicted_trend_label": "횡보",
                   "children": [
                     {
-                      "id": 4,
+                      "id": 6,
                       "level": "DAY",
                       "title": "오늘 관망",
                       "scenario_planning": "BASE",
@@ -189,7 +189,7 @@ export const cascade = {
               ]
             },
             {
-              "id": 4,
+              "id": 6,
               "level": "MONTH",
               "title": "8월 비관 시나리오",
               "scenario_planning": "BEAR",
@@ -214,10 +214,10 @@ export const cascade = {
   ],
   "orphan_weekly_plans": [
     {
-      "id": 6,
+      "id": 11,
       "title": "NAVER 단기 반등 노림",
       "security": {
-        "id": 6,
+        "id": 9,
         "symbol": "035420",
         "name": "NAVER",
         "market": "KOSPI",
@@ -241,27 +241,27 @@ export const homeBoard = {
   "as_of": "2026-08-09",
   "mandatory_principles": [
     {
-      "id": 6,
+      "id": 12,
       "priority": 1,
       "content": "계획에 없는 종목은 사지 않는다."
     },
     {
-      "id": 7,
+      "id": 13,
       "priority": 2,
       "content": "손절가는 사기 전에 정하고, 정한 뒤에는 내리지 않는다."
     },
     {
-      "id": 8,
+      "id": 14,
       "priority": 3,
       "content": "한 종목에 총자산의 20%를 넘기지 않는다."
     },
     {
-      "id": 9,
+      "id": 15,
       "priority": 4,
       "content": "물타기는 미리 적어 둔 n차 분할표 안에서만 한다."
     },
     {
-      "id": 10,
+      "id": 16,
       "priority": 5,
       "content": "장중에 계획을 바꾸지 않는다. 바꾸려면 장 끝나고 근거를 적는다."
     }
@@ -269,7 +269,7 @@ export const homeBoard = {
   "plans": {
     "daily": [
       {
-        "id": 3,
+        "id": 5,
         "title": "오늘 1차 매수",
         "scenario_planning": "BASE",
         "predicted_trend": "UP",
@@ -280,14 +280,14 @@ export const homeBoard = {
         "scenario_planning_label": "기본",
         "predicted_trend_label": "상승",
         "security": {
-          "id": 4,
+          "id": 7,
           "symbol": "005930",
           "name": "삼성전자",
           "current_price": 71500.0
         }
       },
       {
-        "id": 4,
+        "id": 6,
         "title": "오늘 관망",
         "scenario_planning": "BASE",
         "predicted_trend": "SIDEWAYS",
@@ -298,7 +298,7 @@ export const homeBoard = {
         "scenario_planning_label": "기본",
         "predicted_trend_label": "횡보",
         "security": {
-          "id": 5,
+          "id": 8,
           "symbol": "000660",
           "name": "SK하이닉스",
           "current_price": 183000.0
@@ -307,7 +307,7 @@ export const homeBoard = {
     ],
     "weekly": [
       {
-        "id": 4,
+        "id": 9,
         "title": "삼성전자 이번 주 3분할 1차",
         "scenario_planning": "BASE",
         "predicted_trend": "UP",
@@ -319,14 +319,14 @@ export const homeBoard = {
         "scenario_planning_label": "기본",
         "predicted_trend_label": "상승",
         "security": {
-          "id": 4,
+          "id": 7,
           "symbol": "005930",
           "name": "삼성전자",
           "current_price": 71500.0
         }
       },
       {
-        "id": 5,
+        "id": 10,
         "title": "SK하이닉스 관망",
         "scenario_planning": "BASE",
         "predicted_trend": "SIDEWAYS",
@@ -338,14 +338,14 @@ export const homeBoard = {
         "scenario_planning_label": "기본",
         "predicted_trend_label": "횡보",
         "security": {
-          "id": 5,
+          "id": 8,
           "symbol": "000660",
           "name": "SK하이닉스",
           "current_price": 183000.0
         }
       },
       {
-        "id": 6,
+        "id": 11,
         "title": "NAVER 단기 반등 노림",
         "scenario_planning": "BULL",
         "predicted_trend": "UP",
@@ -357,7 +357,7 @@ export const homeBoard = {
         "scenario_planning_label": "낙관",
         "predicted_trend_label": "상승",
         "security": {
-          "id": 6,
+          "id": 9,
           "symbol": "035420",
           "name": "NAVER",
           "current_price": 162000.0
@@ -369,9 +369,9 @@ export const homeBoard = {
     {
       "kind": "LOAN",
       "severity": "HIGH",
-      "loan_id": 2,
+      "loan_id": 3,
       "security": {
-        "id": 5,
+        "id": 8,
         "symbol": "000660",
         "name": "SK하이닉스"
       },
@@ -386,7 +386,7 @@ export const homeBoard = {
       "kind": "QUARTERLY_STRATEGY_MISSING",
       "target": {
         "table": "quarterly_investment_plan",
-        "id": 2,
+        "id": 3,
         "title": "2026 3분기 반도체 비중 55%"
       },
       "message": "손절전략 이 비어 있다."
@@ -395,7 +395,7 @@ export const homeBoard = {
       "kind": "MONTHLY_PRINCIPLE_MISSING",
       "target": {
         "table": "monthly_investment_plan",
-        "id": 4,
+        "id": 6,
         "title": "8월 비관 시나리오"
       },
       "message": "월투자원칙이 없어 이 계획이 종목에 닿지 않는다. 아래 계층이 끊긴다."
@@ -403,12 +403,12 @@ export const homeBoard = {
   ],
   "ai_feedback": [
     {
-      "id": 4,
+      "id": 6,
       "opinion_type": "SUGGESTION",
       "opinion_type_label": "제안",
       "is_expired": false,
       "table_name": "weekly_investment_plan",
-      "object_id": 4,
+      "object_id": 9,
       "ai_decision": "손익비 약 1.29. 3분할 1차 비중을 낮추면 평균 진입가가 개선된다.",
       "score": 71.0,
       "confidence_score": 64.0,
@@ -417,12 +417,12 @@ export const homeBoard = {
       "model_name": "claude-opus-5"
     },
     {
-      "id": 3,
+      "id": 5,
       "opinion_type": "WARNING",
       "opinion_type_label": "경고",
       "is_expired": false,
       "table_name": "quarterly_investment_plan",
-      "object_id": 2,
+      "object_id": 3,
       "ai_decision": "손절전략이 비어 있다. 나머지 세 전략만으로는 하락 국면에서 기준이 없다.",
       "score": 62.0,
       "confidence_score": 81.0,
@@ -449,11 +449,11 @@ export const homeBoard = {
 
 export const securityPlans = {
   "as_of": "2026-08-09",
-  "security_id": 6,
+  "security_id": 9,
   "monthly_plans": [],
   "weekly_plans": [
     {
-      "id": 6,
+      "id": 11,
       "title": "NAVER 단기 반등 노림",
       "predicted_price": 178000.0,
       "stop_loss_price": 155000.0,
@@ -471,7 +471,7 @@ export const executionCompare = {
   "rows": [
     {
       "order": {
-        "id": 4,
+        "id": 7,
         "action_type": "FILL",
         "order_type": "MARKET",
         "side": "BUY",
@@ -486,13 +486,13 @@ export const executionCompare = {
         "side_label": "매수"
       },
       "security": {
-        "id": 6,
+        "id": 9,
         "symbol": "035420",
         "name": "NAVER"
       },
       "matched_plans": [
         {
-          "id": 6,
+          "id": 11,
           "title": "NAVER 단기 반등 노림",
           "scenario_planning": "BULL",
           "predicted_trend": "UP",
@@ -512,7 +512,7 @@ export const executionCompare = {
     },
     {
       "order": {
-        "id": 3,
+        "id": 6,
         "action_type": "FILL",
         "order_type": "LIMIT",
         "side": "BUY",
@@ -527,13 +527,13 @@ export const executionCompare = {
         "side_label": "매수"
       },
       "security": {
-        "id": 4,
+        "id": 7,
         "symbol": "005930",
         "name": "삼성전자"
       },
       "matched_plans": [
         {
-          "id": 4,
+          "id": 9,
           "title": "삼성전자 이번 주 3분할 1차",
           "scenario_planning": "BASE",
           "predicted_trend": "UP",
@@ -600,7 +600,7 @@ export const performanceSummary = {
   ],
   "by_security": [
     {
-      "security_id": 4,
+      "security_id": 7,
       "symbol": "005930",
       "name": "삼성전자",
       "net_profit": 1570400.0,
@@ -610,7 +610,7 @@ export const performanceSummary = {
       "record_count": 1
     },
     {
-      "security_id": 6,
+      "security_id": 9,
       "symbol": "035420",
       "name": "NAVER",
       "net_profit": -340200.0,
@@ -633,13 +633,13 @@ export const aiDigest = {
 };
 
 export const aiFeedbackFor = {
-  "4": [
+  "9": [
     {
-      "id": 4,
+      "id": 6,
       "opinion_type": "SUGGESTION",
       "opinion_type_label": "제안",
       "table_name": "weekly_investment_plan",
-      "object_id": 4,
+      "object_id": 9,
       "ai_decision": "손익비 약 1.29. 3분할 1차 비중을 낮추면 평균 진입가가 개선된다.",
       "score": 71.0,
       "confidence_score": 64.0,
@@ -648,7 +648,7 @@ export const aiFeedbackFor = {
       "valid_until": "2026-08-16",
       "is_expired": false,
       "model": {
-        "id": 2,
+        "id": 3,
         "model_name": "claude-opus-5",
         "model_version": "2026-05",
         "prompt_version": "discipline-v3"
@@ -1074,18 +1074,17 @@ export const choices = {
 
 export const brokerAccounts = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "masked_account_number": "****8901",
     "security_count": 3,
-    "broker_name": "미래에셋증권",
-    "account_number": "12345678901"
+    "broker_name": "미래에셋증권"
   }
 ];
 
 export const securities = [
   {
-    "id": 6,
+    "id": 9,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1099,14 +1098,14 @@ export const securities = [
     "current_price": "162000.00",
     "sector": "인터넷",
     "is_active": true,
-    "account": 2,
+    "account": 3,
     "market_label": "코스피",
     "asset_type_label": "주식",
     "currency_label": "원",
     "market_value": 4050000.0
   },
   {
-    "id": 5,
+    "id": 8,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1120,14 +1119,14 @@ export const securities = [
     "current_price": "183000.00",
     "sector": "반도체",
     "is_active": true,
-    "account": 2,
+    "account": 3,
     "market_label": "코스피",
     "asset_type_label": "주식",
     "currency_label": "원",
     "market_value": 7320000.0
   },
   {
-    "id": 4,
+    "id": 7,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1141,7 +1140,7 @@ export const securities = [
     "current_price": "71500.00",
     "sector": "반도체",
     "is_active": true,
-    "account": 2,
+    "account": 3,
     "market_label": "코스피",
     "asset_type_label": "주식",
     "currency_label": "원",
@@ -1151,10 +1150,10 @@ export const securities = [
 
 export const loans = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "security_detail": {
-      "id": 5,
+      "id": 8,
       "symbol": "000660",
       "name": "SK하이닉스",
       "market": "KOSPI",
@@ -1174,13 +1173,13 @@ export const loans = [
     "collateral_value": "7320000.00",
     "collateral_ratio": "131.00",
     "evaluated_at": null,
-    "security": 5
+    "security": 8
   }
 ];
 
 export const priceData = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1189,16 +1188,16 @@ export const priceData = [
     "high_price": "72400.00",
     "low_price": "70800.00",
     "quote_price": "71500.00",
-    "security": 4
+    "security": 7
   }
 ];
 
 export const annualPlans = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "account_detail": {
-      "id": 2,
+      "id": 3,
       "broker_name": "미래에셋증권",
       "masked_account_number": "****8901"
     },
@@ -1215,7 +1214,7 @@ export const annualPlans = [
     "valid_until": "2026-12-31",
     "target_return_ratio": "18.00",
     "stop_loss_ratio": "-8.00",
-    "account": 2,
+    "account": 3,
     "market_label": "코스피",
     "direction_label": "매수",
     "status_label": "진행중",
@@ -1226,10 +1225,10 @@ export const annualPlans = [
 
 export const quarterlyPlans = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "annual_plan_detail": {
-      "id": 2,
+      "id": 3,
       "title": "2026 반도체 사이클 상반기 비중확대",
       "market": "KOSPI",
       "direction": "LONG",
@@ -1262,7 +1261,7 @@ export const quarterlyPlans = [
     "valid_until": "2026-09-30",
     "target_return_ratio": "6.00",
     "stop_loss_ratio": "-5.00",
-    "annual_plan": 2,
+    "annual_plan": 3,
     "direction_label": "매수",
     "period_label": "2026.07.01 ~ 2026.09.30",
     "is_current": true,
@@ -1277,15 +1276,15 @@ export const quarterlyPlans = [
 
 export const monthlyPlans = [
   {
-    "id": 3,
+    "id": 5,
     "is_deleted": false,
     "quarterly_plan_detail": {
-      "id": 2,
+      "id": 3,
       "title": "2026 3분기 반도체 비중 55%",
       "direction": "LONG",
       "valid_from": "2026-07-01",
       "valid_until": "2026-09-30",
-      "annual_plan": 2,
+      "annual_plan": 3,
       "direction_label": "매수"
     },
     "principle_count": 2,
@@ -1304,22 +1303,22 @@ export const monthlyPlans = [
     },
     "valid_from": "2026-08-01",
     "valid_until": "2026-08-31",
-    "quarterly_plan": 2,
+    "quarterly_plan": 3,
     "scenario_planning_label": "기본",
     "predicted_trend_label": "상승",
     "period_label": "2026.08.01 ~ 2026.08.31",
     "is_current": true
   },
   {
-    "id": 4,
+    "id": 6,
     "is_deleted": false,
     "quarterly_plan_detail": {
-      "id": 2,
+      "id": 3,
       "title": "2026 3분기 반도체 비중 55%",
       "direction": "LONG",
       "valid_from": "2026-07-01",
       "valid_until": "2026-09-30",
-      "annual_plan": 2,
+      "annual_plan": 3,
       "direction_label": "매수"
     },
     "principle_count": 0,
@@ -1337,7 +1336,7 @@ export const monthlyPlans = [
     },
     "valid_from": "2026-08-01",
     "valid_until": "2026-08-31",
-    "quarterly_plan": 2,
+    "quarterly_plan": 3,
     "scenario_planning_label": "비관",
     "predicted_trend_label": "하락",
     "period_label": "2026.08.01 ~ 2026.08.31",
@@ -1347,10 +1346,10 @@ export const monthlyPlans = [
 
 export const weeklyPlans = [
   {
-    "id": 6,
+    "id": 11,
     "is_deleted": false,
     "security_detail": {
-      "id": 6,
+      "id": 9,
       "symbol": "035420",
       "name": "NAVER",
       "market": "KOSPI",
@@ -1375,7 +1374,7 @@ export const weeklyPlans = [
     "valid_until": "2026-08-09",
     "predicted_price": "178000.00",
     "stop_loss_price": "155000.00",
-    "security": 6,
+    "security": 9,
     "scenario_planning_label": "낙관",
     "predicted_trend_label": "상승",
     "period_label": "2026.08.03 ~ 2026.08.09",
@@ -1383,10 +1382,10 @@ export const weeklyPlans = [
     "risk_reward": 2.29
   },
   {
-    "id": 5,
+    "id": 10,
     "is_deleted": false,
     "security_detail": {
-      "id": 5,
+      "id": 8,
       "symbol": "000660",
       "name": "SK하이닉스",
       "market": "KOSPI",
@@ -1413,7 +1412,7 @@ export const weeklyPlans = [
     "valid_until": "2026-08-09",
     "predicted_price": "196000.00",
     "stop_loss_price": "176000.00",
-    "security": 5,
+    "security": 8,
     "scenario_planning_label": "기본",
     "predicted_trend_label": "횡보",
     "period_label": "2026.08.03 ~ 2026.08.09",
@@ -1421,10 +1420,10 @@ export const weeklyPlans = [
     "risk_reward": 1.86
   },
   {
-    "id": 4,
+    "id": 9,
     "is_deleted": false,
     "security_detail": {
-      "id": 4,
+      "id": 7,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
@@ -1451,7 +1450,7 @@ export const weeklyPlans = [
     "valid_until": "2026-08-09",
     "predicted_price": "76000.00",
     "stop_loss_price": "68000.00",
-    "security": 4,
+    "security": 7,
     "scenario_planning_label": "기본",
     "predicted_trend_label": "상승",
     "period_label": "2026.08.03 ~ 2026.08.09",
@@ -1462,12 +1461,12 @@ export const weeklyPlans = [
 
 export const dailyPlans = [
   {
-    "id": 4,
+    "id": 6,
     "is_deleted": false,
     "weekly_plan_detail": {
-      "id": 5,
+      "id": 10,
       "title": "SK하이닉스 관망",
-      "security": 5,
+      "security": 8,
       "scenario_planning": "BASE",
       "predicted_trend": "SIDEWAYS",
       "confidence_score": 3,
@@ -1479,7 +1478,7 @@ export const dailyPlans = [
       "predicted_trend_label": "횡보"
     },
     "security_detail": {
-      "id": 5,
+      "id": 8,
       "symbol": "000660",
       "name": "SK하이닉스",
       "market": "KOSPI",
@@ -1502,19 +1501,19 @@ export const dailyPlans = [
     "valid_until": "2026-08-09",
     "predicted_price": null,
     "stop_loss_price": "176000.00",
-    "weekly_plan": 5,
+    "weekly_plan": 10,
     "scenario_planning_label": "기본",
     "predicted_trend_label": "횡보",
     "period_label": "2026.08.09 ~ 2026.08.09",
     "is_current": true
   },
   {
-    "id": 3,
+    "id": 5,
     "is_deleted": false,
     "weekly_plan_detail": {
-      "id": 4,
+      "id": 9,
       "title": "삼성전자 이번 주 3분할 1차",
-      "security": 4,
+      "security": 7,
       "scenario_planning": "BASE",
       "predicted_trend": "UP",
       "confidence_score": 4,
@@ -1526,7 +1525,7 @@ export const dailyPlans = [
       "predicted_trend_label": "상승"
     },
     "security_detail": {
-      "id": 4,
+      "id": 7,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
@@ -1549,7 +1548,7 @@ export const dailyPlans = [
     "valid_until": "2026-08-09",
     "predicted_price": "73000.00",
     "stop_loss_price": "68000.00",
-    "weekly_plan": 4,
+    "weekly_plan": 9,
     "scenario_planning_label": "기본",
     "predicted_trend_label": "상승",
     "period_label": "2026.08.09 ~ 2026.08.09",
@@ -1559,7 +1558,7 @@ export const dailyPlans = [
 
 export const mandatoryPrinciples = [
   {
-    "id": 6,
+    "id": 12,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1568,7 +1567,7 @@ export const mandatoryPrinciples = [
     "content": "계획에 없는 종목은 사지 않는다."
   },
   {
-    "id": 7,
+    "id": 13,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1577,7 +1576,7 @@ export const mandatoryPrinciples = [
     "content": "손절가는 사기 전에 정하고, 정한 뒤에는 내리지 않는다."
   },
   {
-    "id": 8,
+    "id": 14,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1586,7 +1585,7 @@ export const mandatoryPrinciples = [
     "content": "한 종목에 총자산의 20%를 넘기지 않는다."
   },
   {
-    "id": 9,
+    "id": 15,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1595,7 +1594,7 @@ export const mandatoryPrinciples = [
     "content": "물타기는 미리 적어 둔 n차 분할표 안에서만 한다."
   },
   {
-    "id": 10,
+    "id": 16,
     "is_deleted": false,
     "created_at": "2026-08-09",
     "updated_at": "2026-08-09",
@@ -1607,7 +1606,7 @@ export const mandatoryPrinciples = [
 
 export const principleSources = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "principle_count": 2,
     "created_at": "2026-08-09",
@@ -1623,10 +1622,10 @@ export const principleSources = [
 
 export const investmentPrinciples = [
   {
-    "id": 4,
+    "id": 6,
     "is_deleted": false,
     "source_detail": {
-      "id": 2,
+      "id": 3,
       "name": "현명한 투자자",
       "source_type": "BOOK",
       "url": null,
@@ -1641,14 +1640,14 @@ export const investmentPrinciples = [
     "content": "시장은 하인이지 주인이 아니다.",
     "rationale": "가격은 매일 제시될 뿐, 받아들일 의무는 없다.",
     "cautions": "유동성이 마르는 국면에서는 '무시'가 곧 탈출 기회 상실이 된다.",
-    "source": 2,
+    "source": 3,
     "principle_type_label": "태도"
   },
   {
-    "id": 3,
+    "id": 5,
     "is_deleted": false,
     "source_detail": {
-      "id": 2,
+      "id": 3,
       "name": "현명한 투자자",
       "source_type": "BOOK",
       "url": null,
@@ -1663,17 +1662,17 @@ export const investmentPrinciples = [
     "content": "내재가치보다 충분히 싸게 살 것 — 안전마진.",
     "rationale": "추정이 틀려도 손실을 흡수할 여유가 가격에 이미 들어 있어야 한다.",
     "cautions": "성장주에는 내재가치 추정 자체가 흔들려서 안전마진 계산이 무의미해질 수 있다.",
-    "source": 2,
+    "source": 3,
     "principle_type_label": "가치평가"
   }
 ];
 
 export const quarterlyPrinciples = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "security_detail": {
-      "id": 4,
+      "id": 7,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
@@ -1793,8 +1792,8 @@ export const quarterlyPrinciples = [
     "fcf_yield": "4.10",
     "valuation_type": "UNDERVALUED",
     "performance_summary": "메모리 재고 정상화 진행. 파운드리 적자폭 축소.",
-    "quarterly_plan": 2,
-    "security": 4,
+    "quarterly_plan": 3,
+    "security": 7,
     "valuation_type_label": "저평가",
     "filled_ratio": 1.0
   }
@@ -1802,10 +1801,10 @@ export const quarterlyPrinciples = [
 
 export const monthlyPrinciples = [
   {
-    "id": 4,
+    "id": 7,
     "is_deleted": false,
     "security_detail": {
-      "id": 5,
+      "id": 8,
       "symbol": "000660",
       "name": "SK하이닉스",
       "market": "KOSPI",
@@ -1823,15 +1822,15 @@ export const monthlyPrinciples = [
     "rationale": "HBM3E 공급 계약 물량이 내년 상반기까지 확보돼 있다.",
     "predicted_price": "215000.00",
     "stop_loss_price": "168000.00",
-    "monthly_plan": 3,
-    "security": 5,
+    "monthly_plan": 5,
+    "security": 8,
     "direction_label": "매수"
   },
   {
-    "id": 3,
+    "id": 6,
     "is_deleted": false,
     "security_detail": {
-      "id": 4,
+      "id": 7,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
@@ -1849,15 +1848,15 @@ export const monthlyPrinciples = [
     "rationale": "HBM 비중 확대와 파운드리 가동률 회복이 동시에 잡히는 구간.",
     "predicted_price": "84000.00",
     "stop_loss_price": "66000.00",
-    "monthly_plan": 3,
-    "security": 4,
+    "monthly_plan": 5,
+    "security": 7,
     "direction_label": "매수"
   }
 ];
 
 export const marketDirections = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "affected_count": 2,
     "created_at": "2026-08-09",
@@ -1883,11 +1882,11 @@ export const marketDirections = [
 
 export const strategies = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "price_data_detail": {
-      "id": 2,
-      "security": 4,
+      "id": 3,
+      "security": 7,
       "price_at": "2026-08-09T09:30:00+09:00",
       "high_price": "72400.00",
       "low_price": "70800.00",
@@ -1900,16 +1899,16 @@ export const strategies = [
     "policy_name": "삼성전자 3분할 매수",
     "sector": "반도체",
     "reference_at": "2026-08-09T09:30:00+09:00",
-    "price_data": 2
+    "price_data": 3
   }
 ];
 
 export const strategyDetail = {
-  "id": 2,
+  "id": 3,
   "is_deleted": false,
   "price_data_detail": {
-    "id": 2,
-    "security": 4,
+    "id": 3,
+    "security": 7,
     "price_at": "2026-08-09T09:30:00+09:00",
     "high_price": "72400.00",
     "low_price": "70800.00",
@@ -1919,7 +1918,7 @@ export const strategyDetail = {
   "methods": {
     "BUY_SPLIT": [
       {
-        "id": 6,
+        "id": 11,
         "is_deleted": false,
         "created_at": "2026-08-09",
         "updated_at": "2026-08-09",
@@ -1929,11 +1928,11 @@ export const strategyDetail = {
         "price_ratio": "-3.00",
         "quantity_ratio": "30.00",
         "sector": "반도체",
-        "strategy": 2,
+        "strategy": 3,
         "strategy_type_label": "분할매수"
       },
       {
-        "id": 7,
+        "id": 12,
         "is_deleted": false,
         "created_at": "2026-08-09",
         "updated_at": "2026-08-09",
@@ -1943,11 +1942,11 @@ export const strategyDetail = {
         "price_ratio": "-7.00",
         "quantity_ratio": "30.00",
         "sector": "반도체",
-        "strategy": 2,
+        "strategy": 3,
         "strategy_type_label": "분할매수"
       },
       {
-        "id": 8,
+        "id": 13,
         "is_deleted": false,
         "created_at": "2026-08-09",
         "updated_at": "2026-08-09",
@@ -1957,13 +1956,13 @@ export const strategyDetail = {
         "price_ratio": "-12.00",
         "quantity_ratio": "40.00",
         "sector": "반도체",
-        "strategy": 2,
+        "strategy": 3,
         "strategy_type_label": "분할매수"
       }
     ],
     "SELL_SPLIT": [
       {
-        "id": 9,
+        "id": 14,
         "is_deleted": false,
         "created_at": "2026-08-09",
         "updated_at": "2026-08-09",
@@ -1973,11 +1972,11 @@ export const strategyDetail = {
         "price_ratio": "8.00",
         "quantity_ratio": "50.00",
         "sector": "반도체",
-        "strategy": 2,
+        "strategy": 3,
         "strategy_type_label": "분할매도"
       },
       {
-        "id": 10,
+        "id": 15,
         "is_deleted": false,
         "created_at": "2026-08-09",
         "updated_at": "2026-08-09",
@@ -1987,7 +1986,7 @@ export const strategyDetail = {
         "price_ratio": "15.00",
         "quantity_ratio": "50.00",
         "sector": "반도체",
-        "strategy": 2,
+        "strategy": 3,
         "strategy_type_label": "분할매도"
       }
     ]
@@ -1998,15 +1997,15 @@ export const strategyDetail = {
   "policy_name": "삼성전자 3분할 매수",
   "sector": "반도체",
   "reference_at": "2026-08-09T09:30:00+09:00",
-  "price_data": 2
+  "price_data": 3
 };
 
 export const orders = [
   {
-    "id": 4,
+    "id": 7,
     "is_deleted": false,
     "security_detail": {
-      "id": 6,
+      "id": 9,
       "symbol": "035420",
       "name": "NAVER",
       "market": "KOSPI",
@@ -2024,17 +2023,17 @@ export const orders = [
     "executed_at": "2026-08-09T13:40:00+09:00",
     "created_at": "2026-08-09",
     "remarks": "장중 급등 보고 들어감. 월계획에 없는 종목.",
-    "security": 6,
+    "security": 9,
     "action_type_label": "체결",
     "order_type_label": "시장가",
     "side_label": "매수",
     "notional": 1620000.0
   },
   {
-    "id": 3,
+    "id": 6,
     "is_deleted": false,
     "security_detail": {
-      "id": 4,
+      "id": 7,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
@@ -2052,7 +2051,7 @@ export const orders = [
     "executed_at": "2026-08-09T10:12:00+09:00",
     "created_at": "2026-08-09",
     "remarks": "주계획 1차 진입. 계획대로.",
-    "security": 4,
+    "security": 7,
     "action_type_label": "체결",
     "order_type_label": "지정가",
     "side_label": "매수",
@@ -2062,10 +2061,10 @@ export const orders = [
 
 export const performanceRecords = [
   {
-    "id": 4,
+    "id": 6,
     "is_deleted": false,
     "security_detail": {
-      "id": 6,
+      "id": 9,
       "symbol": "035420",
       "name": "NAVER",
       "market": "KOSPI",
@@ -2114,16 +2113,16 @@ export const performanceRecords = [
     "return_rate": "-4.80",
     "benchmark_return_rate": "3.10",
     "max_drawdown": "-9.60",
-    "security": 6,
+    "security": 9,
     "period_type_label": "월",
     "total_cost": 35200.0,
     "excess_return": -7.9
   },
   {
-    "id": 3,
+    "id": 5,
     "is_deleted": false,
     "security_detail": {
-      "id": 4,
+      "id": 7,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
@@ -2172,7 +2171,7 @@ export const performanceRecords = [
     "return_rate": "6.40",
     "benchmark_return_rate": "3.10",
     "max_drawdown": "-4.20",
-    "security": 4,
+    "security": 7,
     "period_type_label": "월",
     "total_cost": 72600.0,
     "excess_return": 3.3
@@ -2181,7 +2180,7 @@ export const performanceRecords = [
 
 export const aiModelRuns = [
   {
-    "id": 2,
+    "id": 3,
     "is_deleted": false,
     "feedback_count": 2,
     "created_at": "2026-08-09",
@@ -2204,10 +2203,10 @@ export const aiModelRuns = [
 
 export const aiFeedback = [
   {
-    "id": 4,
+    "id": 6,
     "is_deleted": false,
     "model_detail": {
-      "id": 2,
+      "id": 3,
       "model_name": "claude-opus-5",
       "model_version": "2026-05",
       "prompt_version": "discipline-v3",
@@ -2219,7 +2218,7 @@ export const aiFeedback = [
     "updated_at": "2026-08-09",
     "remarks": null,
     "opinion_type": "SUGGESTION",
-    "object_id": 4,
+    "object_id": 9,
     "table_name": "weekly_investment_plan",
     "ai_decision": "손익비 약 1.29. 3분할 1차 비중을 낮추면 평균 진입가가 개선된다.",
     "score": "71.00",
@@ -2227,15 +2226,15 @@ export const aiFeedback = [
     "reasoning_summary": "예상가 76,000 / 손절가 68,000 / 현재가 71,500 기준.",
     "risk_summary": "1차에 비중을 실으면 2·3차 여력이 줄어든다.",
     "valid_until": "2026-08-16",
-    "model": 2,
+    "model": 3,
     "opinion_type_label": "제안",
     "is_expired": false
   },
   {
-    "id": 3,
+    "id": 5,
     "is_deleted": false,
     "model_detail": {
-      "id": 2,
+      "id": 3,
       "model_name": "claude-opus-5",
       "model_version": "2026-05",
       "prompt_version": "discipline-v3",
@@ -2247,7 +2246,7 @@ export const aiFeedback = [
     "updated_at": "2026-08-09",
     "remarks": null,
     "opinion_type": "WARNING",
-    "object_id": 2,
+    "object_id": 3,
     "table_name": "quarterly_investment_plan",
     "ai_decision": "손절전략이 비어 있다. 나머지 세 전략만으로는 하락 국면에서 기준이 없다.",
     "score": "62.00",
@@ -2255,7 +2254,7 @@ export const aiFeedback = [
     "reasoning_summary": "매수·매도·횡보 전략은 기재됐으나 손절 기준이 없다.",
     "risk_summary": "분기 손절비율 -5% 도달 시 행동 규칙이 정의돼 있지 않다.",
     "valid_until": "2026-08-23",
-    "model": 2,
+    "model": 3,
     "opinion_type_label": "경고",
     "is_expired": false
   }

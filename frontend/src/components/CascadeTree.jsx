@@ -35,10 +35,21 @@ function StrategyCoverage({ coverage, strategies }) {
   );
 }
 
-function Node({ node, depth, defaultOpen }) {
+/** 이 계층에서 '+' 를 눌렀을 때 무엇을 만드는가. */
+const ADD_CHILD = {
+  YEAR: { level: "QUARTER", label: "분기계획 추가" },
+  QUARTER: { level: "MONTH", label: "월계획 추가" },
+  // 월계획의 아래는 주계획이 아니라 **월투자원칙**이다. 그게 종목에 닿는 통로라,
+  // 계층이 끊긴 자리를 고치려면 여기부터 채워야 한다.
+  MONTH: { level: "MONTHLY_PRINCIPLE", label: "종목 연결 (월투자원칙)" },
+  WEEK: { level: "DAY", label: "일계획 추가" },
+};
+
+function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
   const [open, setOpen] = useState(defaultOpen);
   const children = node.children || [];
   const hasChildren = children.length > 0;
+  const addable = ADD_CHILD[node.level];
 
   // 월계획인데 종목이 안 달렸으면 아래로 계층이 이어지지 않는다.
   const brokenHere =
@@ -72,6 +83,23 @@ function Node({ node, depth, defaultOpen }) {
             {node.direction && <Badge row={node} field="direction" tone="accent" />}
             {node.predicted_trend && <TrendBadge row={node} />}
             {node.scenario_planning && <Badge row={node} field="scenario_planning" />}
+
+            <span className="ct-tools">
+              {onEdit && (
+                <button type="button" className="row-edit" onClick={() => onEdit(node)}>
+                  수정
+                </button>
+              )}
+              {onAddChild && addable && (
+                <button
+                  type="button"
+                  className={`row-edit ${brokenHere ? "is-urgent" : ""}`}
+                  onClick={() => onAddChild(node, addable.level)}
+                >
+                  + {addable.label}
+                </button>
+              )}
+            </span>
           </div>
 
           <div className="ct-meta num">
@@ -121,7 +149,14 @@ function Node({ node, depth, defaultOpen }) {
       {hasChildren && open && (
         <ul className="ct-children">
           {children.map((child) => (
-            <Node key={`${child.level}-${child.id}`} node={child} depth={depth + 1} defaultOpen />
+            <Node
+              key={`${child.level}-${child.id}`}
+              node={child}
+              depth={depth + 1}
+              defaultOpen
+              onEdit={onEdit}
+              onAddChild={onAddChild}
+            />
           ))}
         </ul>
       )}
@@ -129,7 +164,7 @@ function Node({ node, depth, defaultOpen }) {
   );
 }
 
-export default function CascadeTree({ tree, orphans }) {
+export default function CascadeTree({ tree, orphans, onEdit, onAddChild }) {
   if (!tree?.length) {
     return (
       <p className="ct-empty">
@@ -142,7 +177,14 @@ export default function CascadeTree({ tree, orphans }) {
     <div className="ct">
       <ul className="ct-root">
         {tree.map((node) => (
-          <Node key={`YEAR-${node.id}`} node={node} depth={0} defaultOpen />
+          <Node
+            key={`YEAR-${node.id}`}
+            node={node}
+            depth={0}
+            defaultOpen
+            onEdit={onEdit}
+            onAddChild={onAddChild}
+          />
         ))}
       </ul>
 
@@ -164,6 +206,15 @@ export default function CascadeTree({ tree, orphans }) {
                   </span>
                 )}
                 <span className="ct-orphan-reason"> — {o.reason}</span>
+                {onEdit && (
+                  <button
+                    type="button"
+                    className="row-edit ct-orphan-fix"
+                    onClick={() => onEdit({ ...o, level: "WEEK" })}
+                  >
+                    수정
+                  </button>
+                )}
               </li>
             ))}
           </ul>

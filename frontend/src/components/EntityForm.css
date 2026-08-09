@@ -1,0 +1,37 @@
+.ef-banner {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #fdecec;
+  border: 1px solid #f3d0cd;
+  color: #b3261e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ef-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.ef-spacer {
+  flex: 1;
+}
+
+.ef-delete {
+  color: #b3261e;
+  border-color: #f3d0cd;
+}
+
+.ef-delete:hover {
+  background: #fdecec;
+}
+
+.ef .btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

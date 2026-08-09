@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import AsyncState from "../components/AsyncState";
-import Badge from "../components/Badge";
+import EntityForm from "../components/EntityForm";
 import MetricCard, { MetricRow } from "../components/MetricCard";
+import Modal from "../components/Modal";
 import Panel from "../components/Panel";
-import { fetchExecutionCompare, listSecurities } from "../api/trading";
+import { fetchExecutionCompare, listSecurities, order } from "../api/trading";
+import { ORDER_FIELDS } from "../forms/specs";
 import { dateTime, price, qty, won } from "../lib/format";
 import { useAsync, useAsyncAll } from "../lib/useAsync";
+import { useMultiForm } from "../lib/useMultiForm";
 import "./ExecutionPage.css";
 
 /**
@@ -50,6 +53,22 @@ export default function ExecutionPage() {
         }),
     },
     [securityId, dateFrom, dateTo]
+  );
+
+  const kinds = useMemo(
+    () => ({ ORDER: { title: "이행", fields: ORDER_FIELDS, api: order } }),
+    []
+  );
+  const form = useMultiForm(kinds, reload);
+
+  const optionsMap = useMemo(
+    () => ({
+      securities: (securities.data || []).map((s) => ({
+        value: s.id,
+        label: `${s.name} (${s.symbol})`,
+      })),
+    }),
+    [securities.data]
   );
 
   const compare = data?.compare;
@@ -117,6 +136,22 @@ export default function ExecutionPage() {
               title="계획 대비 이행"
               meta={`${compare.date_from} ~ ${compare.date_to}`}
               note="표시(flag)는 판결이 아니라 기록이다. 계획 밖이었다는 사실이 남아 있어야 나중에 되짚을 수 있다."
+              actions={
+                <button
+                  className="btn is-sm"
+                  onClick={() =>
+                    form.openCreate("ORDER", {
+                      security: securityId || "",
+                      action_type: "FILL",
+                      executed_at: new Date().toISOString().slice(0, 16),
+                    })
+                  }
+                  disabled={!securities.data?.length}
+                  title={securities.data?.length ? undefined : "종목을 먼저 등록한다"}
+                >
+                  + 이행 기록
+                </button>
+              }
             >
               {compare.rows.length === 0 ? (
                 <p className="ep-empty">이 기간에 이행 기록이 없다.</p>
@@ -142,6 +177,13 @@ export default function ExecutionPage() {
                           {row.order.notional != null && ` = ${won(row.order.notional)}`}
                         </span>
                         <span className="num ep-when">{dateTime(row.order.executed_at)}</span>
+                        <button
+                          type="button"
+                          className="row-edit"
+                          onClick={() => form.openEdit("ORDER", row.order.id)}
+                        >
+                          수정
+                        </button>
                       </div>
 
                       {row.flags.length > 0 && (
@@ -181,6 +223,23 @@ export default function ExecutionPage() {
           </>
         )}
       </AsyncState>
+
+      {form.isOpen && (
+        <Modal
+          title={`이행 ${form.isEdit ? "수정" : "기록"}`}
+          subtitle="계획한 것과 실제로 한 것 사이의 간극이 이 표에서 드러난다. 계획 밖이었다면 비고에 왜 그랬는지 적어 둔다."
+          onClose={form.close}
+        >
+          <EntityForm
+            fields={ORDER_FIELDS}
+            instance={form.instance}
+            optionsMap={optionsMap}
+            onSubmit={form.submit}
+            onCancel={form.close}
+            onDelete={form.isEdit ? form.remove : undefined}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

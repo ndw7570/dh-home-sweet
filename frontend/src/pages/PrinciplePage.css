@@ -168,4 +168,27 @@
 .pr-empty {
   padding: 20px 4px;
   color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.pr-mandatory-text {
+  flex: 1;
+}
+
+.pr-spacer {
+  flex: 1;
+}
+
+.pr-loaderr {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #fdecec;
+  border: 1px solid #f3d0cd;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+.pr-q-head .row-edit {
+  margin-left: 4px;
 }

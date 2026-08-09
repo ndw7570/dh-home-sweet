@@ -45,3 +45,41 @@
 .pp .mc-row {
   margin-bottom: 16px;
 }
+
+.pp-loading {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.pp-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-card);
+  background: var(--accent-bg);
+  border: 1px solid #cfe0f8;
+  color: #1b4f9c;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.pp-notice-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pp-loaderr {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #fdecec;
+  border: 1px solid #f3d0cd;
+  color: #b3261e;
+  font-size: 13px;
+}

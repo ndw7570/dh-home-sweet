@@ -180,6 +180,35 @@ button {
   width: 100%;
 }
 
+/* 목록 행의 수정 버튼 — 평소엔 조용히 있다가 행에 마우스를 올리면 또렷해진다. */
+.row-edit {
+  border: 1px solid var(--line);
+  background: var(--surface-card);
+  color: var(--text-muted);
+  border-radius: var(--radius);
+  padding: 3px 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.row-edit:hover {
+  color: var(--text-primary);
+  border-color: var(--line-strong);
+  background: var(--surface-sunken);
+}
+
+/* 패널 머리의 액션 버튼 묶음 */
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn.is-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
