@@ -1,4 +1,4 @@
-"""URL configuration — asset planner."""
+"""URL configuration — 주식 규율 관리."""
 
 from django.contrib import admin
 from django.urls import include, path
@@ -15,7 +15,7 @@ urlpatterns = [
     path("api/auth/", include("users.urls")),
 
     # 도메인 API — 프론트 VITE_API_BASE 와 반드시 일치해야 한다.
-    path("api/planner", include("asset_planning.urls")),
+    path("api/trading/", include("trading_discipline.urls")),
 
     # OpenAPI 스키마 / Swagger UI / Redoc
     path("schema/", SpectacularAPIView.as_view(), name="schema"),

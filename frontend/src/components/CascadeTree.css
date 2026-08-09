@@ -1,0 +1,207 @@
+.ct-root,
+.ct-children {
+  list-style: none;
+}
+
+.ct-children {
+  margin-left: 11px;
+  padding-left: 18px;
+  border-left: 1px solid var(--line);
+}
+
+.ct-node + .ct-node {
+  margin-top: 6px;
+}
+
+.ct-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 0;
+}
+
+.ct-toggle {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.ct-toggle.is-leaf {
+  border-style: dashed;
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.ct-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.ct-title-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ct-level {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* 계층이 내려갈수록 진해진다 — 깊이를 색으로도 읽게 한다. */
+.ct-level-YEAR {
+  background: #1f2b3a;
+  color: #fff;
+}
+.ct-level-QUARTER {
+  background: #35485e;
+  color: #fff;
+}
+.ct-level-MONTH {
+  background: #536b85;
+  color: #fff;
+}
+.ct-level-WEEK {
+  background: #8095ab;
+  color: #fff;
+}
+.ct-level-DAY {
+  background: #b5c2d0;
+  color: #1f2b3a;
+}
+
+.ct-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ct-sec {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.ct-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.ct-meta .ct-stop {
+  color: #b3261e;
+}
+
+.ct-thesis {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  max-width: 76ch;
+}
+
+.ct-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ct-cov {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+}
+
+.ct-cov.is-on {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.ct-cov.is-off {
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-weight: 500;
+}
+
+.ct-securities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ct-sec-chip {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  color: var(--text-secondary);
+}
+
+.ct-broken {
+  margin-top: 8px;
+  font-size: 12.5px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.ct-empty {
+  padding: 32px 4px;
+  color: var(--text-muted);
+}
+
+.ct-orphans {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid #f0dcb4;
+  background: #fffdf7;
+  border-radius: var(--radius-card);
+}
+
+.ct-orphans h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.ct-orphans-why {
+  margin: 6px 0 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 72ch;
+}
+
+.ct-orphans ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ct-orphans li {
+  font-size: 13px;
+}
+
+.ct-orphan-reason {
+  color: var(--text-muted);
+}

@@ -1,112 +1,218 @@
-import { useEffect, useState } from "react";
-
-import SummaryCard from "../components/SummaryCard";
-import TimelineChart from "../components/TimelineChart";
-import { fetchHomeSummary, fetchTimeline } from "../api/planner";
-import { manwon, monthLabel, percent, won } from "../lib/format";
+import AiFeedback from "../components/AiFeedback";
+import AsyncState from "../components/AsyncState";
+import Badge, { TrendBadge } from "../components/Badge";
+import MetricCard, { MetricRow } from "../components/MetricCard";
+import Panel from "../components/Panel";
+import { fetchHomeBoard } from "../api/trading";
+import { confidenceBar, isoDate, price, won } from "../lib/format";
+import { useAsync } from "../lib/useAsync";
 import "./HomePage.css";
 
 /**
- * 홈 — 토스형 단일 컬럼 카드 스택.
+ * 홈 — 오늘의 규율.
  *
- * 이 화면의 일은 데이터를 보여주는 게 아니라 다음 행동 하나를 고르게 만드는 것이다.
- * 그래서 카드마다 한 문장 + 버튼 하나만 둔다. 밀도가 필요한 화면은 계획/자산 탭이다.
+ * 순서가 곧 주장이다.
+ *   1) 지금 해야 할 것 하나   (next_action)
+ *   2) 협상 대상이 아닌 것    (필수원칙)
+ *   3) 계획보다 먼저 오는 것  (경고)
+ *   4) 오늘의 계획
+ *   5) 세우다 만 자리         (빈칸)
+ *   6) AI 의견
+ *
+ * 잔고를 맨 위에 두지 않는다. 잔고는 결과고, 이 화면은 행동을 다룬다.
  */
-export default function HomePage({ onGo }) {
-  const [summary, setSummary] = useState(null);
-  const [timeline, setTimeline] = useState(null);
-  const [status, setStatus] = useState("loading");
 
-  useEffect(() => {
-    let alive = true;
-    Promise.all([fetchHomeSummary(), fetchTimeline({ months_back: 12 })])
-      .then(([s, t]) => {
-        if (!alive) return;
-        setSummary(s);
-        setTimeline(t);
-        setStatus("ready");
-      })
-      .catch(() => alive && setStatus("error"));
-    return () => {
-      alive = false;
-    };
-  }, []);
+const GOTO_LABEL = {
+  plan: "계획 화면으로",
+  security: "종목 화면으로",
+  execution: "이행 화면으로",
+};
 
-  if (status === "loading") {
-    return <div className="placeholder">불러오는 중입니다…</div>;
-  }
-  if (status === "error") {
+function NextAction({ action, onGo }) {
+  if (!action) {
     return (
-      <div className="placeholder">
-        데이터를 불러오지 못했습니다. 백엔드가 떠 있는지 확인해 주세요.
+      <div className="hp-next is-clear">
+        <span className="hp-next-kicker">지금 처리할 것</span>
+        <p className="hp-next-msg">없다. 경고도 빈칸도 없고 오늘 계획도 서 있다.</p>
       </div>
     );
   }
-
-  const gap = summary?.plan_gap_amount;
-  const projection = summary?.projection;
-  const unjournaled = summary?.unjournaled;
-  const review = summary?.pending_review;
-
+  const tab = action.goto?.tab;
   return (
-    <div className="home">
-      <SummaryCard
-        eyebrow="내 순자산"
-        value={won(summary?.net_worth)}
-        caption={
-          gap == null
-            ? "아직 비교할 계획이 없습니다."
-            : gap >= 0
-              ? `계획보다 ${manwon(gap)}원 앞서 있어요`
-              : `계획보다 ${manwon(-gap)}원 뒤처져 있어요`
-        }
-        tone={gap == null ? "default" : gap >= 0 ? "success" : "warning"}
-      />
-
-      {projection && (
-        <SummaryCard
-          eyebrow={`이대로 가면 ${monthLabel(projection.target_date)}엔`}
-          value={won(projection.value)}
-          caption={
-            projection.vs_last_projection_rate == null
-              ? null
-              : `지난번에 예상했던 것보다 ${percent(
-                  Math.abs(projection.vs_last_projection_rate),
-                )} ${projection.vs_last_projection_rate >= 0 ? "위" : "아래"}에 있어요`
-          }
-        >
-          <div className="home-chart">
-            <TimelineChart data={timeline} height={150} />
-          </div>
-        </SummaryCard>
-      )}
-
-      {unjournaled?.missing > 0 && (
-        <SummaryCard
-          headline={`이번 주 매매 ${unjournaled.total}건 중 ${unjournaled.missing}건`}
-          caption="아직 왜 샀는지 안 적으셨어요"
-          action="일지 쓰기"
-          onAction={() => onGo?.("journal", "missing")}
-        />
-      )}
-
-      {review?.status === "READY" && (
-        <SummaryCard
-          accent
-          badge={`${review.period_label} 마감`}
-          headline={`${review.period_label} 회고가 준비됐어요`}
-          caption="계획과 실제의 차이, 원인 후보까지 미리 정리해 뒀어요"
-          action="회고 열기"
-          onAction={() => onGo?.("review")}
-        />
-      )}
-
-      {summary?.hit_rate != null && (
-        <p className="home-footnote">
-          지금까지 세운 예상 중 {percent(summary.hit_rate)}가 실제와 맞았습니다. 예상선은
-          지우지 않고 그대로 쌓입니다.
-        </p>
+    <div className="hp-next">
+      <span className="hp-next-kicker">지금 처리할 것</span>
+      <p className="hp-next-msg">{action.message}</p>
+      {tab && (
+        <button className="btn is-primary is-block" onClick={() => onGo(tab)}>
+          {GOTO_LABEL[tab] || "보러 가기"}
+        </button>
       )}
     </div>
+  );
+}
+
+function PlanCard({ plan, level }) {
+  return (
+    <li className="hp-plan">
+      <div className="hp-plan-head">
+        <span className={`hp-plan-level is-${level}`}>{level === "day" ? "일" : "주"}</span>
+        <strong>{plan.title}</strong>
+        <TrendBadge row={plan} />
+        <Badge row={plan} field="scenario_planning" />
+      </div>
+      {plan.security && (
+        <div className="hp-plan-sec num">
+          {plan.security.name} {plan.security.symbol}
+          {plan.security.current_price != null && (
+            <span className="hp-plan-cur"> 현재 {price(plan.security.current_price)}</span>
+          )}
+        </div>
+      )}
+      <div className="hp-plan-nums num">
+        {plan.confidence_score != null && <span>확신 {confidenceBar(plan.confidence_score)}</span>}
+        {plan.predicted_price != null && <span>예상 {price(plan.predicted_price)}</span>}
+        {plan.stop_loss_price != null && (
+          <span className="hp-stop">손절 {price(plan.stop_loss_price)}</span>
+        )}
+        {plan.available_amount != null && <span>가용 {won(plan.available_amount)}</span>}
+      </div>
+      {plan.thesis && <p className="hp-plan-thesis">{plan.thesis}</p>}
+    </li>
+  );
+}
+
+export default function HomePage({ onGo }) {
+  const { data, error, loading, reload } = useAsync(() => fetchHomeBoard(), []);
+
+  return (
+    <AsyncState loading={loading} error={error} onRetry={reload}>
+      {data && (
+        <div className="hp">
+          <p className="hp-date num">{isoDate(data.as_of)}</p>
+
+          <NextAction action={data.next_action} onGo={onGo} />
+
+          <MetricRow>
+            <MetricCard
+              label="오늘 계획"
+              value={data.counters.daily_plan_count}
+              unit="건"
+              hint={`주계획 ${data.counters.weekly_plan_count}건 아래`}
+              tone={data.counters.daily_plan_count === 0 ? "warning" : undefined}
+            />
+            <MetricCard
+              label="경고"
+              value={data.counters.warning_count}
+              unit="건"
+              hint="담보·손절 — 계획보다 먼저 온다"
+              tone={data.counters.warning_count > 0 ? "danger" : undefined}
+            />
+            <MetricCard
+              label="빈칸"
+              value={data.counters.gap_count}
+              unit="건"
+              hint="세우다 만 계획"
+              tone={data.counters.gap_count > 0 ? "warning" : undefined}
+            />
+            <MetricCard
+              label="오늘 이행"
+              value={data.counters.order_count_today}
+              unit="건"
+              hint="이행 화면에서 계획과 대조된다"
+            />
+          </MetricRow>
+
+          <Panel
+            title="나의 필수원칙"
+            note="협상 대상이 아니다. 화면 맨 위에 고정해 두는 이유다."
+          >
+            <ol className="hp-principles">
+              {data.mandatory_principles.map((p) => (
+                <li key={p.id}>
+                  <span className="hp-pri num">{p.priority}</span>
+                  {p.content}
+                </li>
+              ))}
+            </ol>
+          </Panel>
+
+          {data.warnings.length > 0 && (
+            <Panel
+              title={`경고 ${data.warnings.length}건`}
+              tone="danger"
+              note="담보가 무너지면 규율을 지킬 기회 자체가 없어진다."
+            >
+              <ul className="hp-warnings">
+                {data.warnings.map((w, i) => (
+                  <li key={i} className={`hp-warn is-${w.severity.toLowerCase()}`}>
+                    <div className="hp-warn-head">
+                      <span className="hp-warn-kind">
+                        {w.kind === "LOAN" ? "담보대출" : "손절가 도달"}
+                      </span>
+                      {w.security && (
+                        <span className="num">
+                          {w.security.name} {w.security.symbol}
+                        </span>
+                      )}
+                    </div>
+                    <ul className="hp-warn-reasons">
+                      {w.reasons.map((r, j) => (
+                        <li key={j}>{r}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          )}
+
+          <Panel
+            title="오늘의 계획"
+            meta={`${data.plans.daily.length}일 · ${data.plans.weekly.length}주`}
+          >
+            {data.plans.daily.length === 0 && data.plans.weekly.length === 0 ? (
+              <p className="hp-noplan">
+                오늘 유효한 계획이 없다. 계획 없이 매매하면 남는 것은 결과뿐이다.
+              </p>
+            ) : (
+              <ul className="hp-plans">
+                {data.plans.daily.map((p) => (
+                  <PlanCard key={`d${p.id}`} plan={p} level="day" />
+                ))}
+                {data.plans.weekly.map((p) => (
+                  <PlanCard key={`w${p.id}`} plan={p} level="week" />
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          {data.gaps.length > 0 && (
+            <Panel
+              title={`세우다 만 자리 ${data.gaps.length}건`}
+              tone="warning"
+              note="계획이 있는 것처럼 보이는데 실은 비어 있는 상태가 가장 위험하다."
+            >
+              <ul className="hp-gaps">
+                {data.gaps.map((g, i) => (
+                  <li key={i}>
+                    <strong>{g.target.title}</strong>
+                    <span className="hp-gap-msg"> {g.message}</span>
+                  </li>
+                ))}
+              </ul>
+              <button className="btn is-block" onClick={() => onGo("plan")}>
+                계획 화면에서 채우기
+              </button>
+            </Panel>
+          )}
+
+          {data.ai_feedback.length > 0 && (
+            <Panel title="유효한 AI 의견" meta={`${data.ai_feedback.length}건`}>
+              <AiFeedback items={data.ai_feedback} compact />
+            </Panel>
+          )}
+        </div>
+      )}
+    </AsyncState>
   );
 }

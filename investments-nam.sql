@@ -1758,7 +1758,7 @@ CREATE TABLE "trading_discipline_management"."quarterly_investment_principles"
 	"new_orders_amount"       NUMERIC(15,2) NULL,     -- 신규 수주액
 	"order_backlog"           NUMERIC(15,2) NULL,     -- 수주잔고
 	"operating_margin"        NUMERIC(5,2)  NULL,     -- 영업이익률
-	"net_income"              NUMERIC(5,2)  NULL,     -- 순이익
+	"net_income"              NUMERIC(15,2) NULL,     -- 순이익
 	"roe"                     NUMERIC(5,2)  NULL,     -- ROE
 	"roic"                    NUMERIC(5,2)  NULL,     -- ROIC
 	"free_cash_flow"          NUMERIC(15,2) NULL,     -- 잉여현금흐름

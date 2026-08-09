@@ -1,165 +1,106 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import MetricCard from "../components/MetricCard";
-import TimelineChart from "../components/TimelineChart";
-import { fetchTimeline, listPlans, listScenarios, updateScenario } from "../api/planner";
-import { manwon, percent } from "../lib/format";
+import AsyncState from "../components/AsyncState";
+import CascadeTree from "../components/CascadeTree";
+import MetricCard, { MetricRow } from "../components/MetricCard";
+import Panel from "../components/Panel";
+import { fetchCascade, listBrokerAccounts } from "../api/trading";
+import { isoDate } from "../lib/format";
+import { useAsync, useAsyncAll } from "../lib/useAsync";
 import "./PlanPage.css";
 
 /**
- * 계획 — 대시보드형. 여기서는 밀도가 필요하다.
+ * 계획 — 연 → 분기 → 월 → 주 → 일.
  *
- * 시나리오 가정을 바꾸면 기존 예상선을 고치는 게 아니라 새 예상 배치를 쌓는다.
- * (backend/asset_planning/services/projection_service.snapshot_projection)
- * 그래서 이 화면의 저장 버튼 문구는 "수정"이 아니라 "예상 다시 세우기"다.
+ * 이 화면의 목적은 계획을 '보는' 것이 아니라 **끊긴 자리를 찾는** 것이다.
+ * DDL 상 월계획과 주계획 사이에 FK 가 없어서(주계획은 종목에 직접 붙는다),
+ * 계층은 언제든 조용히 끊어질 수 있다. 서버가 조립하면서 붙지 못한 주계획을
+ * orphan 으로 따로 내려 주고, 화면은 그걸 숨기지 않고 아래에 모아 둔다.
  */
 export default function PlanPage() {
-  const [plan, setPlan] = useState(null);
-  const [scenarios, setScenarios] = useState([]);
-  const [timeline, setTimeline] = useState(null);
-  const [status, setStatus] = useState("loading");
-  const [draft, setDraft] = useState({});
+  const [on, setOn] = useState(() => new Date().toISOString().slice(0, 10));
+  const [accountId, setAccountId] = useState("");
+  const [onlyActive, setOnlyActive] = useState(true);
 
-  useEffect(() => {
-    let alive = true;
-    listPlans({ status: "ACTIVE" })
-      .then(async (plans) => {
-        const p = Array.isArray(plans) ? plans[0] : plans;
-        if (!alive) return;
-        setPlan(p || null);
-        const [sc, tl] = await Promise.all([
-          listScenarios(p?.plan_id),
-          fetchTimeline({ plan_id: p?.plan_id }),
-        ]);
-        if (!alive) return;
-        setScenarios(sc || []);
-        setTimeline(tl);
-        setStatus("ready");
-      })
-      .catch(() => alive && setStatus("error"));
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const accounts = useAsync(() => listBrokerAccounts(), []);
+  const { data, error, loading, reload } = useAsyncAll(
+    {
+      cascade: () =>
+        fetchCascade({
+          on,
+          account_id: accountId || undefined,
+          only_active: onlyActive ? 1 : 0,
+        }),
+    },
+    [on, accountId, onlyActive]
+  );
 
-  if (status === "loading") return <div className="placeholder">불러오는 중입니다…</div>;
-  if (status === "error")
-    return <div className="placeholder">계획을 불러오지 못했습니다.</div>;
-  if (!plan)
-    return (
-      <div className="placeholder">
-        <p>아직 계획이 없습니다.</p>
-        <p className="placeholder-sub">
-          계획이 있어야 실적을 비교할 대상이 생깁니다. 목표 금액과 기간부터 정해 주세요.
-        </p>
-        <button className="btn is-primary" style={{ marginTop: 16 }}>
-          계획 만들기
-        </button>
-      </div>
-    );
-
-  const onDraft = (id, field, value) =>
-    setDraft((d) => ({ ...d, [id]: { ...(d[id] || {}), [field]: value } }));
-
-  const reproject = async (s) => {
-    const patch = draft[s.scenario_id];
-    if (!patch) return;
-    await updateScenario(s.scenario_id, patch);
-    setScenarios((list) =>
-      list.map((x) => (x.scenario_id === s.scenario_id ? { ...x, ...patch } : x))
-    );
-    setDraft((d) => ({ ...d, [s.scenario_id]: undefined }));
-    setTimeline(await fetchTimeline({ plan_id: plan.plan_id }));
-  };
+  const cascade = data?.cascade;
+  const counts = cascade?.counts;
 
   return (
-    <div className="plan">
-      <div className="section-head">
-        <h2>{plan.title}</h2>
-        <span className="meta">
-          {plan.start_date} ~ {plan.end_date}
-        </span>
+    <div className="pp">
+      <div className="pp-controls">
+        <label>
+          <span>기준일</span>
+          <input type="date" value={on} onChange={(e) => setOn(e.target.value)} />
+        </label>
+        <label>
+          <span>계좌</span>
+          <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+            <option value="">전체</option>
+            {(accounts.data || []).map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.broker_name} {a.masked_account_number}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="pp-check">
+          <input
+            type="checkbox"
+            checked={onlyActive}
+            onChange={(e) => setOnlyActive(e.target.checked)}
+          />
+          <span>기준일에 유효한 계획만</span>
+        </label>
       </div>
 
-      <div className="plan-metrics">
-        <MetricCard label="목표 순자산" value={manwon(plan.target_net_worth)} />
-        <MetricCard label="월 적립액" value={manwon(plan.monthly_contribution)} />
-        <MetricCard
-          label="남은 기간"
-          value={`${monthsLeft(plan.end_date)}개월`}
-          sub={plan.period_type === "MONTH" ? "월 단위 회고" : "분기 단위 회고"}
-        />
-      </div>
+      <AsyncState loading={loading} error={error} onRetry={reload}>
+        {cascade && (
+          <>
+            <MetricRow>
+              <MetricCard
+                label="연투자계획"
+                value={counts.annual}
+                unit="건"
+                hint={`${isoDate(cascade.as_of)} 기준`}
+              />
+              <MetricCard
+                label="주계획 연결"
+                value={counts.weekly_attached}
+                unit={` / ${counts.weekly_total}`}
+                hint="월계획 아래로 이어진 주계획"
+              />
+              <MetricCard
+                label="끊긴 주계획"
+                value={counts.weekly_orphan}
+                unit="건"
+                hint="상위 논리 없이 뜬 계획"
+                tone={counts.weekly_orphan > 0 ? "warning" : "success"}
+              />
+            </MetricRow>
 
-      <div className="card plan-chart">
-        <TimelineChart data={timeline} />
-      </div>
-
-      <div className="section-head">
-        <h2>시나리오</h2>
-        <span className="meta">가정을 바꾸면 예상선이 새로 쌓입니다</span>
-      </div>
-
-      <div className="scenario-grid">
-        {scenarios.map((s) => {
-          const d = draft[s.scenario_id] || {};
-          const rate = d.expected_return_rate ?? s.expected_return_rate;
-          const contrib = d.contribution_amount ?? s.contribution_amount;
-          const dirty = Boolean(draft[s.scenario_id]);
-          return (
-            <div key={s.scenario_id} className={`scenario ${s.is_primary ? "is-primary" : ""}`}>
-              <div className="scenario-head">
-                <span className="scenario-label">{s.label}</span>
-                {s.is_primary && <span className="pill is-accent">기준</span>}
-              </div>
-
-              <label className="field">
-                <span>연 기대수익률</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={rate ?? ""}
-                  onChange={(e) =>
-                    onDraft(s.scenario_id, "expected_return_rate", Number(e.target.value))
-                  }
-                />
-                <em className="num">{percent(rate, 1)}</em>
-              </label>
-
-              <label className="field">
-                <span>월 적립 가정액</span>
-                <input
-                  type="number"
-                  step="100000"
-                  value={contrib ?? ""}
-                  onChange={(e) =>
-                    onDraft(s.scenario_id, "contribution_amount", Number(e.target.value))
-                  }
-                />
-                <em className="num">{manwon(contrib)}</em>
-              </label>
-
-              <button
-                className="btn is-block"
-                disabled={!dirty}
-                onClick={() => reproject(s)}
-              >
-                예상 다시 세우기
-              </button>
-            </div>
-          );
-        })}
-      </div>
+            <Panel
+              title="계획 계층"
+              meta={isoDate(cascade.as_of)}
+              note="연·분기·월은 FK 로 이어지지만, 주계획은 종목에 직접 붙는다. 월계획이 종목을 가리키지 않으면 그 아래로 계층이 이어지지 않는다."
+            >
+              <CascadeTree tree={cascade.tree} orphans={cascade.orphan_weekly_plans} />
+            </Panel>
+          </>
+        )}
+      </AsyncState>
     </div>
-  );
-}
-
-function monthsLeft(endDate) {
-  if (!endDate) return 0;
-  const end = new Date(endDate);
-  const now = new Date();
-  return Math.max(
-    0,
-    (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth())
   );
 }

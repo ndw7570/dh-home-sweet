@@ -2,9 +2,9 @@
 // 항상 `results`를 반환한다. 실패 시 Error(throw).
 // namssi-jikjehak/frontend/src/api/client.js 와 동일 정책 — base 경로만 다르다.
 
-const DEFAULT_BASE = "/api/planner";
+const DEFAULT_BASE = "/api/trading";
 const API_BASE = import.meta.env.VITE_API_BASE || DEFAULT_BASE;
-const TOKEN_KEY = "planner_token";
+const TOKEN_KEY = "trading_token";
 
 function buildUrl(path, params) {
   const isAbsolute = path.startsWith("http") || path.startsWith("/api/");

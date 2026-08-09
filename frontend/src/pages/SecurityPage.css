@@ -1,0 +1,31 @@
+.sp .mc-row {
+  margin-bottom: 16px;
+}
+
+.sp-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sp-symbol {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sp-dday {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sp-dday.is-near {
+  color: var(--warning);
+  font-weight: 500;
+}
+
+.sp-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}

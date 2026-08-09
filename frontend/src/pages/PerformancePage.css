@@ -1,0 +1,72 @@
+.pf-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
+.pf-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pf-controls input,
+.pf-controls select {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  color: var(--text-primary);
+}
+
+.pf .mc-row {
+  margin-bottom: 16px;
+}
+
+.pf-costs {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pf-costs li {
+  display: grid;
+  grid-template-columns: 90px 1fr 110px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.pf-cost-label {
+  color: var(--text-secondary);
+}
+
+.pf-cost-bar {
+  height: 8px;
+  background: var(--surface-sunken);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pf-cost-fill {
+  display: block;
+  height: 100%;
+  background: var(--series-scenario);
+  border-radius: 4px;
+}
+
+.pf-cost-value {
+  text-align: right;
+  color: var(--text-secondary);
+}

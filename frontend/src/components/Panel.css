@@ -1,0 +1,54 @@
+.panel {
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.panel.is-danger {
+  border-color: #f0c2b4;
+  background: #fffaf8;
+}
+.panel.is-warning {
+  border-color: #f0dcb4;
+  background: #fffdf7;
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.panel-head-left h2 {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.panel-note {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 62ch;
+}
+
+.panel-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.panel-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.panel-body > * + * {
+  margin-top: 12px;
+}

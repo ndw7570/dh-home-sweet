@@ -1,0 +1,48 @@
+.dt-scroll {
+  overflow-x: auto;
+}
+
+.dt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.dt th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.dt td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.dt tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dt tbody tr.is-clickable {
+  cursor: pointer;
+}
+.dt tbody tr.is-clickable:hover {
+  background: var(--surface-sunken);
+}
+
+.dt-empty {
+  padding: 24px 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.dt .pos {
+  color: var(--success);
+}
+.dt .neg {
+  color: #b3261e;
+}

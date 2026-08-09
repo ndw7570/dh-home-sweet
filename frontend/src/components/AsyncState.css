@@ -1,0 +1,32 @@
+.as {
+  padding: 32px 4px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.as-error {
+  padding: 20px;
+  background: #fdecec;
+  border: 1px solid #f3d0cd;
+  border-radius: var(--radius-card);
+  color: #b3261e;
+}
+
+.as-error-msg {
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.as-error-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.as-error code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface-sunken);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
