@@ -1,0 +1,49 @@
+.scard {
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 20px;
+}
+
+.scard.is-accent {
+  border: 2px solid var(--accent);
+}
+
+.scard-badge {
+  margin-bottom: 10px;
+}
+
+.scard-eyebrow {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.scard-value {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.scard-headline {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.scard-caption {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.scard-caption.tone-success {
+  color: var(--success);
+}
+.scard-caption.tone-warning {
+  color: var(--warning);
+}
+
+.scard-action {
+  margin-top: 14px;
+}

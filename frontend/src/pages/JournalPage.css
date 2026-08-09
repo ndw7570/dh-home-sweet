@@ -1,0 +1,68 @@
+.journal-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.chip {
+  border: 1px solid var(--line-strong);
+  background: var(--surface-card);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.chip:hover {
+  background: var(--surface-sunken);
+}
+
+.chip.is-on {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: #fff;
+}
+
+.chip.is-warning {
+  color: var(--warning);
+  border-color: #f0d9ab;
+  background: var(--warning-bg);
+}
+
+.chip.is-warning.is-on {
+  background: var(--warning);
+  border-color: var(--warning);
+  color: #fff;
+}
+
+.journal-list {
+  padding: 4px 16px;
+}
+
+.journal-list .jrow:last-child {
+  border-bottom: none;
+}
+
+.journal-empty {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.journal-nudge {
+  font-size: 13px;
+  color: var(--warning);
+  background: var(--warning-bg);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.journal-empty-cta {
+  display: block;
+  margin: 14px auto 0;
+  padding: 8px 16px;
+  font-size: 13px;
+}

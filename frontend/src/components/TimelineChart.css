@@ -1,0 +1,116 @@
+.timeline {
+  width: 100%;
+}
+
+.timeline-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.tl-axis {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.tl-today {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.tl-today-label {
+  fill: var(--text-secondary);
+  font-size: 11px;
+  font-family: var(--sans);
+}
+
+.tl-actual {
+  fill: none;
+  stroke: var(--series-actual);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 지우지 않고 남기는 과거 예상선. 존재감은 낮추되 지우지는 않는다. */
+.tl-past {
+  fill: none;
+  stroke: var(--series-past);
+  stroke-width: 1.4;
+  stroke-dasharray: 6 4;
+  opacity: 0.75;
+}
+
+.tl-scenario {
+  fill: none;
+  stroke: var(--series-scenario);
+  stroke-width: 1.4;
+  stroke-dasharray: 2 4;
+  opacity: 0.7;
+}
+
+.tl-scenario.is-base {
+  stroke-width: 2.2;
+  opacity: 1;
+}
+
+.tl-scenario-label {
+  fill: var(--text-secondary);
+  font-size: 11px;
+  font-family: var(--sans);
+}
+
+.tl-mark {
+  fill: var(--series-actual);
+  cursor: pointer;
+  transition: r 0.12s;
+}
+
+.timeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  list-style: none;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.timeline-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lg-line {
+  width: 16px;
+  height: 0;
+  border-top-width: 2px;
+  border-top-style: solid;
+}
+.lg-line.is-actual {
+  border-color: var(--series-actual);
+}
+.lg-line.is-past {
+  border-top-style: dashed;
+  border-color: var(--series-past);
+}
+.lg-line.is-scenario {
+  border-top-style: dotted;
+  border-color: var(--series-scenario);
+}
+.lg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--series-actual);
+}
+
+.timeline-empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
