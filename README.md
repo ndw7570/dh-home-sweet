@@ -74,7 +74,7 @@ psql -U postgres -d trading_discipline -c "CREATE SCHEMA IF NOT EXISTS trading_d
 
 python manage.py migrate
 python manage.py seed_demo      # 데모 데이터 (계층이 끊긴 케이스도 같이 들어간다)
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8000   # dev. 운영은 5071(nginx/게이트웨이 뒤).
 ```
 
 (a)↔(b) 를 오갈 때 데이터는 넘어가지 않는다. 테이블명이 다르기 때문이다.
@@ -83,12 +83,12 @@ python manage.py runserver 0.0.0.0:8000
 ### 2. 프론트
 
 ```bash
-cd frontend && npm install && npm run dev      # http://localhost:5353
+cd frontend && npm install && npm run dev      # http://localhost:9070
 ```
 
 `.env.development` 의 `VITE_USE_MOCK` 이 스위치다.
 
-- `0` (기본) — 위 백엔드를 실제로 호출한다. `/api` 는 vite 프록시가 `:8000` 으로 넘긴다.
+- `0` (기본) — 위 백엔드를 실제로 호출한다. `/api` 는 vite 프록시가 `:8000` 로 넘긴다.
 - `1` — 백엔드를 아예 안 부르고 `src/data/mock.js` 로 뜬다. 백엔드 없이 화면만 볼 때.
 
 목 데이터는 실제 백엔드 응답을 떠서 만든 것이라 필드 모양이 API 와 정확히 같다.

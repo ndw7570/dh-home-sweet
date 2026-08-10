@@ -187,7 +187,7 @@ STRICT_QUERY_PARAMS = _bool("STRICT_QUERY_PARAMS", True)
 # ─────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = _list(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:5353,http://127.0.0.1:5353",
+    "http://localhost:9070,http://127.0.0.1:9070",
 )
 CORS_ALLOW_CREDENTIALS = False
 

@@ -9,9 +9,9 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       host: "0.0.0.0",
-      port: 5353,
+      port: 9070,
       proxy: { "/api": { target, changeOrigin: true } },
     },
-    preview: { host: "0.0.0.0", port: 5353 },
+    preview: { host: "0.0.0.0", port: 9070 },
   };
 });
