@@ -5,3 +5,13 @@ django-cors-headers==4.4.0
 drf-spectacular==0.27.2
 psycopg[binary]==3.2.1
 python-dotenv==1.0.1
+
+# ── 워크스트림 B: 실시간 시세 수집·주문 (docs/kis-stack-plan.md) ──
+# 지금 phase 1 에서는 뼈대만 세운다. 실제 KIS 연동·주문 로직은 이후 phase 에서.
+celery==5.4.0
+redis==5.0.8
+channels==4.1.0
+channels-redis==4.2.0
+daphne==4.1.2
+django-celery-beat==2.7.0
+websockets==13.0.1

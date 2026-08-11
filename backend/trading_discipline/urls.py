@@ -23,8 +23,8 @@ from trading_discipline.views.planning import (
 )
 from trading_discipline.views.portfolio import (
     BrokerAccountViewSet,
+    DailySecurityPriceDataViewSet,
     SecuritiesLoanViewSet,
-    SecurityPriceDataViewSet,
     SecurityViewSet,
 )
 from trading_discipline.views.principle import (
@@ -42,7 +42,7 @@ router = DefaultRouter()
 router.register(r"broker-account", BrokerAccountViewSet)
 router.register(r"security", SecurityViewSet)
 router.register(r"securities-loan", SecuritiesLoanViewSet)
-router.register(r"security-price-data", SecurityPriceDataViewSet)
+router.register(r"security-price-data", DailySecurityPriceDataViewSet)
 
 # planning — 연 → 분기 → 월 → 주 → 일
 router.register(r"annual-plan", AnnualPlanViewSet)

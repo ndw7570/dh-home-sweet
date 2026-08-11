@@ -24,9 +24,9 @@ from trading_discipline.models.planning import (
 )
 from trading_discipline.models.portfolio import (
     BrokerAccount,
+    DailySecurityPriceData,
     SecuritiesLoan,
     Security,
-    SecurityPriceData,
 )
 from trading_discipline.models.principle import (
     InvestmentPrinciple,
@@ -42,7 +42,7 @@ __all__ = [
     "BrokerAccount",
     "Security",
     "SecuritiesLoan",
-    "SecurityPriceData",
+    "DailySecurityPriceData",
     # planning
     "AnnualInvestmentPlan",
     "QuarterlyInvestmentPlan",

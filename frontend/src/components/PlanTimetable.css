@@ -1,0 +1,347 @@
+.tt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── 툴바 (범례 + 연도 선택) ──────────────────── */
+.tt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tt-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.tt-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tt-legend-swatch {
+  display: inline-block;
+  width: 22px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--line-strong);
+}
+.tt-legend-swatch.is-related {
+  background: var(--accent-bg);
+  border-color: #cfe0f8;
+}
+.tt-legend-swatch.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.tt-legend-swatch.is-hasplans {
+  background: var(--surface-card);
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.tt-year-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.tt-year-picker select {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  color: var(--text-primary);
+}
+
+/* ── 그리드 (5행) ────────────────────────────── */
+.tt-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-card);
+}
+
+.tt-grid {
+  display: flex;
+  flex-direction: column;
+  min-width: max-content;
+}
+
+.tt-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--line);
+  min-height: 52px;
+}
+.tt-row:last-child {
+  border-bottom: 0;
+}
+
+.tt-row-label {
+  flex: 0 0 84px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--line);
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.tt-row-cells {
+  display: flex;
+  gap: 3px;
+  padding: 6px 4px;
+  align-items: stretch;
+}
+
+/* ── 셀 ─────────────────────────────────────── */
+.tt-cell {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  padding: 4px 6px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s,
+    color 0.12s;
+  min-height: 40px;
+}
+.tt-cell:hover {
+  border-color: var(--line-strong);
+}
+
+.tt-cell-label {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.tt-cell-sub {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-top: 1px;
+}
+
+/* 계획이 걸린 셀 — 테두리를 강조. 뱃지는 우상단. */
+.tt-cell.has-plans {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+.tt-cell-count {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 999px;
+  min-width: 14px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* 호버/선택 계층 공통 하이라이트 */
+.tt-cell.is-related {
+  background: var(--accent-bg);
+  border-color: #cfe0f8;
+  color: #1b4f9c;
+}
+.tt-cell.is-related.has-plans {
+  border-color: var(--accent);
+}
+
+.tt-cell.is-selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.tt-cell.is-selected .tt-cell-count {
+  background: #fff;
+  color: var(--accent);
+}
+
+/* 일(day) 행은 셀이 좁아서 폰트 축소 */
+.tt-cell-DAY {
+  padding: 4px 2px;
+  font-size: 11px;
+  min-height: 36px;
+}
+.tt-cell-DAY .tt-cell-sub {
+  font-size: 9px;
+}
+.tt-cell-DAY .tt-cell-count {
+  padding: 1px 3px;
+  font-size: 8px;
+  min-width: 10px;
+}
+
+/* 주(week) 행도 살짝 축소 */
+.tt-cell-WEEK {
+  font-size: 11px;
+}
+
+/* 연 셀은 크게 */
+.tt-cell-YEAR {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ── 상세 패널 ──────────────────────────────── */
+.tt-hint {
+  padding: 12px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.tt-detail {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  padding: 14px 16px;
+}
+
+.tt-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tt-detail-badge {
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.tt-detail-title {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.tt-detail-range {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.tt-detail-days {
+  color: var(--text-muted);
+}
+.tt-detail-close {
+  margin-left: auto;
+}
+
+.tt-detail-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.tt-detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tt-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-page);
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.tt-detail-lv {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  min-width: 32px;
+  text-align: center;
+}
+.tt-lv-YEAR {
+  background: #1d3a6b;
+}
+.tt-lv-QUARTER {
+  background: #2e5aa0;
+}
+.tt-lv-MONTH {
+  background: #4278c8;
+}
+.tt-lv-WEEK {
+  background: #6b9be0;
+}
+.tt-lv-DAY {
+  background: #94baee;
+  color: #12335c;
+}
+
+.tt-detail-name {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+.tt-detail-name:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.tt-detail-sec {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tt-detail-when {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.tt-detail-flag {
+  font-size: 11px;
+  color: var(--warning);
+}

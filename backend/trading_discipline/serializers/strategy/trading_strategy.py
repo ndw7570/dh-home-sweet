@@ -2,13 +2,13 @@ from rest_framework import serializers
 
 from trading_discipline.models import TradingStrategy
 from trading_discipline.serializers._base import DomainSerializer
-from trading_discipline.serializers.portfolio.security_price_data import (
-    SecurityPriceDataParentSerializer,
+from trading_discipline.serializers.portfolio.daily_security_price_data import (
+    DailySecurityPriceDataParentSerializer,
 )
 
 
 class TradingStrategyListSerializer(DomainSerializer):
-    price_data_detail = SecurityPriceDataParentSerializer(source="price_data", read_only=True)
+    price_data_detail = DailySecurityPriceDataParentSerializer(source="price_data", read_only=True)
     method_count = serializers.SerializerMethodField()
 
     class Meta:

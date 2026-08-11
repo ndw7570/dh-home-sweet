@@ -11,7 +11,7 @@
 from datetime import date, timedelta
 
 from trading_discipline.constants.choices import ActionType, MarketTrend, OrderSide
-from trading_discipline.models import MonthlyInvestmentPrinciple, Order, WeeklyInvestmentPlan
+from trading_discipline.models import Order, WeeklyInvestmentPlan
 from trading_discipline.services._common import labels, num, today
 
 #: 예상가를 이만큼 넘겨 사면 표시한다(%).
@@ -29,18 +29,11 @@ def _plans_covering(security_id: int, on: date) -> list[WeeklyInvestmentPlan]:
 def _is_grounded(plan: WeeklyInvestmentPlan) -> bool:
     """이 주계획이 위 계층(월계획)에 실제로 매달려 있는가.
 
-    주계획은 종목에만 FK 로 붙기 때문에, 월계획과 무관하게 혼자 만들어질 수 있다.
-    그렇게 뜬 주계획은 '계획을 세웠다' 는 알리바이만 주고 상위 논리와는 무관하다.
-    월투자원칙이 같은 종목을 가리키고 기간까지 겹칠 때만 근거가 있다고 본다.
+    v0.0.2 부터 `weekly_investment_plan.monthly_plan_id` FK 가 존재한다.
+    시리얼라이저에서 필수로 강제하지만, DDL 은 여전히 NULLABLE 이므로 방어적으로
+    확인한다(예: DB 에 직접 꽂은 데이터).
     """
-    if not plan.security_id:
-        return False
-    return MonthlyInvestmentPrinciple.objects.filter(
-        security_id=plan.security_id,
-        monthly_plan__valid_from__lte=plan.valid_until,
-        monthly_plan__valid_until__gte=plan.valid_from,
-        monthly_plan__is_deleted=False,
-    ).exists()
+    return plan.monthly_plan_id is not None
 
 
 def _flags_for(order: Order, plans: list[WeeklyInvestmentPlan]) -> list[dict]:
@@ -61,7 +54,7 @@ def _flags_for(order: Order, plans: list[WeeklyInvestmentPlan]) -> list[dict]:
             {
                 "code": "UNGROUNDED_PLAN",
                 "severity": "HIGH",
-                "message": "주계획은 있지만 어느 월계획에도 매달려 있지 않다. "
+                "message": "주계획은 있지만 월계획에 매달려 있지 않다(monthly_plan_id 가 비어 있다). "
                 "상위 논리 없이 세운 계획이라 사실상 계획 밖의 매매다.",
             }
         )

@@ -171,11 +171,20 @@ export const MONTHLY_PLAN_FIELDS = [
 
 export const WEEKLY_PLAN_FIELDS = [
   {
+    name: "monthly_plan",
+    label: "월계획",
+    type: "ref",
+    optionsKey: "monthlyPlans",
+    required: true,
+    hint: "v0.0.2 부터 주계획은 월계획에 직접 매달린다. DDL 은 NULLABLE 이지만 실질적으로 필수 — 상위 논리 없는 주계획을 만들지 않기 위해서.",
+  },
+  {
     name: "security",
     label: "종목",
     type: "ref",
     optionsKey: "securities",
-    hint: "주계획은 월계획이 아니라 종목에 붙는다(DDL 그대로). 이 종목을 가리키는 월투자원칙이 없으면 계층이 끊긴 계획이 된다.",
+    required: true,
+    hint: "주계획은 반드시 한 종목에 대한 것이다(v0.0.2 부터 NOT NULL).",
   },
   { name: "title", label: "계획명", required: true },
   { name: "scenario_planning", label: "시나리오", type: "choice", choiceKey: "scenario_planning", required: true, default: "BASE", half: true },

@@ -1,23 +1,14 @@
-"""계획 캐스케이드 조립 — 이 프로그램의 시그니처.
+"""계획 캐스케이드 조립.
 
-연 → 분기 → 월 → 주 → 일 다섯 계층을 한 트리로 세운다.
-문제는 계층이 한 번 꺾인다는 것이다.
+연 → 분기 → 월 → 주 → 일 다섯 계층을 하나의 트리로 세운다.
+v0.0.2 부터 주계획이 `monthly_plan_id` FK 로 월계획에 직접 매달리게 되면서,
+계층은 FK 만 따라가면 통째로 그려진다 — 예전처럼 종목+기간 겹침으로 조립할
+필요가 없다.
 
-    annual --FK--> quarterly --FK--> monthly
-                                        |
-                                 monthly_investment_principles (월계획 × 종목)
-                                        |
-                                     Security
-                                        |
-                                    weekly --FK--> daily
-
-월계획과 주계획 사이에는 FK 가 없다. DDL 이 그렇게 생겼다(주계획은 종목에 직접 붙는다).
-그래서 '이 월계획 밑의 주계획'은 **월원칙이 가리키는 종목** + **기간이 겹치는가** 두
-조건으로 찾아 붙인다. 이 조립을 화면마다 다시 하면 규칙이 갈라지므로 여기 한 곳에 둔다.
-
-기간이 안 겹치거나 월원칙이 비어서 어디에도 못 붙은 주계획은 버리지 않고
-`orphan_weekly_plans` 로 따로 내보낸다. 조용히 사라지면 계획을 세워 놓고도
-화면에서 안 보이는 일이 생긴다.
+월계획이 자기 아래 종목에 닿는 통로는 여전히 `monthly_investment_principles` 다.
+월원칙이 하나도 없는 월계획은 '어떤 종목에 대한 것인지' 를 알 수 없어 화면이
+그 자리에 경고를 찍는다. 계층 자체가 끊기는 것은 아니지만(주계획은 여전히
+매달릴 수 있다), 근거가 비어 있다는 사실을 숨기지 않는다.
 """
 
 from datetime import date
@@ -29,7 +20,7 @@ from trading_discipline.models import (
     QuarterlyInvestmentPlan,
     WeeklyInvestmentPlan,
 )
-from trading_discipline.services._common import active_on, labels, num, overlaps, today
+from trading_discipline.services._common import active_on, labels, num, today
 
 
 def _security_brief(security) -> dict | None:
@@ -68,6 +59,7 @@ def _weekly_node(plan: WeeklyInvestmentPlan, dailies: list[DailyInvestmentPlan])
         "level": "WEEK",
         "title": plan.title,
         "security": _security_brief(plan.security),
+        "monthly_plan_id": plan.monthly_plan_id,
         "scenario_planning": plan.scenario_planning,
         "predicted_trend": plan.predicted_trend,
         "confidence_score": plan.confidence_score,
@@ -96,7 +88,8 @@ def _monthly_node(plan: MonthlyInvestmentPlan, weekly_nodes: list[dict], securit
         "valid_from": plan.valid_from,
         "valid_until": plan.valid_until,
         **labels(plan, "scenario_planning", "predicted_trend"),
-        # 월계획이 종목에 닿는 통로. 비어 있으면 아래로 계층이 이어지지 않는다.
+        # 월계획이 종목에 닿는 통로. 비어 있으면 근거가 비어 있다는 경고만 뜨고
+        # 계층 자체는 끊기지 않는다(주계획은 여전히 FK 로 매달릴 수 있다).
         "securities": [_security_brief(s) for s in securities],
         "children": weekly_nodes,
     }
@@ -171,21 +164,8 @@ def build_cascade(
         annual_qs = annual_qs.filter(active_on(on=on))
     annual_plans = list(annual_qs.order_by("-valid_from"))
 
-    # 주계획은 종목으로 붙일 것이라 한 번에 다 읽어 종목별로 쌓아 둔다.
-    weekly_qs = WeeklyInvestmentPlan.objects.select_related("security").prefetch_related(
-        "daily_plans"
-    )
-    if only_active:
-        weekly_qs = weekly_qs.filter(active_on(on=on))
-    weekly_plans = list(weekly_qs.order_by("-valid_from"))
-
-    weekly_by_security: dict[int, list[WeeklyInvestmentPlan]] = {}
-    for wp in weekly_plans:
-        if wp.security_id:
-            weekly_by_security.setdefault(wp.security_id, []).append(wp)
-
-    attached_weekly_ids: set[int] = set()
     tree = []
+    weekly_total = 0
 
     for annual in annual_plans:
         quarterly_qs = annual.quarterly_plans.filter(is_deleted=False)
@@ -195,7 +175,9 @@ def build_cascade(
 
         for quarterly in quarterly_qs.order_by("valid_from"):
             monthly_qs = quarterly.monthly_plans.filter(is_deleted=False).prefetch_related(
-                "principles__security"
+                "principles__security",
+                "weekly_plans__security",
+                "weekly_plans__daily_plans",
             )
             if only_active:
                 monthly_qs = monthly_qs.filter(active_on(on=on))
@@ -207,21 +189,20 @@ def build_cascade(
                     for p in monthly.principles.all()
                     if not p.is_deleted and p.security_id
                 ]
+
+                weekly_plans = [w for w in monthly.weekly_plans.all() if not w.is_deleted]
+                if only_active:
+                    weekly_plans = [w for w in weekly_plans if w.is_active_on(on)]
+                weekly_plans.sort(key=lambda w: w.valid_from)
+                weekly_total += len(weekly_plans)
+
                 weekly_nodes = []
-                for security in securities:
-                    for wp in weekly_by_security.get(security.id, []):
-                        # 월계획 기간과 겹치는 주계획만 이 월계획 밑으로 붙인다.
-                        if not (
-                            wp.valid_from <= monthly.valid_until
-                            and wp.valid_until >= monthly.valid_from
-                        ):
-                            continue
-                        attached_weekly_ids.add(wp.id)
-                        dailies = [d for d in wp.daily_plans.all() if not d.is_deleted]
-                        if only_active:
-                            dailies = [d for d in dailies if d.is_active_on(on)]
-                        dailies.sort(key=lambda d: d.valid_from)
-                        weekly_nodes.append(_weekly_node(wp, dailies))
+                for wp in weekly_plans:
+                    dailies = [d for d in wp.daily_plans.all() if not d.is_deleted]
+                    if only_active:
+                        dailies = [d for d in dailies if d.is_active_on(on)]
+                    dailies.sort(key=lambda d: d.valid_from)
+                    weekly_nodes.append(_weekly_node(wp, dailies))
 
                 monthly_nodes.append(_monthly_node(monthly, weekly_nodes, securities))
 
@@ -229,35 +210,14 @@ def build_cascade(
 
         tree.append(_annual_node(annual, quarterly_nodes))
 
-    orphans = [
-        {
-            "id": wp.id,
-            "title": wp.title,
-            "security": _security_brief(wp.security),
-            "valid_from": wp.valid_from,
-            "valid_until": wp.valid_until,
-            "reason": (
-                "종목이 지정되지 않았다"
-                if not wp.security_id
-                else "이 종목을 가리키는 월투자원칙이 없거나 기간이 겹치지 않는다"
-            ),
-        }
-        for wp in weekly_plans
-        if wp.id not in attached_weekly_ids
-    ]
-
     return {
         "as_of": on,
         "account_id": account_id,
         "only_active": only_active,
         "tree": tree,
-        # 어느 월계획에도 못 붙은 주계획. 계층이 끊긴 지점을 화면이 그대로 보여 준다.
-        "orphan_weekly_plans": orphans,
         "counts": {
             "annual": len(tree),
-            "weekly_total": len(weekly_plans),
-            "weekly_attached": len(attached_weekly_ids),
-            "weekly_orphan": len(orphans),
+            "weekly_total": weekly_total,
         },
     }
 
@@ -272,6 +232,7 @@ def plans_for_security(security_id: int, on: date | None = None) -> dict:
     weekly = list(
         WeeklyInvestmentPlan.objects.filter(security_id=security_id)
         .filter(active_on(on=on))
+        .select_related("monthly_plan__quarterly_plan__annual_plan")
         .prefetch_related("daily_plans")
         .order_by("-valid_from")
     )
@@ -306,6 +267,7 @@ def plans_for_security(security_id: int, on: date | None = None) -> dict:
             {
                 "id": w.id,
                 "title": w.title,
+                "monthly_plan_id": w.monthly_plan_id,
                 "predicted_price": num(w.predicted_price),
                 "stop_loss_price": num(w.stop_loss_price),
                 "valid_from": w.valid_from,
@@ -317,8 +279,3 @@ def plans_for_security(security_id: int, on: date | None = None) -> dict:
             for w in weekly
         ],
     }
-
-
-def overlapping_monthly_plans(start: date, end: date):
-    """기간이 겹치는 월계획 — 캐스케이드 밖에서도 쓰라고 열어 둔다."""
-    return MonthlyInvestmentPlan.objects.filter(overlaps(start, end))

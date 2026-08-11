@@ -1,0 +1,256 @@
+.pc {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pc-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ── 종목별 수익률 vs 벤치마크 ─────────────────────── */
+.pc-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pc-bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 160px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.pc-bar-label strong {
+  font-weight: 600;
+}
+.pc-bar-sym {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.pc-bar-axis {
+  position: relative;
+  height: 26px;
+  background: var(--surface-sunken);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pc-bar-mid {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-strong);
+  z-index: 1;
+}
+
+.pc-bar-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transition: width 0.2s;
+}
+.pc-bar-return {
+  height: 12px;
+  top: 2px;
+}
+.pc-bar-return.is-pos {
+  background: var(--success);
+}
+.pc-bar-return.is-neg {
+  background: #d64545;
+}
+.pc-bar-bench {
+  height: 10px;
+  top: 14px;
+  opacity: 0.75;
+}
+.pc-bar-bench.is-pos {
+  background: #6db296;
+}
+.pc-bar-bench.is-neg {
+  background: #c98a8a;
+}
+
+.pc-bar-nums {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 13px;
+}
+.pc-bar-nums .pos {
+  color: var(--success);
+  font-weight: 600;
+}
+.pc-bar-nums .neg {
+  color: #b3261e;
+  font-weight: 600;
+}
+.pc-bar-vs {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.pc-bar-bm {
+  color: var(--text-secondary);
+}
+
+.pc-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.pc-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pc-legend-swatch {
+  position: static;
+  display: inline-block;
+  width: 18px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* ── 계획가 대비 체결가 ────────────────────────────── */
+.pc-orders {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pc-order {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-card);
+}
+.pc-order.is-flagged {
+  background: var(--warning-bg);
+  border-color: #f0d29a;
+}
+
+.pc-order-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.pc-side {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+.pc-side.is-buy {
+  background: var(--accent);
+}
+.pc-side.is-sell {
+  background: #d64545;
+}
+
+.pc-order-sym {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.pc-order-plan {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-left: auto;
+}
+.pc-order-noplan {
+  color: var(--warning);
+  font-style: normal;
+}
+
+.pc-price-track {
+  position: relative;
+  height: 40px;
+  margin: 4px 24px 4px 30px;
+}
+.pc-price-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20px;
+  height: 2px;
+  background: var(--line-strong);
+  border-radius: 2px;
+}
+.pc-price-tick {
+  position: absolute;
+  top: 12px;
+  width: 2px;
+  height: 18px;
+  background: var(--text-secondary);
+  transform: translateX(-1px);
+}
+.pc-price-cap {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  background: var(--surface-card);
+  padding: 0 3px;
+}
+.pc-price-tick.is-stop {
+  background: #b3261e;
+}
+.pc-price-tick.is-stop .pc-price-cap {
+  color: #b3261e;
+}
+.pc-price-tick.is-target {
+  background: var(--success);
+}
+.pc-price-tick.is-target .pc-price-cap {
+  color: var(--success);
+}
+.pc-price-tick.is-filled {
+  background: var(--accent);
+  width: 3px;
+  height: 22px;
+  top: 10px;
+}
+.pc-price-tick.is-filled .pc-price-cap {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.pc-order-flags {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pc-order-flag {
+  font-size: 12px;
+  color: var(--warning);
+}
+.pc-order-flag.is-high {
+  color: #b3261e;
+}

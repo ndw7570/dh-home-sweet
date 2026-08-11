@@ -7,11 +7,12 @@ import "./CascadeTree.css";
 /**
  * 계획 5계층 트리 — 이 화면의 주인공.
  *
- * 연 → 분기 → 월 → 주 → 일. 왼쪽 세로선이 계층의 깊이를 나타내고,
- * 각 노드는 '무엇을 하기로 했는가' 한 줄과 근거(thesis)를 갖는다.
+ * 연 → 분기 → 월 → 주 → 일. v0.0.2 부터 다섯 계층이 FK 로 곧게 이어진다.
+ * 왼쪽 세로선이 계층의 깊이를 나타내고, 각 노드는 '무엇을 하기로 했는가'
+ * 한 줄과 근거(thesis)를 갖는다.
  *
- * 중요한 것은 **끊긴 자리를 숨기지 않는 것**이다.
- *   - 월계획에 종목이 안 달려 있으면 그 자리에 경고를 찍는다(아래로 안 이어짐)
+ * 중요한 것은 **근거가 빈 자리를 숨기지 않는 것**이다.
+ *   - 월계획에 월원칙이 없어 종목에 안 닿으면 그 자리에 경고를 찍는다
  *   - 분기계획의 네 전략 문장 중 빈 것을 표시한다
  * 계획이 있는 것처럼 보이는데 실은 비어 있는 상태가 가장 위험하다.
  */
@@ -164,7 +165,7 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
   );
 }
 
-export default function CascadeTree({ tree, orphans, onEdit, onAddChild }) {
+export default function CascadeTree({ tree, onEdit, onAddChild }) {
   if (!tree?.length) {
     return (
       <p className="ct-empty">
@@ -187,39 +188,6 @@ export default function CascadeTree({ tree, orphans, onEdit, onAddChild }) {
           />
         ))}
       </ul>
-
-      {orphans?.length > 0 && (
-        <div className="ct-orphans">
-          <h3>어느 월계획에도 붙지 않은 주계획 {orphans.length}건</h3>
-          <p className="ct-orphans-why">
-            주계획은 종목에만 매달리기 때문에 상위 논리 없이도 만들어진다. 여기 있는 것들은
-            계획을 세웠다는 알리바이만 있고 연·분기·월의 논리와는 연결돼 있지 않다.
-          </p>
-          <ul>
-            {orphans.map((o) => (
-              <li key={o.id}>
-                <strong>{o.title}</strong>
-                {o.security && (
-                  <span className="ct-sec">
-                    {" "}
-                    {o.security.name} <span className="num">{o.security.symbol}</span>
-                  </span>
-                )}
-                <span className="ct-orphan-reason"> — {o.reason}</span>
-                {onEdit && (
-                  <button
-                    type="button"
-                    className="row-edit ct-orphan-fix"
-                    onClick={() => onEdit({ ...o, level: "WEEK" })}
-                  >
-                    수정
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

@@ -7,7 +7,7 @@ from core.models.common import BaseDomainModel
 class TradingStrategy(BaseDomainModel):
     """매수매도전략 — `trading_strategies`.
 
-    가격데이터(`security_price_data`)를 가리킨다는 점이 중요하다.
+    일별 가격데이터(`daily_security_price_data`)를 가리킨다는 점이 중요하다.
     전략을 '지금 가격 기준' 이 아니라 '그때 그 가격 기준' 으로 못박아 두는 구조라,
     나중에 왜 이 가격대에 분할을 걸었는지 되짚을 수 있다.
     실제 n차 분할표는 `trading_strategy_methods` 에 자식 행으로 들어간다.
@@ -15,7 +15,7 @@ class TradingStrategy(BaseDomainModel):
 
     id = models.AutoField(primary_key=True, db_comment="ID")
     price_data = models.ForeignKey(
-        "trading_discipline.SecurityPriceData",
+        "trading_discipline.DailySecurityPriceData",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

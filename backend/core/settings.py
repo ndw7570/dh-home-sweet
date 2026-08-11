@@ -31,6 +31,8 @@ DEBUG = _bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = _list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0")
 
 INSTALLED_APPS = [
+    # daphne 는 django.contrib.staticfiles 보다 위에 있어야 runserver 를 ASGI 로 교체한다.
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -41,10 +43,17 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "drf_spectacular",
+    "channels",
+    "django_celery_beat",
     # local
     "users.apps.UsersConfig",
     "trading_discipline.apps.TradingDisciplineConfig",
+    "market_data.apps.MarketDataConfig",
+    "market_trading.apps.MarketTradingConfig",
 ]
+
+# Channels 를 껴서 ASGI 로 서브함. daphne 가 실제 서버.
+ASGI_APPLICATION = "core.asgi.application"
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -201,6 +210,39 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# ─────────────────────────────────────────────
+#  Celery — 배치 · 봉 집계 · 리페어 (docs/kis-stack-plan.md 참조)
+# ─────────────────────────────────────────────
+# 브로커·결과 저장소 모두 같은 Redis 인스턴스. 프로덕션에서 부하가 커지면 분리.
+REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL)
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL)
+CELERY_TIMEZONE = TIME_ZONE
+# Beat 를 DB scheduler 로 두면 관리자 화면(django_celery_beat)에서 스케줄을 조정할 수 있다.
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+# 태스크 실패 시 자동 재시도 정책은 태스크별로 결정. 여기서는 직렬화만 못박아 둔다.
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
+# 실시간 시세는 즉시성이 중요하므로 워커 prefetch 를 낮춰 rebalance 지연을 줄인다.
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# ─────────────────────────────────────────────
+#  Channels — 실시간 프론트 전송 (phase 5)
+# ─────────────────────────────────────────────
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [REDIS_URL]},
+    },
+}
+
+# ─────────────────────────────────────────────
+#  KIS 시세 수집기 (phase 3~)
+# ─────────────────────────────────────────────
+# paper | live — 실전 키·계좌 활성화는 phase 6 에서 kill switch 와 함께.
+KIS_ENV = os.getenv("KIS_ENV", "paper")
 
 LOGGING = {
     "version": 1,

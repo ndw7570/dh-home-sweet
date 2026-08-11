@@ -46,6 +46,35 @@
   margin-bottom: 16px;
 }
 
+/* 뷰 탭 — 상단 필터 아래, 실제 컨텐츠 위에 놓인다.
+   Header 의 최상위 탭과 시각적으로 구분되도록 아래 밑줄만 강조하는 스타일. */
+.pp-viewtabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pp-viewtab {
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.pp-viewtab:hover {
+  color: var(--text-primary);
+}
+
+.pp-viewtab.is-on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
 .pp-loading {
   font-size: 13px;
   color: var(--text-muted);

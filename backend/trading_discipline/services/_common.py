@@ -16,11 +16,6 @@ def active_on(field_from: str = "valid_from", field_until: str = "valid_until", 
     return Q(**{f"{field_from}__lte": on, f"{field_until}__gte": on})
 
 
-def overlaps(start: date, end: date, field_from="valid_from", field_until="valid_until") -> Q:
-    """[start, end] 와 조금이라도 겹치는 행."""
-    return Q(**{f"{field_from}__lte": end, f"{field_until}__gte": start})
-
-
 def labels(instance, *fields) -> dict:
     """`{"direction_label": "매수", ...}` — 코드값의 한글 라벨을 뽑는다.
 

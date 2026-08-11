@@ -52,7 +52,7 @@ SECURITIES_LOAN_FILTER_FIELDS = {
     "ratio_below": "collateral_ratio__lte",  # 담보비율 경고선
 }
 
-SECURITY_PRICE_DATA_FILTER_FIELDS = {
+DAILY_SECURITY_PRICE_DATA_FILTER_FIELDS = {
     "security_id": "security_id__exact",
     "price_from": "price_at__gte",
     "price_to": "price_at__lte",
@@ -88,6 +88,7 @@ MONTHLY_PLAN_FILTER_FIELDS = {
 }
 
 WEEKLY_PLAN_FILTER_FIELDS = {
+    "monthly_plan_id": "monthly_plan_id__exact",
     "security_id": "security_id__exact",
     "scenario_planning": "scenario_planning__exact",
     "predicted_trend": "predicted_trend__exact",

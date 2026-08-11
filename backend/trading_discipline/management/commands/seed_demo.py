@@ -3,9 +3,11 @@
     python manage.py seed_demo          # 이미 있으면 아무것도 안 한다
     python manage.py seed_demo --reset  # 지우고 다시 넣는다
 
-계획 5계층이 실제로 이어지는 한 벌(연 1 → 분기 1 → 월 2시나리오 → 주 2 → 일 2)과,
-일부러 **계층이 끊긴 케이스**(월원칙 없는 월계획, 어디에도 안 붙는 주계획)를 같이 넣는다.
-끊긴 자리를 화면이 어떻게 잡아내는지가 이 프로그램의 핵심이라, 시드에도 그 상태가 있어야 한다.
+계획 5계층이 실제로 이어지는 한 벌(연 1 → 분기 1 → 월 2시나리오 → 주 3 → 일 2)과,
+일부러 **월원칙이 비어 있는 월계획**을 같이 넣는다. v0.0.2 부터 주계획은
+`monthly_plan_id` FK 로 월계획에 매달리게 되어(시리얼라이저가 필수로 요구) API 로는
+orphan 이 뜨지 않는다. 다만 '월원칙 없는 월계획' 같은 근거의 공백은 여전히 있고,
+화면이 그 자리에 경고를 찍는다.
 """
 
 from datetime import date, datetime, time, timedelta
@@ -53,9 +55,9 @@ from trading_discipline.models import (
     PrincipleSource,
     QuarterlyInvestmentPlan,
     QuarterlyInvestmentPrinciple,
+    DailySecurityPriceData,
     SecuritiesLoan,
     Security,
-    SecurityPriceData,
     TradingStrategy,
     TradingStrategyMethod,
     WeeklyInvestmentPlan,
@@ -63,7 +65,7 @@ from trading_discipline.models import (
 
 MODELS_IN_DELETE_ORDER = [
     AiDecisionFeedback, AiModelRun, PerformanceRecord, Order,
-    TradingStrategyMethod, TradingStrategy, SecurityPriceData,
+    TradingStrategyMethod, TradingStrategy, DailySecurityPriceData,
     AffectedSecurity, MarketDirection,
     DailyInvestmentPlan, WeeklyInvestmentPlan,
     MonthlyInvestmentPrinciple, MonthlyInvestmentPlan,
@@ -208,7 +210,8 @@ class Command(BaseCommand):
         # monthly_bear 에는 일부러 원칙을 안 붙인다 → '월원칙 없는 월계획' 빈칸 카드
 
         weekly_samsung = WeeklyInvestmentPlan.objects.create(
-            security=samsung, title="삼성전자 이번 주 3분할 1차",
+            monthly_plan=monthly_base, security=samsung,
+            title="삼성전자 이번 주 3분할 1차",
             scenario_planning=ScenarioPlanning.BASE, available_amount=Decimal("3000000.00"),
             predicted_trend=MarketTrend.UP,
             thesis="70,000 지지 확인. 여기서 1차 진입.",
@@ -217,7 +220,8 @@ class Command(BaseCommand):
             predicted_price=Decimal("76000.00"), stop_loss_price=Decimal("68000.00"),
         )
         weekly_hynix = WeeklyInvestmentPlan.objects.create(
-            security=hynix, title="SK하이닉스 관망",
+            monthly_plan=monthly_base, security=hynix,
+            title="SK하이닉스 관망",
             scenario_planning=ScenarioPlanning.BASE, available_amount=Decimal("2000000.00"),
             predicted_trend=MarketTrend.SIDEWAYS,
             thesis="180,000 ~ 195,000 박스. 이탈 확인 전까지 신규 진입 없음.",
@@ -225,11 +229,13 @@ class Command(BaseCommand):
             valid_from=w_from, valid_until=w_until,
             predicted_price=Decimal("196000.00"), stop_loss_price=Decimal("176000.00"),
         )
-        # 어느 월계획에도 안 붙는 주계획 — NAVER 는 월원칙이 없다 → orphan 으로 잡힌다
+        # NAVER 는 월원칙이 없다 — 계층은 이어지지만 근거가 비어 있는 상태.
+        # (v0.0.1 의 '어디에도 안 붙는 주계획' 시나리오가 이걸로 바뀌었다.)
         WeeklyInvestmentPlan.objects.create(
-            security=naver, title="NAVER 단기 반등 노림",
+            monthly_plan=monthly_base, security=naver,
+            title="NAVER 단기 반등 노림",
             scenario_planning=ScenarioPlanning.BULL, predicted_trend=MarketTrend.UP,
-            thesis="낙폭 과대. 다만 월계획에 없는 종목이다.",
+            thesis="낙폭 과대. 월원칙 없이 매달아 둔 계획이라 화면에 경고가 뜬다.",
             confidence_score=2,
             valid_from=w_from, valid_until=w_until,
             predicted_price=Decimal("178000.00"), stop_loss_price=Decimal("155000.00"),
@@ -278,7 +284,7 @@ class Command(BaseCommand):
         AffectedSecurity.objects.create(market_direction=direction, affected_security=hynix)
 
         # ── 가격 · 전략 (n차 분할표) ───────────────────
-        price = SecurityPriceData.objects.create(
+        price = DailySecurityPriceData.objects.create(
             security=samsung, price_at=_at(today, 9, 30),
             high_price=Decimal("72400.00"), low_price=Decimal("70800.00"),
             quote_price=Decimal("71500.00"),
@@ -359,7 +365,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("데모 데이터를 넣었다."))
         self.stdout.write(
-            "  계층이 이어진 한 벌: 연1 → 분기1 → 월2 → 주2 → 일2\n"
-            "  일부러 끊어 둔 것: 손절전략 미기재(분기), 월원칙 없는 월계획(비관),\n"
-            "                     월계획에 없는 주계획(NAVER) → /cascade/ 의 orphan 으로 잡힌다"
+            "  계층이 이어진 한 벌: 연1 → 분기1 → 월2 → 주3 → 일2\n"
+            "  일부러 비워 둔 자리: 손절전략 미기재(분기), 월원칙 없는 월계획(비관),\n"
+            "                     월원칙 없는 종목의 주계획(NAVER) → 화면에 경고로 뜬다"
         )

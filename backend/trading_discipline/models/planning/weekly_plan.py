@@ -9,24 +9,30 @@ from trading_discipline.models.planning._mixins import CONFIDENCE_VALIDATORS, Pl
 class WeeklyInvestmentPlan(PlanPeriodMixin, BaseDomainModel):
     """주투자계획 — `weekly_investment_plan`.
 
-    ⚠ 계층이 여기서 한 번 꺾인다.
-    연→분기→월 은 계획끼리 FK 로 이어지는데, 주계획은 월계획이 아니라 **종목**에 붙는다
-    (FK_securities_TO_weekly_investment_plan). DDL 그대로다.
+    계획 5계층은 이제 연 → 분기 → 월 → **주** → 일 로 FK 로 곧게 이어진다.
+    (v0.0.1 은 주계획이 월계획과 FK 로 이어지지 않고 종목+기간 겹침으로 추정하는
+    구조였다. v0.0.2 에서 `monthly_plan_id` FK 가 붙으면서 그 '꺾이는 계층'이 사라졌다.)
 
-    그래서 '이 주계획이 어느 월계획 밑인가'는 FK 로 못 읽고, 종목과 기간이 겹치는
-    월계획을 찾아 맞춰야 한다. 그 조립은 `services/cascade_service.py` 가 한다.
-
-    `available_amount`(가용금액)가 이 계층에만 있다 — 실제로 돈을 쓰는 단위가 주 단위라는 뜻.
+    `security` 도 필수로 조인다 — 주계획은 반드시 한 종목에 대한 것이어야 한다.
+    `available_amount`(가용금액)가 이 계층에만 있는 것도 같은 이유다: 실제로 돈을
+    쓰는 단위가 주 단위라는 뜻.
     """
 
     PERIOD_LEVEL = "WEEK"
 
     id = models.AutoField(primary_key=True, db_comment="ID")
-    security = models.ForeignKey(
-        "trading_discipline.Security",
+    monthly_plan = models.ForeignKey(
+        "trading_discipline.MonthlyInvestmentPlan",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+        db_column="monthly_plan_id",
+        related_name="weekly_plans",
+        db_comment="월투자계획ID",
+    )
+    security = models.ForeignKey(
+        "trading_discipline.Security",
+        on_delete=models.CASCADE,
         db_column="security_id",
         related_name="weekly_plans",
         db_comment="종목ID",
@@ -65,6 +71,7 @@ class WeeklyInvestmentPlan(PlanPeriodMixin, BaseDomainModel):
         indexes = [
             models.Index(fields=["security", "valid_from"], name="weekly_sec_valid_idx"),
             models.Index(fields=["valid_from", "valid_until"], name="weekly_valid_idx"),
+            models.Index(fields=["monthly_plan", "valid_from"], name="weekly_mplan_valid_idx"),
         ]
 
     def __str__(self):

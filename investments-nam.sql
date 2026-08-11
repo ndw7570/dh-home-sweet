@@ -1541,7 +1541,8 @@ COMMENT ON CONSTRAINT "PK_monthly_investment_principles" ON "trading_discipline_
 CREATE TABLE "trading_discipline_management"."weekly_investment_plan"
 (
 	"id"                SERIAL        NOT NULL, -- ID
-	"security_id"       INTEGER       NULL,     -- 종목ID
+	"monthly_plan_id"   INTEGER       NULL,     -- monthly_plan_id
+	"security_id"       INTEGER       NOT NULL,     -- 종목ID
 	"title"             VARCHAR(200)  NOT NULL, -- 계획명
 	"scenario_planning" VARCHAR(20)   NOT NULL, -- 시나리오계획
 	"available_amount"  NUMERIC(15,2) NULL,     -- 가용금액
@@ -2214,7 +2215,7 @@ ALTER TABLE "trading_discipline_management"."mandatory_principles"
 COMMENT ON CONSTRAINT "PK_mandatory_principles" ON "trading_discipline_management"."mandatory_principles" IS '나의필수원칙 기본키';
 
 -- 가격데이터
-CREATE TABLE "trading_discipline_management"."security_price_data"
+CREATE TABLE "trading_discipline_management"."daily_security_price_data"
 (
 	"id"          INTEGER       NOT NULL, -- ID
 	"security_id" INTEGER       NULL,     -- security_id
@@ -2229,58 +2230,58 @@ CREATE TABLE "trading_discipline_management"."security_price_data"
 );
 
 -- 가격데이터
-COMMENT ON TABLE "trading_discipline_management"."security_price_data" IS '가격데이터';
+COMMENT ON TABLE "trading_discipline_management"."daily_security_price_data" IS '가격데이터';
 
 -- ID
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."id" IS 'ID';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."id" IS 'ID';
 
 -- security_id
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."security_id" IS 'security_id';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."security_id" IS 'security_id';
 
 -- 시각
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."price_at" IS '시각';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."price_at" IS '시각';
 
 -- 고가
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."high_price" IS '고가';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."high_price" IS '고가';
 
 -- 저가
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."low_price" IS '저가';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."low_price" IS '저가';
 
 -- 호가
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."quote_price" IS '호가';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."quote_price" IS '호가';
 
 -- 생성일
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."created_at" IS '생성일';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."created_at" IS '생성일';
 
 -- 수정일
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."updated_at" IS '수정일';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."updated_at" IS '수정일';
 
 -- 비고
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."remarks" IS '비고';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."remarks" IS '비고';
 
 -- 삭제여부
-COMMENT ON COLUMN "trading_discipline_management"."security_price_data"."is_deleted" IS '삭제여부';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."is_deleted" IS '삭제여부';
 
 -- 가격데이터 기본키
-CREATE UNIQUE INDEX "PK_security_price_data"
-	ON "trading_discipline_management"."security_price_data"
+CREATE UNIQUE INDEX "PK_daily_security_price_data"
+	ON "trading_discipline_management"."daily_security_price_data"
 	( -- 가격데이터
 		"id" ASC NULLS LAST -- ID
 	);
 
 -- 가격데이터 기본키
-COMMENT ON INDEX "trading_discipline_management"."PK_security_price_data" IS '가격데이터 기본키';
+COMMENT ON INDEX "trading_discipline_management"."PK_daily_security_price_data" IS '가격데이터 기본키';
 
 -- 가격데이터
-ALTER TABLE "trading_discipline_management"."security_price_data"
-	ADD CONSTRAINT "PK_security_price_data"
+ALTER TABLE "trading_discipline_management"."daily_security_price_data"
+	ADD CONSTRAINT "PK_daily_security_price_data"
 		-- 가격데이터 기본키
 	PRIMARY KEY
-	USING INDEX "PK_security_price_data"
+	USING INDEX "PK_daily_security_price_data"
 	NOT DEFERRABLE;
 
 -- 가격데이터 기본키
-COMMENT ON CONSTRAINT "PK_security_price_data" ON "trading_discipline_management"."security_price_data" IS '가격데이터 기본키';
+COMMENT ON CONSTRAINT "PK_daily_security_price_data" ON "trading_discipline_management"."daily_security_price_data" IS '가격데이터 기본키';
 
 -- 영향종목
 CREATE TABLE "trading_discipline_management"."affected_securities"
@@ -2604,6 +2605,20 @@ ALTER TABLE "trading_discipline_management"."weekly_investment_plan"
 -- 종목 -> 주투자계획
 COMMENT ON CONSTRAINT "FK_securities_TO_weekly_investment_plan" ON "trading_discipline_management"."weekly_investment_plan" IS '종목 -> 주투자계획';
 
+-- monthly_investment_plan -> weekly_investment_plan
+ALTER TABLE "trading_discipline_management"."weekly_investment_plan"
+	ADD CONSTRAINT "FK_monthly_investment_plan_TO_weekly_investment_plan"
+	 -- monthly_investment_plan -> weekly_investment_plan
+		FOREIGN KEY (
+			"monthly_plan_id"
+		)
+		REFERENCES "trading_discipline_management"."monthly_investment_plan" (
+			"id"
+		);
+
+COMMENT ON CONSTRAINT "FK_monthly_investment_plan_TO_weekly_investment_plan" ON "trading_discipline_management"."weekly_investment_plan" IS 'monthly_investment_plan -> weekly_investment_plan';
+
+
 -- 일투자계획
 ALTER TABLE "trading_discipline_management"."daily_investment_plan"
 	ADD CONSTRAINT "FK_weekly_investment_plan_TO_daily_investment_plan"
@@ -2634,21 +2649,21 @@ COMMENT ON CONSTRAINT "FK_quarterly_investment_plan_TO_quarterly_investment_prin
 
 -- 매수매도전략
 ALTER TABLE "trading_discipline_management"."trading_strategies"
-	ADD CONSTRAINT "FK_security_price_data_TO_trading_strategies"
+	ADD CONSTRAINT "FK_daily_security_price_data_TO_trading_strategies"
 	 -- 가격데이터 -> 매수매도전략
 		FOREIGN KEY (
 			"price_data_id" -- 가격데이터ID
 		)
-		REFERENCES "trading_discipline_management"."security_price_data" ( -- 가격데이터
+		REFERENCES "trading_discipline_management"."daily_security_price_data" ( -- 가격데이터
 			"id" -- ID
 		);
 
 -- 가격데이터 -> 매수매도전략
-COMMENT ON CONSTRAINT "FK_security_price_data_TO_trading_strategies" ON "trading_discipline_management"."trading_strategies" IS '가격데이터 -> 매수매도전략';
+COMMENT ON CONSTRAINT "FK_daily_security_price_data_TO_trading_strategies" ON "trading_discipline_management"."trading_strategies" IS '가격데이터 -> 매수매도전략';
 
 -- 가격데이터
-ALTER TABLE "trading_discipline_management"."security_price_data"
-	ADD CONSTRAINT "FK_securities_TO_security_price_data"
+ALTER TABLE "trading_discipline_management"."daily_security_price_data"
+	ADD CONSTRAINT "FK_securities_TO_daily_security_price_data"
 	 -- 종목 -> 가격데이터
 		FOREIGN KEY (
 			"security_id" -- security_id
@@ -2658,7 +2673,7 @@ ALTER TABLE "trading_discipline_management"."security_price_data"
 		);
 
 -- 종목 -> 가격데이터
-COMMENT ON CONSTRAINT "FK_securities_TO_security_price_data" ON "trading_discipline_management"."security_price_data" IS '종목 -> 가격데이터';
+COMMENT ON CONSTRAINT "FK_securities_TO_daily_security_price_data" ON "trading_discipline_management"."daily_security_price_data" IS '종목 -> 가격데이터';
 
 -- 영향종목
 ALTER TABLE "trading_discipline_management"."affected_securities"

@@ -20,7 +20,7 @@ iconv -f CP949 -t UTF-8 investments-nam.sql > investments-nam.utf8.sql
 | `broker_accounts` | `BrokerAccount` | trading_discipline / portfolio |
 | `securities` | `Security` | portfolio |
 | `securities_loans` | `SecuritiesLoan` | portfolio |
-| `security_price_data` | `SecurityPriceData` | portfolio |
+| `daily_security_price_data` | `DailySecurityPriceData` | portfolio |
 | `annual_investment_plan` | `AnnualInvestmentPlan` | planning |
 | `quarterly_investment_plan` | `QuarterlyInvestmentPlan` | planning |
 | `monthly_investment_plan` | `MonthlyInvestmentPlan` | planning |
@@ -64,11 +64,15 @@ iconv -f CP949 -t UTF-8 investments-nam.sql > investments-nam.utf8.sql
 | `monthly_investment_principles` | `security_id` | `securities.id` |
 | `affected_securities` | `affected_security_id` | `securities.id` |
 
+v0.0.2 ERD 는 `FK_securities_TO_weekly_investment_plan` 을 뺐지만, 모델은 그대로 FK 를
+유지한다(위 표에 준하는 판단). `security_id` 는 NOT NULL 이라 참조 무결성이 앱 로직에만
+있으면 종목 삭제 시 주계획이 조용히 고아 상태가 된다.
+
 ### 2-3. PK 타입
 
 DDL 이 형제 테이블끼리 엇갈린다 — `annual`/`weekly`/`daily` 는 `SERIAL` 인데
 `monthly` 는 `INTEGER`, `securities`·`broker_accounts`·`ai_model_runs`·
-`principle_sources`·`market_directions`·`security_price_data` 도 `INTEGER` 다.
+`principle_sources`·`market_directions`·`daily_security_price_data` 도 `INTEGER` 다.
 
 같은 계층 안에서 갈리는 게 의도로 읽히지 않아 **전부 `AutoField`(SERIAL)** 로 통일했다.
 외부에서 ID 를 받아 오는 테이블이 실제로 있다면 알려 주면 되돌린다.
@@ -110,7 +114,7 @@ DDL 은 코드성 컬럼을 전부 `VARCHAR(20)` 으로만 잡고 값을 규정�
 - **`created_at` / `updated_at` 은 SQL 그대로 `DATE`** 로 뒀다.
   같은 날 여러 건이 들어오면 정렬이 흔들린다는 문제가 있는데, SQL 이 기준이라
   바꾸지 않았다. 실제로 시각이 중요한 자리는 SQL 이 이미 `TIMESTAMP` 를 쓰고 있다
-  (`orders.executed_at`, `security_price_data.price_at`, `trading_strategies.reference_at`,
+  (`orders.executed_at`, `daily_security_price_data.price_at`, `trading_strategies.reference_at`,
   `securities_loans.evaluated_at`, `ai_model_runs.started_at/completed_at`).
   audit 컬럼도 `TIMESTAMP` 로 바꾸고 싶으면 `core/models/common.py` 의
   `TimeStampedModel` 한 곳만 고치면 된다.
@@ -119,37 +123,48 @@ DDL 은 코드성 컬럼을 전부 `VARCHAR(20)` 으로만 잡고 값을 규정�
 - **`performance_records.etc_cost` 의 컬럼 코멘트가 `기티비용`** 이다(오타로 보인다).
   화면이 이 코멘트를 라벨로 그대로 쓰므로 DDL 을 고치면 화면도 같이 고쳐진다.
 
-## 3. 계층이 한 번 꺾이는 지점 — 가장 중요한 구조
+## 3. 계층은 이제 FK 로 곧게 이어진다 (v0.0.2)
 
 ```
 broker_accounts
       │
-annual ──FK──> quarterly ──FK──> monthly
-                                    │
-                     monthly_investment_principles  (월계획 × 종목)
-                                    │
-                                Security
-                                    │
-                          weekly ──FK──> daily
+annual ──FK──> quarterly ──FK──> monthly ──FK──> weekly ──FK──> daily
+                                    │                │
+                     monthly_investment_principles   security
+                                (월계획 × 종목)     (주계획도 종목에 직접 붙는다, NOT NULL)
 ```
 
-`weekly_investment_plan` 의 FK 는 `monthly_investment_plan` 이 아니라 **`securities`** 다
-(`FK_securities_TO_weekly_investment_plan`). DDL 그대로다.
+v0.0.2 에서 `weekly_investment_plan.monthly_plan_id` FK 가 붙으면서, 이전 버전이 갖고
+있던 '월 ↔ 주 사이의 꺾임' 은 사라졌다. 캐스케이드 트리는 이 FK 만 따라가면 통째로
+그려진다 — 종목+기간 겹침으로 조립할 필요가 없다.
 
-그래서 '이 월계획 밑의 주계획'은 FK 로 못 읽고, **월원칙이 가리키는 종목 + 기간 겹침**
-두 조건으로 찾아 붙여야 한다. 그 조립은 `services/cascade_service.py` 한 곳에서만 한다.
+`security_id` 도 이번 버전부터 NOT NULL 이다. 주계획은 반드시 하나의 종목에 대한
+것이어야 하며, 종목 없이 뜬 주계획은 스키마 레벨에서 만들어지지 않는다.
 
-이 구조의 실질적 결과:
+### 3-1. `monthly_plan_id` 는 DDL 상 NULLABLE 이지만 실질적으로 필수
 
-- 월계획에 `monthly_investment_principles` 가 하나도 없으면 **거기서 계층이 끊긴다.**
-  홈의 '빈칸' 카드와 계획 화면의 노란 경고가 이걸 잡는다.
-- 주계획은 상위 논리 없이도 혼자 만들어질 수 있다. 어디에도 못 붙은 주계획은
-  `/cascade/` 응답의 `orphan_weekly_plans` 로 따로 나오고, 이행 대조에서는
-  `UNGROUNDED_PLAN` 으로 표시된다.
+ERD 는 `monthly_plan_id` 를 NOT NULL 로 명시하지 않았다(DDL 도 NULLABLE 로 둔다).
+하지만 상위 논리 없이 뜨는 주계획을 만들 이유가 없어서, 시리얼라이저
+(`WeeklyPlanListSerializer.Meta.extra_kwargs`)가 이 필드를 **필수**로 요구한다.
 
-계층을 FK 로 잇고 싶다면 `weekly_investment_plan` 에 `monthly_plan_id` 를 추가하는
-것이 방법이다. 다만 그러면 한 주계획이 여러 시나리오(BASE/BEAR) 월계획에 동시에
-속할 수 없게 되므로, 지금 구조가 의도된 것이라면 그대로 두는 편이 낫다.
+방어선 하나가 더 있다: 이행 대조(`services/execution_service.py`) 는 매매를 받았을 때
+그 주계획의 `monthly_plan_id` 가 비어 있으면 `UNGROUNDED_PLAN` 을 표시한다.
+DB 에 직접 꽂은 데이터가 있어도 화면에서는 잡힌다.
+
+### 3-2. 남아 있는 '끊긴 자리' — 근거의 공백
+
+계층이 이어지는 것과 별개로, **월원칙이 하나도 없는 월계획** 은 여전히 존재할 수 있다
+(월원칙 = `monthly_investment_principles`, 월계획과 종목을 잇는 이음매).
+
+이 상태의 월계획은 아래로 계층은 잇지만 "이 월계획은 어떤 종목에 대한 것인가"의
+답이 비어 있다. `services/cascade_service.py` 는 이 상태를 감추지 않고, 응답의
+`monthly.securities` 를 빈 배열로 그대로 내려 준다. 프론트가 그 자리에 경고를 찍는다.
+
+### 3-3. v0.0.1 에서 뺀 것
+
+`orphan_weekly_plans` 응답 필드는 없앴다 — v0.0.2 에서 시리얼라이저가 FK 를 필수로
+받아 주므로 어디에도 못 붙은 주계획이 API 로 뜨지 않는다.
+`UNGROUNDED_PLAN` 플래그는 위 3-1 처럼 방어선으로 남긴다.
 
 ## 4. 확인이 필요한 것
 

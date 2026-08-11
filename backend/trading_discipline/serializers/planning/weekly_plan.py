@@ -15,6 +15,10 @@ class WeeklyPlanListSerializer(PlanSerializerBase):
     class Meta:
         model = WeeklyInvestmentPlan
         fields = "__all__"
+        # DDL 은 monthly_plan_id 를 NULLABLE 로 두지만, 실제로 상위 논리 없이 뜨는 주계획을
+        # 만들지 않기 위해 시리얼라이저에서 필수로 강제한다. 이행 대조의 UNGROUNDED_PLAN 이
+        # 이 규칙의 방어선 역할을 한다.
+        extra_kwargs = {"monthly_plan": {"required": True, "allow_null": False}}
 
     def get_daily_count(self, obj) -> int:
         return obj.daily_plans.filter(is_deleted=False).count()
@@ -38,6 +42,7 @@ class WeeklyPlanParentSerializer(DomainSerializer):
         fields = (
             "id",
             "title",
+            "monthly_plan",
             "security",
             "scenario_planning",
             "predicted_trend",

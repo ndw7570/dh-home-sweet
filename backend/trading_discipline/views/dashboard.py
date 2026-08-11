@@ -65,8 +65,9 @@ def _bool_param(request, key: str, default: bool) -> bool:
 class CascadeView(APIView):
     """GET /cascade/?on=YYYY-MM-DD&account_id=&only_active=1
 
-    계획 화면이 통째로 받아 가는 트리. 어디에도 못 붙은 주계획은
-    `orphan_weekly_plans` 로 따로 온다.
+    계획 화면이 통째로 받아 가는 트리. v0.0.2 부터 주계획이 `monthly_plan_id` FK 로
+    월계획에 매달리므로 FK 만 따라가면 트리가 완성된다. (시리얼라이저에서 FK 를 필수로
+    강제한다 — DDL 은 NULLABLE 이지만 실제로 상위 논리 없이 뜨는 주계획은 안 만든다.)
     """
 
     def get(self, request):

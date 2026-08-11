@@ -6,6 +6,8 @@ import EntityForm from "../components/EntityForm";
 import MetricCard, { MetricRow } from "../components/MetricCard";
 import Modal from "../components/Modal";
 import Panel from "../components/Panel";
+import PlanPerformanceChart from "../components/PlanPerformanceChart";
+import PlanTimetable from "../components/PlanTimetable";
 import {
   annualPlan,
   dailyPlan,
@@ -56,13 +58,21 @@ const PARENT_KEY = {
   QUARTER: "annual_plan",
   MONTH: "quarterly_plan",
   MONTHLY_PRINCIPLE: "monthly_plan",
+  WEEK: "monthly_plan",
   DAY: "weekly_plan",
 };
+
+const VIEW_TABS = [
+  { key: "cascade", label: "계층" },
+  { key: "timetable", label: "타임테이블" },
+  { key: "chart", label: "성과 그래프" },
+];
 
 export default function PlanPage() {
   const [on, setOn] = useState(() => new Date().toISOString().slice(0, 10));
   const [accountId, setAccountId] = useState("");
   const [onlyActive, setOnlyActive] = useState(true);
+  const [view, setView] = useState("cascade");
 
   const { data, error, loading, reload } = useAsyncAll(
     {
@@ -190,6 +200,20 @@ export default function PlanPage() {
         </label>
       </div>
 
+      <div className="pp-viewtabs" role="tablist" aria-label="계획 보기 방식">
+        {VIEW_TABS.map((t) => (
+          <button
+            key={t.key}
+            role="tab"
+            aria-selected={view === t.key}
+            className={`pp-viewtab ${view === t.key ? "is-on" : ""}`}
+            onClick={() => setView(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {form.loadError && (
         <p className="pp-loaderr">원본을 불러오지 못했다 — {String(form.loadError.message)}</p>
       )}
@@ -223,57 +247,68 @@ export default function PlanPage() {
         </div>
       )}
 
-      <AsyncState loading={loading} error={error} onRetry={reload}>
-        {cascade && (
-          <>
-            <MetricRow>
-              <MetricCard
-                label="연투자계획"
-                value={counts.annual}
-                unit="건"
-                hint={`${isoDate(cascade.as_of)} 기준`}
-              />
-              <MetricCard
-                label="주계획 연결"
-                value={counts.weekly_attached}
-                unit={` / ${counts.weekly_total}`}
-                hint="월계획 아래로 이어진 주계획"
-              />
-              <MetricCard
-                label="끊긴 주계획"
-                value={counts.weekly_orphan}
-                unit="건"
-                hint="상위 논리 없이 뜬 계획"
-                tone={counts.weekly_orphan > 0 ? "warning" : "success"}
-              />
-            </MetricRow>
+      {view === "chart" ? (
+        <PlanPerformanceChart accountId={accountId} />
+      ) : (
+        <AsyncState loading={loading} error={error} onRetry={reload}>
+          {cascade && (
+            <>
+              <MetricRow>
+                <MetricCard
+                  label="연투자계획"
+                  value={counts.annual}
+                  unit="건"
+                  hint={`${isoDate(cascade.as_of)} 기준`}
+                />
+                <MetricCard
+                  label="주계획"
+                  value={counts.weekly_total}
+                  unit="건"
+                  hint="월계획 아래로 FK 로 이어진 주계획"
+                />
+              </MetricRow>
 
-            <Panel
-              title="계획 계층"
-              meta={isoDate(cascade.as_of)}
-              note="연·분기·월은 FK 로 이어지지만, 주계획은 종목에 직접 붙는다. 월계획이 종목을 가리키지 않으면 그 아래로 계층이 이어지지 않는다."
-              actions={
-                <div className="panel-actions">
-                  <button className="btn is-sm" onClick={() => form.openCreate("YEAR")}>
-                    + 연계획
-                  </button>
-                  <button className="btn is-sm" onClick={() => form.openCreate("WEEK")}>
-                    + 주계획
-                  </button>
-                </div>
-              }
-            >
-              {form.loading && <p className="pp-loading">원본을 읽는 중…</p>}
-              <CascadeTree
-                tree={cascade.tree}
-                orphans={cascade.orphan_weekly_plans}
-                onEdit={(node) => form.openEdit(node.level, node.id)}
-                onAddChild={handleAddChild}
-              />
-            </Panel>
-          </>
-        )}
-      </AsyncState>
+              {view === "cascade" && (
+                <Panel
+                  title="계획 계층"
+                  meta={isoDate(cascade.as_of)}
+                  note="연 → 분기 → 월 → 주 → 일 을 FK 로 곧게 따라간다. 월계획이 월원칙(종목 연결)을 갖지 않으면 근거가 비어 있다는 경고가 그 자리에 뜬다."
+                  actions={
+                    <div className="panel-actions">
+                      <button className="btn is-sm" onClick={() => form.openCreate("YEAR")}>
+                        + 연계획
+                      </button>
+                      <button className="btn is-sm" onClick={() => form.openCreate("WEEK")}>
+                        + 주계획
+                      </button>
+                    </div>
+                  }
+                >
+                  {form.loading && <p className="pp-loading">원본을 읽는 중…</p>}
+                  <CascadeTree
+                    tree={cascade.tree}
+                    onEdit={(node) => form.openEdit(node.level, node.id)}
+                    onAddChild={handleAddChild}
+                  />
+                </Panel>
+              )}
+
+              {view === "timetable" && (
+                <Panel
+                  title="계획 타임테이블"
+                  meta={isoDate(cascade.as_of)}
+                  note="시간 축으로 본다. 상단에서 확대 수준(연/분기/월/주/일)을 바꾸면 컬럼 폭이 바뀌고, 각 계층의 계획이 자기 유효 구간만큼 막대로 표시된다. 막대를 누르면 원본을 연다."
+                >
+                  <PlanTimetable
+                    tree={cascade.tree}
+                    onEdit={(node) => form.openEdit(node.level, node.id)}
+                  />
+                </Panel>
+              )}
+            </>
+          )}
+        </AsyncState>
+      )}
 
       {form.isOpen && (
         <Modal
