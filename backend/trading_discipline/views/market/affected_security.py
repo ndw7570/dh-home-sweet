@@ -8,12 +8,12 @@ from trading_discipline.serializers.market import (
 
 
 class AffectedSecurityViewSet(BaseCommonViewSet):
-    """영향종목 CRUD — 시장방향 ↔ 종목 연결."""
+    """영향종목 CRUD — 뉴스 ↔ 종목 연결."""
 
     queryset = AffectedSecurity.objects.all()
     FILTER_FIELDS = AFFECTED_SECURITY_FILTER_FIELDS
     list_serializer_class = AffectedSecurityListSerializer
     detail_serializer_class = AffectedSecurityDetailSelectSerializer
-    select_list = ("market_direction", "affected_security")
-    select_detail = ("market_direction", "affected_security")
-    default_ordering = ("-id",)
+    select_list = ("news__market_direction", "security")
+    select_detail = ("news__market_direction", "security")
+    default_ordering = ("-affected_security_id",)

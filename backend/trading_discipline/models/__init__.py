@@ -14,7 +14,7 @@ investments-nam.sql 의 29개 테이블 중 커뮤니티(posts/comments/likes/at
 
 from trading_discipline.models.ai import AiDecisionFeedback, AiModelRun
 from trading_discipline.models.execution import Order, PerformanceRecord
-from trading_discipline.models.market import AffectedSecurity, MarketDirection
+from trading_discipline.models.market import AffectedSecurity, MarketDirection, News
 from trading_discipline.models.planning import (
     AnnualInvestmentPlan,
     DailyInvestmentPlan,
@@ -59,6 +59,7 @@ __all__ = [
     "MonthlyInvestmentPrinciple",
     # market
     "MarketDirection",
+    "News",
     "AffectedSecurity",
     # strategy
     "TradingStrategy",

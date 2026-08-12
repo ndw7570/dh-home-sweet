@@ -50,6 +50,7 @@ from trading_discipline.models import (
     MarketDirection,
     MonthlyInvestmentPlan,
     MonthlyInvestmentPrinciple,
+    News,
     Order,
     PerformanceRecord,
     PrincipleSource,
@@ -67,7 +68,7 @@ from trading_discipline.models import (
 MODELS_IN_DELETE_ORDER = [
     AiDecisionFeedback, AiModelRun, PerformanceRecord, Order,
     TradingStrategyMethod, TradingStrategy, DailySecurityPriceData,
-    AffectedSecurity, MarketDirection,
+    AffectedSecurity, News, MarketDirection,
     DailyInvestmentPlan, WeeklySecurityInvestmentPlan, WeeklyInvestmentPlan,
     MonthlyInvestmentPrinciple, MonthlyInvestmentPlan,
     QuarterlyInvestmentPrinciple, QuarterlyInvestmentPlan, AnnualInvestmentPlan,
@@ -287,7 +288,7 @@ class Command(BaseCommand):
             performance_summary="메모리 재고 정상화 진행. 파운드리 적자폭 축소.",
         )
 
-        # ── 시장방향 ──────────────────────────────────
+        # ── 시장방향 → 뉴스 → 종목 ────────────────────
         direction = MarketDirection.objects.create(
             direction=MarketTrend.UP, factor_type=FactorType.RATE,
             content="연준 금리 인하 기대가 반도체 밸류에이션에 우호적으로 작용.",
@@ -295,8 +296,17 @@ class Command(BaseCommand):
             factor_value=Decimal("3.85"),
             affected_targets={"sectors": ["반도체"], "indices": ["KOSPI"]},
         )
-        AffectedSecurity.objects.create(market_direction=direction, affected_security=samsung)
-        AffectedSecurity.objects.create(market_direction=direction, affected_security=hynix)
+        # 종목은 시장방향에 바로 걸지 않는다 — 어느 기사를 보고 떠올렸는지가 남아야 한다.
+        news = News.objects.create(
+            market_direction=direction,
+            direction=MarketTrend.UP, factor_type=FactorType.RATE,
+            content="연준, 점도표에서 연내 두 차례 인하 시사.",
+            rationale="할인율 부담이 먼저 풀리는 쪽은 이익 가시성이 높은 대형 반도체다.",
+            factor_value=Decimal("3.85"),
+            affected_targets={"sectors": ["반도체"]},
+        )
+        AffectedSecurity.objects.create(news=news, security=samsung)
+        AffectedSecurity.objects.create(news=news, security=hynix)
 
         # ── 가격 · 전략 (n차 분할표) ───────────────────
         price = DailySecurityPriceData.objects.create(

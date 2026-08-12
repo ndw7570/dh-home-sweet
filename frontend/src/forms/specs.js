@@ -247,8 +247,17 @@ export const DAILY_PLAN_FIELDS = [
   { name: "predicted_trend", label: "예측추세", type: "choice", choiceKey: "market_trend", required: true, half: true },
   { name: "thesis", label: "투자논리", type: "textarea", rows: 3, required: true },
   { name: "confidence_score", label: "계획확신도", type: "confidence" },
-  { name: "valid_from", label: "유효시작일", type: "date", required: true, half: true },
-  { name: "valid_until", label: "유효종료일", type: "date", required: true, half: true },
+  // 일계획은 하루짜리다 — 시작일과 종료일이 늘 같다. 칸을 둘로 두면 서로 다른 날짜를
+  // 넣을 수 있게 되고, 그렇게 만든 '이틀짜리 일계획'은 어느 날의 계획인지 알 수 없다.
+  // 그래서 입력은 한 칸으로 받고, 종료일은 저장할 때 같은 값으로 복제한다(mirrorTo).
+  {
+    name: "valid_from",
+    label: "계획일자",
+    type: "date",
+    required: true,
+    mirrorTo: "valid_until",
+    hint: "일계획은 하루짜리라 유효종료일도 이 날짜로 저장된다.",
+  },
   { name: "predicted_price", label: "예상가격", type: "price", half: true },
   { name: "stop_loss_price", label: "손절가격", type: "price", half: true },
   { name: "allocation_ratio", label: "벨런싱비율계획 (JSON)", type: "json", rows: 3 },
@@ -394,14 +403,64 @@ export const MARKET_DIRECTION_FIELDS = [
     type: "json",
     rows: 4,
     placeholder: '{\n  "sectors": ["반도체"],\n  "indices": ["KOSPI"]\n}',
-    hint: "종목이 아닌 대상(섹터·지수·통화). 종목은 아래 '영향 종목'으로 따로 건다.",
+    hint: "종목이 아닌 대상(섹터·지수·통화). 종목은 뉴스 아래 '영향 종목'으로 따로 건다.",
+  },
+  { name: "remarks", label: "비고", type: "textarea", rows: 2 },
+];
+
+/**
+ * 뉴스 — 시장방향과 종목 사이의 한 단.
+ * 컬럼이 시장방향과 같은 축인 것은 의도된 것이다. 같은 축으로 적어야 상위 판단과
+ * 하위 사실을 나란히 놓고 어긋난 자리를 찾을 수 있다.
+ */
+export const NEWS_FIELDS = [
+  {
+    name: "market_direction",
+    label: "시장방향",
+    type: "ref",
+    optionsKey: "directions",
+    required: true,
+    hint: "이 기사가 어느 시장 판단을 떠받치는지.",
+  },
+  { name: "factor_type", label: "요인종류", type: "choice", choiceKey: "factor_type", half: true },
+  { name: "direction", label: "방향", type: "choice", choiceKey: "market_trend", half: true },
+  {
+    name: "factor_value",
+    label: "수치",
+    type: "ratio",
+    half: true,
+    hint: "기사에 나온 숫자(금리 %, 환율 등).",
+  },
+  { name: "content", label: "내용", type: "textarea", rows: 3 },
+  {
+    name: "rationale",
+    label: "투자근거",
+    type: "textarea",
+    rows: 3,
+    required: true,
+    hint: "이 기사를 왜 판단의 근거로 삼는지. 안 적으면 서버가 막는다.",
+  },
+  {
+    name: "affected_targets",
+    label: "영향대상 (JSON)",
+    type: "json",
+    rows: 3,
+    placeholder: '{\n  "sectors": ["반도체"]\n}',
+    hint: "종목이 아닌 대상. 종목은 '영향 종목'으로 따로 건다.",
   },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },
 ];
 
 export const AFFECTED_SECURITY_FIELDS = [
-  { name: "market_direction", label: "시장방향", type: "ref", optionsKey: "directions", required: true },
-  { name: "affected_security", label: "영향받는 종목", type: "ref", optionsKey: "securities", required: true },
+  {
+    name: "news",
+    label: "뉴스",
+    type: "ref",
+    optionsKey: "news",
+    required: true,
+    hint: "종목은 시장방향에 바로 걸리지 않는다 — 어느 기사를 보고 떠올렸는지가 남아야 한다.",
+  },
+  { name: "security", label: "영향받는 종목", type: "ref", optionsKey: "securities", required: true },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },
 ];
 

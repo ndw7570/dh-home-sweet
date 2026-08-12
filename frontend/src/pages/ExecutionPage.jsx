@@ -9,12 +9,15 @@ import { fetchExecutionCompare, listSecurities, order } from "../api/trading";
 import { ORDER_FIELDS } from "../forms/specs";
 import {
   dateTime,
+  dateWithWeekday,
   daysAgoISODate,
+  isoDate,
   localISODateTimeInput,
   price,
   qty,
   todayISODate,
   won,
+  LEVEL_LABEL,
 } from "../lib/format";
 import { useAsync, useAsyncAll } from "../lib/useAsync";
 import { useMultiForm } from "../lib/useMultiForm";
@@ -30,6 +33,18 @@ import "./ExecutionPage.css";
  *
  * 규율 준수율 하나가 이 프로그램이 답하려는 질문이다.
  */
+
+/**
+ * 행위종류는 색만으로 구분하지 않는다 — 기호가 먼저 읽히게 둔다.
+ * (Badge.jsx 의 추세 배지와 같은 규칙. 색맹 대응이고, 흑백 출력에서도 갈린다.)
+ */
+const ACTION_MARK = {
+  FILL: "●", // 체결 — 사실로 굳었다
+  ORDER: "◐", // 주문 — 냈지만 아직 안 됐다
+  PLAN: "○", // 계획 — 대조 대상에서 빠진다
+  CANCEL: "✕",
+  REJECT: "!",
+};
 
 const FLAG_LABEL = {
   NO_PLAN: "계획 없음",
@@ -75,6 +90,31 @@ export default function ExecutionPage() {
 
   const compare = data?.compare;
   const summary = compare?.summary;
+
+  /**
+   * 이행을 **이행일별로** 묶는다.
+   *
+   * 계획은 하루 단위로 세우고(일계획), 이행도 하루 안에서 여러 번 일어난다.
+   * 평평한 목록으로 두면 "그날 계획대로 했나" 를 사람이 눈으로 날짜를 세어 가며
+   * 맞춰야 한다. 날짜가 그 질문의 단위라, 화면의 단위도 날짜여야 한다.
+   *
+   * 묶는 키는 서버가 판정에 실제로 쓴 `row.date` 다 — 화면에서 다시 계산하면
+   * 시간대 때문에 서버 판정과 어긋난 날짜로 묶이는 일이 생긴다.
+   * `row.date` 가 없는 건 목 데이터처럼 옛 응답 모양일 때뿐이라, 그때만 이행시각에서 뽑는다.
+   */
+  const dayGroups = useMemo(() => {
+    const map = new Map();
+    for (const row of compare?.rows || []) {
+      const key = row.date || isoDate(row.order.executed_at) || "(날짜 없음)";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(row);
+    }
+    return Array.from(map, ([date, rows]) => ({
+      date,
+      rows,
+      flagged: rows.filter((r) => r.flags.length > 0).length,
+    }));
+  }, [compare]);
 
   return (
     <div className="ep">
@@ -155,71 +195,33 @@ export default function ExecutionPage() {
                 </button>
               }
             >
-              {compare.rows.length === 0 ? (
+              {dayGroups.length === 0 ? (
                 <p className="ep-empty">이 기간에 이행 기록이 없다.</p>
               ) : (
-                <ul className="ep-rows">
-                  {compare.rows.map((row) => (
-                    <li
-                      key={row.order.id}
-                      className={`ep-row ${row.flags.length ? "is-flagged" : "is-clean"}`}
-                    >
-                      <div className="ep-row-head">
-                        <span className={`ep-side is-${(row.order.side || "").toLowerCase()}`}>
-                          {row.order.side_label || row.order.side || "?"}
-                        </span>
-                        <span className="ep-action">{row.order.action_type_label}</span>
-                        {row.security && (
-                          <strong className="num">
-                            {row.security.name} {row.security.symbol}
-                          </strong>
+                <div className="ep-days">
+                  {dayGroups.map((g) => (
+                    <section key={g.date} className="ep-day">
+                      <div className="ep-day-head">
+                        <strong className="ep-day-date num">{dateWithWeekday(g.date)}</strong>
+                        <span className="ep-day-count num">이행 {g.rows.length}건</span>
+                        {g.flagged > 0 ? (
+                          <span className="ep-day-flagged num">표시 {g.flagged}건</span>
+                        ) : (
+                          <span className="ep-day-clean">표시 없음</span>
                         )}
-                        <span className="num ep-nums">
-                          {qty(row.order.quantity)}주 × {price(row.order.limit_price)}
-                          {row.order.notional != null && ` = ${won(row.order.notional)}`}
-                        </span>
-                        <span className="num ep-when">{dateTime(row.order.executed_at)}</span>
-                        <button
-                          type="button"
-                          className="row-edit"
-                          onClick={() => form.openEdit("ORDER", row.order.id)}
-                        >
-                          수정
-                        </button>
                       </div>
-
-                      {row.flags.length > 0 && (
-                        <ul className="ep-flags">
-                          {row.flags.map((f, i) => (
-                            <li key={i} className={`ep-flag is-${f.severity.toLowerCase()}`}>
-                              <span className="ep-flag-code">
-                                {FLAG_LABEL[f.code] || f.code}
-                              </span>
-                              {f.message}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {row.matched_plans.length > 0 ? (
-                        <div className="ep-plans">
-                          <span className="ep-plans-label">대조한 주계획</span>
-                          {row.matched_plans.map((p) => (
-                            <span key={p.id} className="ep-plan num">
-                              {p.title}
-                              {p.predicted_price != null && ` · 예상 ${price(p.predicted_price)}`}
-                              {p.stop_loss_price != null && ` · 손절 ${price(p.stop_loss_price)}`}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="ep-noplan">대조할 주계획이 없다.</p>
-                      )}
-
-                      {row.order.remarks && <p className="ep-remarks">{row.order.remarks}</p>}
-                    </li>
+                      <ul className="ep-rows">
+                        {g.rows.map((row) => (
+                          <OrderRow
+                            key={row.order.id}
+                            row={row}
+                            onEdit={() => form.openEdit("ORDER", row.order.id)}
+                          />
+                        ))}
+                      </ul>
+                    </section>
                   ))}
-                </ul>
+                </div>
               )}
             </Panel>
           </>
@@ -243,5 +245,76 @@ export default function ExecutionPage() {
         </Modal>
       )}
     </div>
+  );
+}
+
+/**
+ * 이행 한 건 + 그 건에 걸린 표시 + 무엇과 대조했는지.
+ *
+ * 대조 대상이 일계획일 때와 주(종목별)계획일 때를 라벨로 갈라 둔다.
+ * 같은 "대조한 계획" 이어도 그날을 콕 집어 세운 계획과 그 주 전체를 덮는 계획은
+ * 근거의 무게가 다르다. 그걸 뭉뚱그리면 준수율이 어디에 기대고 있는지 알 수 없다.
+ */
+function OrderRow({ row, onEdit }) {
+  const { order, security, flags, matched_plans: plans } = row;
+
+  return (
+    <li className={`ep-row ${flags.length ? "is-flagged" : "is-clean"}`}>
+      <div className="ep-row-head">
+        <span className={`ep-side is-${(order.side || "").toLowerCase()}`}>
+          {order.side_label || order.side || "?"}
+        </span>
+        <span className={`ep-action is-${(order.action_type || "").toLowerCase()}`}>
+          <span className="ep-action-mark" aria-hidden="true">
+            {ACTION_MARK[order.action_type] || "·"}
+          </span>
+          {order.action_type_label || order.action_type || "?"}
+        </span>
+        {security && (
+          <strong className="num">
+            {security.name} {security.symbol}
+          </strong>
+        )}
+        <span className="num ep-nums">
+          {qty(order.quantity)}주 × {price(order.limit_price)}
+          {order.notional != null && ` = ${won(order.notional)}`}
+        </span>
+        <span className="num ep-when">{dateTime(order.executed_at)}</span>
+        <button type="button" className="row-edit" onClick={onEdit}>
+          수정
+        </button>
+      </div>
+
+      {flags.length > 0 && (
+        <ul className="ep-flags">
+          {flags.map((f, i) => (
+            <li key={i} className={`ep-flag is-${f.severity.toLowerCase()}`}>
+              <span className="ep-flag-code">{FLAG_LABEL[f.code] || f.code}</span>
+              {f.message}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {plans.length > 0 ? (
+        <div className="ep-plans">
+          <span className="ep-plans-label">대조한 계획</span>
+          {plans.map((p) => (
+            <span key={`${p.level}-${p.id}`} className="ep-plan num">
+              <span className={`ep-plan-lv is-${p.level.toLowerCase()}`}>
+                {LEVEL_LABEL[p.level] || p.level}
+              </span>
+              {p.title}
+              {p.predicted_price != null && ` · 예상 ${price(p.predicted_price)}`}
+              {p.stop_loss_price != null && ` · 손절 ${price(p.stop_loss_price)}`}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="ep-noplan">대조할 계획이 없다 — 일계획도, 주(종목별)계획도.</p>
+      )}
+
+      {order.remarks && <p className="ep-remarks">{order.remarks}</p>}
+    </li>
   );
 }

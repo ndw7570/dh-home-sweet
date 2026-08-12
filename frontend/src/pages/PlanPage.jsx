@@ -95,6 +95,22 @@ export default function PlanPage() {
     [on, accountId, onlyActive]
   );
 
+  /**
+   * 타임테이블 전용 조회 — 기간 필터 없이 통째로 읽는다.
+   *
+   * 타임테이블은 1년 축을 그린다. 위 `data.cascade` 는 기준일에 유효한 계획만
+   * 담고 있어서, 그걸 그대로 넘기면 일(DAY) 행은 기준일 셀 하나 말고는 절대
+   * 채워지지 않는다. 1년을 그려 놓고 하루치만 있는 셈이라 눈으로는 "계획이 없다"
+   * 로 읽힌다. 이 뷰일 때만 따로 읽고, 화면 밖일 땐 아예 부르지 않는다.
+   */
+  const timetable = useAsync(
+    () =>
+      view === "timetable"
+        ? fetchCascade({ on, account_id: accountId || undefined, only_active: 0 })
+        : Promise.resolve(null),
+    [view, on, accountId]
+  );
+
   // 폼의 FK 셀렉트를 채울 목록. 계획 조회와 별개로 한 번씩만 읽는다.
   const refs = useAsyncAll(
     {
@@ -137,7 +153,7 @@ export default function PlanPage() {
   );
 
   const reloadAll = async () => {
-    await Promise.all([reload(), refs.reload()]);
+    await Promise.all([reload(), refs.reload(), timetable.reload()]);
   };
   const form = useMultiForm(kinds, reloadAll);
 
@@ -207,8 +223,13 @@ export default function PlanPage() {
 
     const outOfRange = onlyActive && !(saved.valid_from <= on && on <= saved.valid_until);
     if (outOfRange) {
+      // 일계획처럼 하루짜리면 "A ~ A" 가 아니라 날짜 하나로 읽히게 둔다.
+      const period =
+        saved.valid_from === saved.valid_until
+          ? saved.valid_from
+          : `${saved.valid_from} ~ ${saved.valid_until}`;
       setNotice({
-        message: `저장했다. 다만 기간이 ${saved.valid_from} ~ ${saved.valid_until} 라 기준일(${on})에는 유효하지 않아 아래 트리에 안 나온다.`,
+        message: `저장했다. 다만 기간이 ${period} 라 기준일(${on})에는 유효하지 않아 아래 트리에 안 나온다.`,
         jumpTo: saved.valid_from,
       });
     }
@@ -348,12 +369,18 @@ export default function PlanPage() {
                 <Panel
                   title="계획 타임테이블"
                   meta={isoDate(cascade.as_of)}
-                  note="시간 축으로 본다. 상단에서 확대 수준(연/분기/월/주/일)을 바꾸면 컬럼 폭이 바뀌고, 각 계층의 계획이 자기 유효 구간만큼 막대로 표시된다. 막대를 누르면 원본을 연다."
+                  note="시간 축으로 본다. 상단에서 확대 수준(연/분기/월/주/일)을 바꾸면 컬럼 폭이 바뀌고, 각 계층의 계획이 자기 유효 구간만큼 막대로 표시된다. 막대를 누르면 원본을 연다. 이 뷰는 위의 기준일·유효 필터를 따르지 않고 계획을 전부 그린다 — 1년 축에 하루치만 얹으면 볼 것이 없다."
                 >
-                  <PlanTimetable
-                    tree={cascade.tree}
-                    onEdit={(node) => form.openEdit(node.level, node.id)}
-                  />
+                  <AsyncState
+                    loading={timetable.loading}
+                    error={timetable.error}
+                    onRetry={timetable.reload}
+                  >
+                    <PlanTimetable
+                      tree={timetable.data?.tree || []}
+                      onEdit={(node) => form.openEdit(node.level, node.id)}
+                    />
+                  </AsyncState>
                 </Panel>
               )}
             </>

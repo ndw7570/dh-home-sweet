@@ -127,10 +127,14 @@ export const listMonthlyPrinciples = (params = {}) =>
   );
 export const monthlyPrinciple = crud("monthly-principle");
 
-// ── 시장 ──────────────────────────────────────────
+// ── 시장 — 시장방향 → 뉴스 → 종목 ─────────────────
 export const listMarketDirections = (params = {}) =>
   wrap(() => api.get("/market-direction/", { no_page: 1, ...params }), () => mock.marketDirections);
 export const marketDirection = crud("market-direction");
+
+export const listNews = (params = {}) =>
+  wrap(() => api.get("/news/", { no_page: 1, ...params }), () => mock.news || []);
+export const news = crud("news");
 
 export const affectedSecurity = crud("affected-security");
 

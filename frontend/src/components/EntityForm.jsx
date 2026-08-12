@@ -25,46 +25,53 @@ const EMPTY = (v) => v === "" || v === null || v === undefined;
 
 function toPayload(fields, values) {
   const out = {};
+  // 스펙에 `mirrorTo` 가 있으면 그 컬럼에도 같은 값을 넣는다. 두 컬럼이 늘 같은 값이어야
+  // 하는 자리(일계획의 유효시작일/종료일)에 입력창을 하나만 두기 위한 것이다.
+  const put = (f, v) => {
+    out[f.name] = v;
+    if (f.mirrorTo) out[f.mirrorTo] = v;
+  };
+
   for (const f of fields) {
     if (f.readOnly) continue;
     let raw = values[f.name];
 
     if (f.type === "checkbox") {
-      out[f.name] = Boolean(raw);
+      put(f, Boolean(raw));
       continue;
     }
     // 모든 문자열 입력은 양 끝 공백을 걷어 낸다. 트림 후 빈 값이면 null 로 보낸다.
     if (typeof raw === "string") raw = raw.trim();
 
     if (EMPTY(raw)) {
-      out[f.name] = null;
+      put(f, null);
       continue;
     }
     switch (f.type) {
       case "number":
       case "ratio":
       case "confidence":
-        out[f.name] = Number(raw);
+        put(f, Number(raw));
         break;
       case "price": {
         // 화면에는 콤마가 있고 상태에도 남을 수 있으니 저장 직전에 걷어 낸다.
         // 부호만 있는 경우(NaN)는 빈 값으로 취급 — 서버에 NaN 을 보내지 않는다.
         const n = Number(String(raw).replace(/,/g, ""));
-        out[f.name] = Number.isFinite(n) ? n : null;
+        put(f, Number.isFinite(n) ? n : null);
         break;
       }
       case "ref":
-        out[f.name] = Number(raw);
+        put(f, Number(raw));
         break;
       case "json":
-        out[f.name] = JSON.parse(raw); // 아래 validateLocal 에서 미리 검사한다
+        put(f, JSON.parse(raw)); // 아래 validateLocal 에서 미리 검사한다
         break;
       case "datetime":
         // <input type="datetime-local"> 은 "2026-08-09T10:12" — DRF 가 그대로 파싱한다.
-        out[f.name] = raw;
+        put(f, raw);
         break;
       default:
-        out[f.name] = raw;
+        put(f, raw);
     }
   }
   return out;

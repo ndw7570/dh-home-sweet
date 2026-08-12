@@ -33,6 +33,51 @@
   margin-bottom: 16px;
 }
 
+/**
+ * 이행일별 묶음.
+ *
+ * 계획은 하루 단위로 서고 이행도 하루 안에서 여러 번 일어난다. "그날 계획대로
+ * 했나" 가 이 화면이 답하는 질문이라, 화면의 단위도 날짜여야 한다.
+ * 날짜 머리에 그날의 이행 건수와 표시 건수를 같이 둬서, 펼쳐 보기 전에도
+ * 어느 날이 어긋났는지 세로로 훑을 수 있게 한다.
+ */
+.ep-days {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ep-day-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 7px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ep-day-date {
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+
+.ep-day-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ep-day-flagged {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b3261e;
+}
+
+.ep-day-clean {
+  font-size: 12px;
+  color: var(--success);
+}
+
 .ep-rows {
   list-style: none;
   display: flex;
@@ -79,9 +124,65 @@
   color: #1b57c4;
 }
 
+/**
+ * 행위종류 — 이 화면에서 매수/매도만큼 중요하다.
+ * "사려고 했다(주문)" 와 "실제로 샀다(체결)" 는 전혀 다른 사실인데, 회색 글자
+ * 하나로 두면 둘이 같은 무게로 읽힌다. 규율 준수율은 실제로 일어난 것을 세는
+ * 숫자라 이 구분이 흐려지면 화면 전체가 흐려진다.
+ *
+ * 매수/매도(채움형 빨강·파랑) 와 같은 색 채널을 쓰면 서로 잡아먹는다.
+ * 그래서 이쪽은 **테두리형**으로 종류 자체를 다르게 두고, 체결 하나만 채운다.
+ * 색이 안 보여도 갈리도록 기호를 앞에 붙인다(Badge.jsx 의 추세 배지와 같은 규칙).
+ */
 .ep-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 12px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.ep-action-mark {
+  font-size: 10px;
+  line-height: 1;
+}
+
+/* 체결 — 실제로 일어난 일. 유일하게 채워서 가장 먼저 눈에 걸리게 한다. */
+.ep-action.is-fill {
+  background: #2b3238;
+  border-color: #2b3238;
+  color: #ffffff;
+}
+
+/* 주문 — 냈지만 아직 안 됐다. 진행 중이라는 뜻으로 경고색 계열. */
+.ep-action.is-order {
+  background: var(--warning-bg);
+  border-color: #e7cd9b;
+  color: var(--warning);
+}
+
+/* 계획 — 대조 대상에서 빠지는 행. 점선으로 '아직 사실이 아님' 을 표시. */
+.ep-action.is-plan {
+  border-color: var(--line-strong);
+  border-style: dashed;
   color: var(--text-muted);
+}
+
+/* 취소 — 없던 일이 된 것. 취소선으로 글자 자체를 지운다. */
+.ep-action.is-cancel {
+  border-color: var(--line);
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+/* 거부 — 매수(채움형 빨강) 와 안 겹치게 배경 없이 테두리만. */
+.ep-action.is-reject {
+  border-color: #e0a9a5;
+  color: #b3261e;
 }
 
 .ep-nums {
@@ -141,11 +242,36 @@
 }
 
 .ep-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   padding: 2px 8px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   color: var(--text-secondary);
+}
+
+/**
+ * 무엇과 대조했는가 — 일계획인가, 그 주 전체를 덮는 주(종목별)계획인가.
+ * 그날을 콕 집어 세운 계획과 주 단위로 뭉뚱그린 계획은 근거의 무게가 다르다.
+ * 뭉뚱그려 두면 준수율이 어디에 기대고 있는지 알 수 없어진다.
+ */
+.ep-plan-lv {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 0 5px;
+  border-radius: 4px;
+}
+
+.ep-plan-lv.is-day {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.ep-plan-lv.is-weekly_security {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
 }
 
 .ep-noplan {

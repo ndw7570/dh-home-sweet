@@ -157,9 +157,20 @@ MARKET_DIRECTION_FILTER_FIELDS = {
     "date_to": "created_at__lte",
 }
 
-AFFECTED_SECURITY_FILTER_FIELDS = {
+NEWS_FILTER_FIELDS = {
     "market_direction_id": "market_direction_id__exact",
-    "security_id": "affected_security_id__exact",
+    "direction": "direction__exact",
+    "factor_type": "factor_type__exact",
+    "content": "content__icontains",
+    "date_from": "created_at__gte",
+    "date_to": "created_at__lte",
+}
+
+AFFECTED_SECURITY_FILTER_FIELDS = {
+    "news_id": "news_id__exact",
+    # 종목이 시장방향에 닿는 길이 뉴스를 거치게 바뀌었다 — 두 단을 타고 올라간다.
+    "market_direction_id": "news__market_direction_id__exact",
+    "security_id": "security_id__exact",
 }
 
 # ─────────────────────────────────────────────

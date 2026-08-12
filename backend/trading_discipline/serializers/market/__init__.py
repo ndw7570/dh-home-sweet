@@ -7,11 +7,19 @@ from trading_discipline.serializers.market.market_direction import (
     MarketDirectionListSerializer,
     MarketDirectionParentSerializer,
 )
+from trading_discipline.serializers.market.news import (
+    NewsDetailSelectSerializer,
+    NewsListSerializer,
+    NewsParentSerializer,
+)
 
 __all__ = [
     "MarketDirectionListSerializer",
     "MarketDirectionParentSerializer",
     "MarketDirectionDetailSelectSerializer",
+    "NewsListSerializer",
+    "NewsParentSerializer",
+    "NewsDetailSelectSerializer",
     "AffectedSecurityListSerializer",
     "AffectedSecurityDetailSelectSerializer",
 ]

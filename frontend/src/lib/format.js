@@ -112,6 +112,21 @@ export const isoDate = (d) => {
 export const dateRange = (from, to) =>
   from && to ? `${shortDate(from)} ~ ${shortDate(to)}` : "기간 미정";
 
+const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+
+/**
+ * "2026-08-12" → "2026.08.12 (수)".
+ * 날짜별로 묶어 보여 주는 자리에서 요일이 빠지면 주말·휴장일을 눈으로 못 거른다.
+ * 로컬 자정에 만들어 요일을 뽑는다 — new Date("2026-08-12") 는 UTC 라 KST 에서 하루 밀린다.
+ */
+export const dateWithWeekday = (d) => {
+  if (!d) return "";
+  const s = String(d).slice(0, 10);
+  const t = new Date(`${s}T00:00:00`);
+  if (Number.isNaN(t.getTime())) return s;
+  return `${s.replace(/-/g, ".")} (${WEEKDAY[t.getDay()]})`;
+};
+
 export const dateTime = (d) => {
   if (!d) return "—";
   const t = new Date(d);

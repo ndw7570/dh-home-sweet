@@ -95,3 +95,81 @@
 .mp-head .row-edit {
   margin-left: 4px;
 }
+
+.mp-tools {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/**
+ * 뉴스 — 시장방향과 종목 사이의 한 단.
+ *
+ * 왼쪽 세로선으로 "이 판단에 매달린 사실들" 임을 표시한다. 들여쓰기만으로는
+ * 어디까지가 한 방향의 근거인지 눈으로 안 잡힌다.
+ */
+.mp-news {
+  list-style: none;
+  margin-top: 12px;
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mp-news-item {
+  background: var(--surface-sunken);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.mp-news-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-news-lv {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.mp-news-factor {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.mp-news-content {
+  margin-top: 7px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.mp-news-nosec {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 판단만 있고 그것을 떠받치는 사실이 없는 자리. 숨기지 않는다. */
+.mp-broken {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+/* 어느 시장방향에도 안 걸린 뉴스. */
+.mp-item.is-orphan {
+  border-color: #f0d6ac;
+  background: #fffdf7;
+}

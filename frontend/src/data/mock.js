@@ -2259,3 +2259,9 @@ export const aiFeedback = [
     "is_expired": false
   }
 ];
+
+// dump_mock 이 아직 안 담고 있던 자원들. `manage.py dump_mock` 을 다시 돌리면
+// 실제 데이터로 채워진다. 여기 비어 있어도 목 모드 화면은 뜬다(빈 목록으로 그려짐).
+export const weeklySecurityPlans = [];
+
+export const news = [];

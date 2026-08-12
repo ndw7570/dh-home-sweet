@@ -182,6 +182,9 @@ def build_cascade(
     """계획 트리를 통째로 조립한다.
 
     on          기준일. 이 날짜에 유효한 계획만 담는다(only_active=True 일 때).
+                단 일계획(DAY)은 예외 — 부모 주계획이 살아남으면 그 아래 일계획은
+                날짜와 무관하게 전부 담는다. 하루짜리라 기준일로 거르면 '오늘 것'
+                하나만 남기 때문이다.
     account_id  증권사계좌로 좁힌다. None 이면 전체.
     only_active False 면 기간을 무시하고 전부 담는다(과거 계획 열람용).
     """
@@ -242,9 +245,14 @@ def build_cascade(
 
                     security_nodes = []
                     for sp in security_plans:
+                        # 일계획에는 기준일 필터를 걸지 않는다. 일계획은 하루짜리라
+                        # 기준일로 거르면 '오늘 것' 하나만 남는데, 이 화면은 이번 주
+                        # 계획을 세우는 자리다 — 내일 것을 저장하는 순간 트리에서
+                        # 사라져 저장이 안 된 것처럼 보였다. 기간 판정은 이미 부모
+                        # 주계획에서 했으니(위 weekly_plans 필터), 살아남은 주 아래의
+                        # 일계획은 전부 보여 준다. 주 밖으로 잘못 적힌 날짜도 숨기지
+                        # 않는다 — 행에 날짜가 찍히니 눈으로 잡고 고칠 수 있다.
                         dailies = [d for d in sp.daily_plans.all() if not d.is_deleted]
-                        if only_active:
-                            dailies = [d for d in dailies if d.is_active_on(on)]
                         dailies.sort(key=lambda d: d.valid_from)
                         security_nodes.append(_weekly_security_node(sp, dailies))
 

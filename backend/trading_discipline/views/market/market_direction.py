@@ -14,6 +14,7 @@ class MarketDirectionViewSet(BaseCommonViewSet):
     FILTER_FIELDS = MARKET_DIRECTION_FILTER_FIELDS
     list_serializer_class = MarketDirectionListSerializer
     detail_serializer_class = MarketDirectionDetailSelectSerializer
-    prefetch_list = ("affected_securities",)
-    prefetch_detail = ("affected_securities__affected_security",)
+    # 종목은 이제 뉴스를 거쳐야 닿는다 — 두 단을 미리 끌어와야 목록에서 N+1 이 안 난다.
+    prefetch_list = ("news_items__affected_securities",)
+    prefetch_detail = ("news_items__affected_securities__security",)
     default_ordering = ("-created_at", "-id")

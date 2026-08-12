@@ -13,7 +13,11 @@ from trading_discipline.views.dashboard import (
     SecurityPlansView,
 )
 from trading_discipline.views.execution import OrderViewSet, PerformanceRecordViewSet
-from trading_discipline.views.market import AffectedSecurityViewSet, MarketDirectionViewSet
+from trading_discipline.views.market import (
+    AffectedSecurityViewSet,
+    MarketDirectionViewSet,
+    NewsViewSet,
+)
 from trading_discipline.views.planning import (
     AnnualPlanViewSet,
     DailyPlanViewSet,
@@ -60,8 +64,9 @@ router.register(r"investment-principle", InvestmentPrincipleViewSet)
 router.register(r"quarterly-principle", QuarterlyPrincipleViewSet)
 router.register(r"monthly-principle", MonthlyPrincipleViewSet)
 
-# market
+# market — 시장방향 → 뉴스 → 종목
 router.register(r"market-direction", MarketDirectionViewSet)
+router.register(r"news", NewsViewSet)
 router.register(r"affected-security", AffectedSecurityViewSet)
 
 # strategy
