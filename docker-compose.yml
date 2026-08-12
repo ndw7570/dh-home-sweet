@@ -1,7 +1,8 @@
 services:
   db:
-    # TimescaleDB 는 PostgreSQL 확장자. 이미지는 PostgreSQL 이 이미 들어 있는 형태.
+    # TimescaleDB — KIS 시세 봉 데이터(hypertable) 용. 백엔드 본체 DB 는 외부 Postgres(backend/.env) 를 쓴다.
     # docs/kis-stack-plan.md 참조: 봉 데이터가 커지기 전에 hypertable 로 관리하기 위해 처음부터 채택.
+    # collector 프로파일에만 딸려 뜬다 — `docker compose --profile collector up` 할 때만 기동.
     image: timescale/timescaledb:2.16.1-pg16
     environment:
       POSTGRES_DB: trading_discipline
@@ -11,14 +12,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      # 최초 컨테이너 생성 시 1회만 실행됨. 재실행하려면 볼륨을 지워야 한다.
-      # TimescaleDB 확장은 hypertable 마이그레이션(phase 2)에서 CREATE EXTENSION 을 넣는다.
-      - ./investments-nam.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d trading_discipline"]
       interval: 5s
       timeout: 3s
       retries: 20
+    profiles: ["collector"]
 
   redis:
     # Celery broker + Channels layer + Streams(향후 phase). 셋 다 한 인스턴스로 시작.
@@ -38,21 +37,9 @@ services:
     build: ./backend
     # ASGI 로 승격 — Channels(웹소켓) 를 함께 서비스하기 위해서. HTTP 도 daphne 가 처리.
     command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "core.asgi:application"]
+    # DB/Django/CORS 등은 backend/.env 에서 읽는다. 여기엔 도커 네트워크 특유값만 둔다.
+    # (backend 컨테이너 안에서 redis 는 서비스명 `redis` 로만 해석되므로 REDIS_URL 은 여기서 고정.)
     environment: &django-env
-      DJANGO_SECRET_KEY: dev-only-insecure-key-change-me
-      DJANGO_DEBUG: "1"
-      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,backend
-      DB_ENGINE: postgres
-      DB_SCHEMA: trading_discipline_management
-      DB_NAME: trading_discipline
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_HOST: db
-      DB_PORT: "5432"
-      STRICT_QUERY_PARAMS: "1"
-      CORS_ALLOWED_ORIGINS: http://localhost:9070,http://127.0.0.1:9070
-      TIME_ZONE: Asia/Seoul
-      LOG_LEVEL: INFO
       REDIS_URL: redis://redis:6379/0
       # KIS 연동은 mock 으로 시작 (phase 3~6 에서 실제 연동)
       KIS_ENV: paper
@@ -61,8 +48,6 @@ services:
     volumes:
       - ./backend:/app
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -74,8 +59,6 @@ services:
     volumes:
       - ./backend:/app
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -87,8 +70,6 @@ services:
     volumes:
       - ./backend:/app
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
 
