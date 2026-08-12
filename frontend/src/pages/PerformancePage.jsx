@@ -17,7 +17,7 @@ import {
   performanceRecord,
 } from "../api/trading";
 import { PERFORMANCE_RECORD_FIELDS } from "../forms/specs";
-import { isoDate, rate, won } from "../lib/format";
+import { isoDate, localISODate, rate, todayISODate, won } from "../lib/format";
 import { useAsyncAll } from "../lib/useAsync";
 import { useMultiForm } from "../lib/useMultiForm";
 import "./PerformancePage.css";
@@ -43,13 +43,13 @@ const PERIODS = [
 const yearAgo = () => {
   const d = new Date();
   d.setFullYear(d.getFullYear() - 1);
-  return d.toISOString().slice(0, 10);
+  return localISODate(d);
 };
 
 export default function PerformancePage() {
   const [periodType, setPeriodType] = useState("");
   const [dateFrom, setDateFrom] = useState(yearAgo);
-  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState(todayISODate);
 
   const { data, error, loading, reload } = useAsyncAll(
     {

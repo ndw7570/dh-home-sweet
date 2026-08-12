@@ -4,7 +4,7 @@ import AsyncState from "./AsyncState";
 import MetricCard, { MetricRow } from "./MetricCard";
 import Panel from "./Panel";
 import { fetchExecutionCompare, fetchPerformanceSummary } from "../api/trading";
-import { rate, won } from "../lib/format";
+import { daysAgoISODate, rate, todayISODate, won } from "../lib/format";
 import { useAsyncAll } from "../lib/useAsync";
 import "./PlanPerformanceChart.css";
 
@@ -18,15 +18,9 @@ import "./PlanPerformanceChart.css";
  * 이 뷰는 조회 전용이다. 편집은 이행 · 성과 페이지에서.
  */
 
-const dateFrom = (days) => {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
-};
-
 export default function PlanPerformanceChart({ accountId }) {
-  const today = new Date().toISOString().slice(0, 10);
-  const start = useMemo(() => dateFrom(90), []);
+  const today = todayISODate();
+  const start = useMemo(() => daysAgoISODate(90), []);
 
   const { data, error, loading, reload } = useAsyncAll(
     {
@@ -37,7 +31,7 @@ export default function PlanPerformanceChart({ accountId }) {
         }),
       perf: () =>
         fetchPerformanceSummary({
-          date_from: dateFrom(365),
+          date_from: daysAgoISODate(365),
           date_to: today,
         }),
     },

@@ -22,6 +22,7 @@ import {
   monthlyPlan,
   monthlyPrinciple,
   quarterlyPlan,
+  quarterlyPrinciple,
   weeklyPlan,
   weeklySecurityPlan,
 } from "../api/trading";
@@ -31,10 +32,11 @@ import {
   MONTHLY_PLAN_FIELDS,
   MONTHLY_PRINCIPLE_FIELDS,
   QUARTERLY_PLAN_FIELDS,
+  QUARTERLY_PRINCIPLE_FIELDS,
   WEEKLY_PLAN_FIELDS,
   WEEKLY_SECURITY_PLAN_FIELDS,
 } from "../forms/specs";
-import { isoDate } from "../lib/format";
+import { isoDate, planPeriodLabel, todayISODate } from "../lib/format";
 import { useAsync, useAsyncAll } from "../lib/useAsync";
 import { useMultiForm } from "../lib/useMultiForm";
 import "./PlanPage.css";
@@ -55,12 +57,14 @@ const KIND_LABEL = {
   WEEKLY_SECURITY: "종목별 주계획",
   DAY: "일투자계획",
   MONTHLY_PRINCIPLE: "월투자원칙",
+  QUARTERLY_PRINCIPLE: "분기투자원칙",
 };
 
 /** 트리 노드의 level → 새로 만들 때 채워 줄 부모 FK */
 const PARENT_KEY = {
   QUARTER: "annual_plan",
   MONTH: "quarterly_plan",
+  QUARTERLY_PRINCIPLE: "quarterly_plan",
   MONTHLY_PRINCIPLE: "monthly_plan",
   WEEK: "monthly_plan",
   WEEKLY_SECURITY: "weekly_plan",
@@ -74,7 +78,7 @@ const VIEW_TABS = [
 ];
 
 export default function PlanPage() {
-  const [on, setOn] = useState(() => new Date().toISOString().slice(0, 10));
+  const [on, setOn] = useState(todayISODate);
   const [accountId, setAccountId] = useState("");
   const [onlyActive, setOnlyActive] = useState(true);
   const [view, setView] = useState("cascade");
@@ -122,6 +126,12 @@ export default function PlanPage() {
         fields: MONTHLY_PRINCIPLE_FIELDS,
         api: monthlyPrinciple,
       },
+      QUARTERLY_PRINCIPLE: {
+        title: KIND_LABEL.QUARTERLY_PRINCIPLE,
+        fields: QUARTERLY_PRINCIPLE_FIELDS,
+        api: quarterlyPrinciple,
+        wide: true, // 필드가 20개 넘어 두 열이 편하다.
+      },
     }),
     []
   );
@@ -141,19 +151,34 @@ export default function PlanPage() {
         value: s.id,
         label: `${s.name} (${s.symbol})`,
       })),
-      annualPlans: (refs.data?.annualPlans || []).map((p) => ({ value: p.id, label: p.title })),
-      quarterlyPlans: (refs.data?.quarterlyPlans || []).map((p) => ({ value: p.id, label: p.title })),
+      // 드롭다운 라벨에 기간을 앞에 붙여 동명 계획을 구분한다 — 이름만으로는 못 구분한다.
+      annualPlans: (refs.data?.annualPlans || []).map((p) => ({
+        value: p.id,
+        label: `[${planPeriodLabel("YEAR", p.valid_from)}] ${p.title}`,
+      })),
+      quarterlyPlans: (refs.data?.quarterlyPlans || []).map((p) => ({
+        value: p.id,
+        label: `[${planPeriodLabel("QUARTER", p.valid_from)}] ${p.title}`,
+      })),
       monthlyPlans: (refs.data?.monthlyPlans || []).map((p) => ({
         value: p.id,
-        label: `${p.title} [${p.scenario_planning_label || p.scenario_planning}]`,
+        label: `[${planPeriodLabel("MONTH", p.valid_from)}] ${p.title} [${
+          p.scenario_planning_label || p.scenario_planning
+        }]`,
       })),
-      weeklyPlans: (refs.data?.weeklyPlans || []).map((p) => ({ value: p.id, label: p.title })),
+      weeklyPlans: (refs.data?.weeklyPlans || []).map((p) => ({
+        value: p.id,
+        label: `[${planPeriodLabel("WEEK", p.valid_from)}] ${p.title}`,
+      })),
       weeklySecurityPlans: (refs.data?.weeklySecurityPlans || []).map((p) => {
         const sec = p.security_detail;
-        const label = sec
-          ? `${p.title} — ${sec.name} (${sec.symbol})`
-          : p.title;
-        return { value: p.id, label };
+        // WEEKLY_SECURITY 자체엔 유효기간이 없다 — 상위 주계획의 것을 물려받는다.
+        const period = planPeriodLabel("WEEK", p.weekly_plan_detail?.valid_from);
+        const base = period ? `[${period}] ${p.title}` : p.title;
+        return {
+          value: p.id,
+          label: sec ? `${base} — ${sec.name} (${sec.symbol})` : base,
+        };
       }),
     }),
     [refs.data]
@@ -307,8 +332,13 @@ export default function PlanPage() {
                     tree={cascade.tree}
                     onEdit={(node) => form.openEdit(node.level, node.id)}
                     onAddChild={handleAddChild}
-                    onEditPrinciple={(principleId) =>
-                      form.openEdit("MONTHLY_PRINCIPLE", principleId)
+                    onEditPrinciple={(principleId, parentLevel) =>
+                      form.openEdit(
+                        parentLevel === "QUARTER"
+                          ? "QUARTERLY_PRINCIPLE"
+                          : "MONTHLY_PRINCIPLE",
+                        principleId
+                      )
                     }
                   />
                 </Panel>
@@ -337,6 +367,8 @@ export default function PlanPage() {
           subtitle={
             form.kind === "MONTHLY_PRINCIPLE"
               ? "월계획을 종목에 잇는 행이다. 이걸 만들면 그 종목의 주계획이 이 월계획 아래로 붙는다."
+              : form.kind === "QUARTERLY_PRINCIPLE"
+              ? "분기계획을 종목에 잇는 행이다. 성장성·수익성·현금·안정성·가격 지표를 한 종목에 대해 못박아 둔다."
               : undefined
           }
           onClose={form.close}

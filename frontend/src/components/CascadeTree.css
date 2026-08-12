@@ -161,6 +161,32 @@
   background: transparent;
 }
 
+/* 분기 chip 은 실적 카드(매출·ROE·PBR…) 성격이라 톤을 달리한다.
+   월 chip 이 채워진 은은한 뉘앙스라면, 분기는 아웃라인·청록 톤으로 "이건 지표 카드" 라는 신호. */
+.ct-sec-chip.is-quarter {
+  border-color: #7fb1a8;
+  color: #2d6b62;
+  background: rgba(127, 177, 168, 0.08);
+}
+button.ct-sec-chip.is-quarter.is-clickable:hover,
+button.ct-sec-chip.is-quarter.is-clickable:focus-visible {
+  border-color: #4c8c81;
+  color: #1e5049;
+  background: rgba(127, 177, 168, 0.18);
+}
+.ct-sec-chip-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  background: #7fb1a8;
+  color: #fff;
+  vertical-align: 1px;
+}
+
 /* 월원칙과 연결된 chip 은 클릭해서 수정할 수 있다는 걸 시각적으로 알려 준다. */
 button.ct-sec-chip.is-clickable {
   cursor: pointer;

@@ -118,7 +118,9 @@ def _monthly_node(plan: MonthlyInvestmentPlan, weekly_nodes: list[dict], princip
     }
 
 
-def _quarterly_node(plan: QuarterlyInvestmentPlan, monthly_nodes: list[dict]) -> dict:
+def _quarterly_node(
+    plan: QuarterlyInvestmentPlan, monthly_nodes: list[dict], principles: list
+) -> dict:
     return {
         "id": plan.id,
         "level": "QUARTER",
@@ -138,6 +140,11 @@ def _quarterly_node(plan: QuarterlyInvestmentPlan, monthly_nodes: list[dict]) ->
         "valid_from": plan.valid_from,
         "valid_until": plan.valid_until,
         **labels(plan, "direction"),
+        # 월계획과 같은 방식 — 분기투자원칙(종목별) 을 chip 으로 노출한다.
+        # principle_id 를 실어 프론트 chip 클릭으로 곧바로 그 원칙을 열 수 있게 한다.
+        "securities": [
+            {**_security_brief(p.security), "principle_id": p.id} for p in principles
+        ],
         "children": monthly_nodes,
     }
 
@@ -192,12 +199,17 @@ def build_cascade(
     weekly_security_total = 0
 
     for annual in annual_plans:
-        quarterly_qs = annual.quarterly_plans.filter(is_deleted=False)
+        quarterly_qs = annual.quarterly_plans.filter(is_deleted=False).prefetch_related(
+            "principles__security",
+        )
         if only_active:
             quarterly_qs = quarterly_qs.filter(active_on(on=on))
         quarterly_nodes = []
 
         for quarterly in quarterly_qs.order_by("valid_from"):
+            q_principles = [
+                p for p in quarterly.principles.all() if not p.is_deleted and p.security_id
+            ]
             monthly_qs = quarterly.monthly_plans.filter(is_deleted=False).prefetch_related(
                 "principles__security",
                 "weekly_plans__security_plans__security",
@@ -240,7 +252,7 @@ def build_cascade(
 
                 monthly_nodes.append(_monthly_node(monthly, weekly_nodes, principles))
 
-            quarterly_nodes.append(_quarterly_node(quarterly, monthly_nodes))
+            quarterly_nodes.append(_quarterly_node(quarterly, monthly_nodes, q_principles))
 
         tree.append(_annual_node(annual, quarterly_nodes))
 

@@ -36,24 +36,42 @@ function StrategyCoverage({ coverage, strategies }) {
   );
 }
 
-/** 이 계층에서 '+' 를 눌렀을 때 무엇을 만드는가. */
-const ADD_CHILD = {
-  YEAR: { level: "QUARTER", label: "분기계획 추가" },
-  QUARTER: { level: "MONTH", label: "월계획 추가" },
-  // 월계획의 아래는 주계획이 아니라 **월투자원칙**이다. 그게 종목에 닿는 통로라,
-  // 계층이 끊긴 자리를 고치려면 여기부터 채워야 한다.
-  MONTH: { level: "MONTHLY_PRINCIPLE", label: "종목 연결 (월투자원칙)" },
-  WEEK: { level: "WEEKLY_SECURITY", label: "종목별 주계획 추가" },
-  WEEKLY_SECURITY: { level: "DAY", label: "일계획 추가" },
+/**
+ * 이 계층에서 만들 수 있는 것 두 가지 — 하위 계획, 그리고 투자원칙(있는 계층만).
+ * 예전엔 MONTH 만 원칙 추가 버튼이 있고 나머지는 하위계획만 있어서, 어느 계층에서
+ * 무엇이 되는지 사람이 매번 기억해야 했다. 두 슬롯을 모든 노드에 통일해 둔다.
+ *   - child: 이 계층 아래로 이어지는 계획
+ *   - principle: 이 계층의 투자원칙 (종목에 닿는 통로)
+ */
+const NODE_ACTIONS = {
+  YEAR: {
+    child: { level: "QUARTER", label: "분기계획" },
+    // 연투자원칙 모델은 없다.
+  },
+  QUARTER: {
+    child: { level: "MONTH", label: "월계획" },
+    principle: { level: "QUARTERLY_PRINCIPLE", label: "분기투자원칙" },
+  },
+  MONTH: {
+    child: { level: "WEEK", label: "주계획" },
+    principle: { level: "MONTHLY_PRINCIPLE", label: "월투자원칙" },
+  },
+  WEEK: {
+    child: { level: "WEEKLY_SECURITY", label: "종목별 주계획" },
+  },
+  WEEKLY_SECURITY: {
+    child: { level: "DAY", label: "일계획" },
+  },
 };
 
 function Node({ node, depth, defaultOpen, onEdit, onAddChild, onEditPrinciple }) {
   const [open, setOpen] = useState(defaultOpen);
   const children = node.children || [];
   const hasChildren = children.length > 0;
-  const addable = ADD_CHILD[node.level];
+  const actions = NODE_ACTIONS[node.level];
 
   // 월계획인데 종목이 안 달렸으면 아래로 계층이 이어지지 않는다.
+  // 이 경고는 원칙 추가 버튼 쪽으로 강조를 옮긴다 — 사용자가 채워야 할 자리가 거기다.
   const brokenHere =
     node.level === "MONTH" && (!node.securities || node.securities.length === 0);
 
@@ -92,13 +110,22 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild, onEditPrinciple })
                   수정
                 </button>
               )}
-              {onAddChild && addable && (
+              {onAddChild && actions?.child && (
+                <button
+                  type="button"
+                  className="row-edit"
+                  onClick={() => onAddChild(node, actions.child.level)}
+                >
+                  + {actions.child.label} 추가
+                </button>
+              )}
+              {onAddChild && actions?.principle && (
                 <button
                   type="button"
                   className={`row-edit ${brokenHere ? "is-urgent" : ""}`}
-                  onClick={() => onAddChild(node, addable.level)}
+                  onClick={() => onAddChild(node, actions.principle.level)}
                 >
-                  + {addable.label}
+                  + {actions.principle.label} 추가
                 </button>
               )}
             </span>
@@ -134,23 +161,33 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild, onEditPrinciple })
 
           {node.securities?.length > 0 && (
             <div className="ct-securities">
-              {node.securities.map((s) =>
-                s.principle_id && onEditPrinciple ? (
+              {node.securities.map((s) => {
+                // 월/분기 chip 이 같은 모양이면 어느 계층 원칙인지 눈으로 구분이 안 된다.
+                // 분기는 "실적 카드" 라는 성격을 접두어로, 톤은 살짝 다른 컬러로 준다.
+                const isQ = node.level === "QUARTER";
+                const chipClass = `ct-sec-chip ${isQ ? "is-quarter" : ""}`;
+                const inner = (
+                  <>
+                    {isQ && <span className="ct-sec-chip-tag">실적</span>}
+                    {s.name} <span className="num">{s.symbol}</span>
+                  </>
+                );
+                return s.principle_id && onEditPrinciple ? (
                   <button
                     key={s.id}
                     type="button"
-                    className="ct-sec-chip is-clickable"
-                    onClick={() => onEditPrinciple(s.principle_id)}
-                    title="월투자원칙 수정"
+                    className={`${chipClass} is-clickable`}
+                    onClick={() => onEditPrinciple(s.principle_id, node.level)}
+                    title={isQ ? "분기투자원칙 수정" : "월투자원칙 수정"}
                   >
-                    {s.name} <span className="num">{s.symbol}</span>
+                    {inner}
                   </button>
                 ) : (
-                  <span key={s.id} className="ct-sec-chip">
-                    {s.name} <span className="num">{s.symbol}</span>
+                  <span key={s.id} className={chipClass}>
+                    {inner}
                   </span>
-                )
-              )}
+                );
+              })}
             </div>
           )}
 

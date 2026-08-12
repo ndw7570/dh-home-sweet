@@ -32,7 +32,82 @@ export const qty = (v) => (v == null ? "—" : Number(v).toLocaleString("ko-KR")
 
 export const shortDate = (d) => (d ? String(d).slice(5).replace("-", ".") : "");
 
-export const isoDate = (d) => (d ? String(d).slice(0, 10) : "");
+/** 그해 몇 번째 주. PlanTimetable 의 WEEK 앵커(직전 일요일) 와 같은 정의. */
+export const weekOfYear = (d) => {
+  const anchor = new Date(d.getFullYear(), 0, 1);
+  anchor.setDate(anchor.getDate() - anchor.getDay());
+  return Math.floor((d.getTime() - anchor.getTime()) / (7 * 86400000)) + 1;
+};
+
+/**
+ * 계층별 기간 라벨 — "이 계획이 언제 것인지" 를 라벨만 보고 알게 한다.
+ * 드롭다운·목록에서 동명이인 구분에 쓴다. 트리 셀 안의 짧은 표기와 달리
+ * 해(year) 를 함께 실어 다른 해 계획과 섞이지 않게 한다.
+ */
+export const planPeriodLabel = (level, validFrom) => {
+  if (!validFrom) return "";
+  const d = new Date(`${String(validFrom).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1;
+  switch (level) {
+    case "YEAR":
+      return `${y}년`;
+    case "QUARTER":
+      return `${y} ${Math.floor((m - 1) / 3) + 1}분기`;
+    case "MONTH":
+      return `${y}-${String(m).padStart(2, "0")}`;
+    case "WEEK":
+    case "WEEKLY_SECURITY":
+      return `${y} ${weekOfYear(d)}주`;
+    case "DAY":
+      return `${y}-${String(m).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    default:
+      return "";
+  }
+};
+
+/** JS Date → 로컬 기준 YYYY-MM-DD. toISOString() 은 UTC 라 KST 15시 이후엔 하루가 밀린다. */
+export const localISODate = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${da}`;
+};
+
+/** 오늘(로컬) 을 YYYY-MM-DD 로. 날짜 필터·기본값 자리에 쓴다. */
+export const todayISODate = () => localISODate(new Date());
+
+/** n 일 전(로컬) 을 YYYY-MM-DD 로. */
+export const daysAgoISODate = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return localISODate(d);
+};
+
+/** JS Date → <input type="datetime-local"> 값 (로컬 YYYY-MM-DDTHH:MM). */
+export const localISODateTimeInput = (d) => {
+  const base = localISODate(d);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${base}T${hh}:${mm}`;
+};
+
+/**
+ * 로컬(KST) 기준 YYYY-MM-DD.
+ * 순수 날짜 문자열("2026-08-15") 은 그대로 잘라 반환한다 — Date 로 파싱하면 UTC 자정으로 취급되어
+ * 음수 시차 지역에서 하루가 밀린다.
+ * TZ 정보가 붙은 datetime("2026-08-15T22:00:00Z", "…+00:00", "…+09:00") 은 로컬 기준으로 바꾼다.
+ * 예: 백엔드가 "2026-08-15T22:00:00Z" (UTC) 를 주면 KST 로는 2026-08-16 07:00 → "2026-08-16".
+ */
+export const isoDate = (d) => {
+  if (!d) return "";
+  const s = String(d);
+  if (!/[TZ]|[+-]\d\d:?\d\d$/.test(s)) return s.slice(0, 10);
+  const t = new Date(s);
+  if (Number.isNaN(t.getTime())) return s.slice(0, 10);
+  return localISODate(t);
+};
 
 export const dateRange = (from, to) =>
   from && to ? `${shortDate(from)} ~ ${shortDate(to)}` : "기간 미정";

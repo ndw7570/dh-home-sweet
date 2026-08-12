@@ -7,7 +7,15 @@ import Modal from "../components/Modal";
 import Panel from "../components/Panel";
 import { fetchExecutionCompare, listSecurities, order } from "../api/trading";
 import { ORDER_FIELDS } from "../forms/specs";
-import { dateTime, price, qty, won } from "../lib/format";
+import {
+  dateTime,
+  daysAgoISODate,
+  localISODateTimeInput,
+  price,
+  qty,
+  todayISODate,
+  won,
+} from "../lib/format";
 import { useAsync, useAsyncAll } from "../lib/useAsync";
 import { useMultiForm } from "../lib/useMultiForm";
 import "./ExecutionPage.css";
@@ -31,16 +39,10 @@ const FLAG_LABEL = {
   ABOVE_TARGET: "예상가 초과",
 };
 
-const daysAgo = (n) => {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
-};
-
 export default function ExecutionPage() {
   const [securityId, setSecurityId] = useState("");
-  const [dateFrom, setDateFrom] = useState(() => daysAgo(30));
-  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateFrom, setDateFrom] = useState(() => daysAgoISODate(30));
+  const [dateTo, setDateTo] = useState(todayISODate);
 
   const securities = useAsync(() => listSecurities(), []);
   const { data, error, loading, reload } = useAsyncAll(
@@ -143,7 +145,7 @@ export default function ExecutionPage() {
                     form.openCreate("ORDER", {
                       security: securityId || "",
                       action_type: "FILL",
-                      executed_at: new Date().toISOString().slice(0, 16),
+                      executed_at: localISODateTimeInput(new Date()),
                     })
                   }
                   disabled={!securities.data?.length}
