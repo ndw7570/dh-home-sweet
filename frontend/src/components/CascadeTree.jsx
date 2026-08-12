@@ -5,11 +5,11 @@ import { confidenceBar, dateRange, price, won, LEVEL_LABEL } from "../lib/format
 import "./CascadeTree.css";
 
 /**
- * 계획 5계층 트리 — 이 화면의 주인공.
+ * 계획 계층 트리 — 이 화면의 주인공.
  *
- * 연 → 분기 → 월 → 주 → 일. v0.0.2 부터 다섯 계층이 FK 로 곧게 이어진다.
- * 왼쪽 세로선이 계층의 깊이를 나타내고, 각 노드는 '무엇을 하기로 했는가'
- * 한 줄과 근거(thesis)를 갖는다.
+ * 연 → 분기 → 월 → 주(기간) → 주(종목별) → 일. v0.0.3 부터 주계획이
+ * 두 계층으로 나뉘었다. 주계획(WEEK) 은 기간만 잡고, 그 아래 종목별
+ * 계획(WEEKLY_SECURITY) 이 예상가·손절가·가용금액을 가진다.
  *
  * 중요한 것은 **근거가 빈 자리를 숨기지 않는 것**이다.
  *   - 월계획에 월원칙이 없어 종목에 안 닿으면 그 자리에 경고를 찍는다
@@ -43,10 +43,11 @@ const ADD_CHILD = {
   // 월계획의 아래는 주계획이 아니라 **월투자원칙**이다. 그게 종목에 닿는 통로라,
   // 계층이 끊긴 자리를 고치려면 여기부터 채워야 한다.
   MONTH: { level: "MONTHLY_PRINCIPLE", label: "종목 연결 (월투자원칙)" },
-  WEEK: { level: "DAY", label: "일계획 추가" },
+  WEEK: { level: "WEEKLY_SECURITY", label: "종목별 주계획 추가" },
+  WEEKLY_SECURITY: { level: "DAY", label: "일계획 추가" },
 };
 
-function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
+function Node({ node, depth, defaultOpen, onEdit, onAddChild, onEditPrinciple }) {
   const [open, setOpen] = useState(defaultOpen);
   const children = node.children || [];
   const hasChildren = children.length > 0;
@@ -73,7 +74,7 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
             <span className={`ct-level ct-level-${node.level}`}>
               {LEVEL_LABEL[node.level]}
             </span>
-            <strong className="ct-title">{node.title}</strong>
+            {node.title && <strong className="ct-title">{node.title}</strong>}
             {node.security && (
               <span className="ct-sec">
                 {node.security.name}
@@ -104,7 +105,9 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
           </div>
 
           <div className="ct-meta num">
-            <span>{dateRange(node.valid_from, node.valid_until)}</span>
+            {(node.valid_from || node.valid_until) && (
+              <span>{dateRange(node.valid_from, node.valid_until)}</span>
+            )}
             {node.confidence_score != null && (
               <span title={`확신도 ${node.confidence_score}/5`}>
                 확신 {confidenceBar(node.confidence_score)}
@@ -131,11 +134,23 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
 
           {node.securities?.length > 0 && (
             <div className="ct-securities">
-              {node.securities.map((s) => (
-                <span key={s.id} className="ct-sec-chip">
-                  {s.name} <span className="num">{s.symbol}</span>
-                </span>
-              ))}
+              {node.securities.map((s) =>
+                s.principle_id && onEditPrinciple ? (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className="ct-sec-chip is-clickable"
+                    onClick={() => onEditPrinciple(s.principle_id)}
+                    title="월투자원칙 수정"
+                  >
+                    {s.name} <span className="num">{s.symbol}</span>
+                  </button>
+                ) : (
+                  <span key={s.id} className="ct-sec-chip">
+                    {s.name} <span className="num">{s.symbol}</span>
+                  </span>
+                )
+              )}
             </div>
           )}
 
@@ -157,6 +172,7 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
               defaultOpen
               onEdit={onEdit}
               onAddChild={onAddChild}
+              onEditPrinciple={onEditPrinciple}
             />
           ))}
         </ul>
@@ -165,7 +181,7 @@ function Node({ node, depth, defaultOpen, onEdit, onAddChild }) {
   );
 }
 
-export default function CascadeTree({ tree, onEdit, onAddChild }) {
+export default function CascadeTree({ tree, onEdit, onAddChild, onEditPrinciple }) {
   if (!tree?.length) {
     return (
       <p className="ct-empty">
@@ -185,6 +201,7 @@ export default function CascadeTree({ tree, onEdit, onAddChild }) {
             defaultOpen
             onEdit={onEdit}
             onAddChild={onAddChild}
+            onEditPrinciple={onEditPrinciple}
           />
         ))}
       </ul>

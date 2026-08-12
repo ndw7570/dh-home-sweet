@@ -61,13 +61,14 @@ from trading_discipline.models import (
     TradingStrategy,
     TradingStrategyMethod,
     WeeklyInvestmentPlan,
+    WeeklySecurityInvestmentPlan,
 )
 
 MODELS_IN_DELETE_ORDER = [
     AiDecisionFeedback, AiModelRun, PerformanceRecord, Order,
     TradingStrategyMethod, TradingStrategy, DailySecurityPriceData,
     AffectedSecurity, MarketDirection,
-    DailyInvestmentPlan, WeeklyInvestmentPlan,
+    DailyInvestmentPlan, WeeklySecurityInvestmentPlan, WeeklyInvestmentPlan,
     MonthlyInvestmentPrinciple, MonthlyInvestmentPlan,
     QuarterlyInvestmentPrinciple, QuarterlyInvestmentPlan, AnnualInvestmentPlan,
     InvestmentPrinciple, PrincipleSource, MandatoryPrinciple,
@@ -209,47 +210,61 @@ class Command(BaseCommand):
         )
         # monthly_bear 에는 일부러 원칙을 안 붙인다 → '월원칙 없는 월계획' 빈칸 카드
 
-        weekly_samsung = WeeklyInvestmentPlan.objects.create(
-            monthly_plan=monthly_base, security=samsung,
+        # v0.0.3~ 주계획은 기간 그룹만이다. 종목별 필드는 WeeklySecurityInvestmentPlan 이 가진다.
+        weekly_base = WeeklyInvestmentPlan.objects.create(
+            monthly_plan=monthly_base,
+            title=f"{today.month}월 {w_from.day}~{w_until.day} 주계획 (기본)",
+            scenario_planning=ScenarioPlanning.BASE, predicted_trend=MarketTrend.UP,
+            thesis="완만한 상승. 반도체 대형주 중심으로 분할 진입.",
+            confidence_score=4, allocation_ratio={"005930": 40, "000660": 30, "035420": 30},
+            valid_from=w_from, valid_until=w_until,
+        )
+        weekly_bull = WeeklyInvestmentPlan.objects.create(
+            monthly_plan=monthly_base,
+            title=f"{today.month}월 {w_from.day}~{w_until.day} 주계획 (강세)",
+            scenario_planning=ScenarioPlanning.BULL, predicted_trend=MarketTrend.UP,
+            thesis="지수 신고가 뚫으면 매수 강도 상향.",
+            confidence_score=3,
+            valid_from=w_from, valid_until=w_until,
+        )
+
+        ws_samsung = WeeklySecurityInvestmentPlan.objects.create(
+            weekly_plan=weekly_base, security=samsung,
             title="삼성전자 이번 주 3분할 1차",
             scenario_planning=ScenarioPlanning.BASE, available_amount=Decimal("3000000.00"),
             predicted_trend=MarketTrend.UP,
             thesis="70,000 지지 확인. 여기서 1차 진입.",
             confidence_score=4, allocation_ratio={"005930": 100},
-            valid_from=w_from, valid_until=w_until,
             predicted_price=Decimal("76000.00"), stop_loss_price=Decimal("68000.00"),
         )
-        weekly_hynix = WeeklyInvestmentPlan.objects.create(
-            monthly_plan=monthly_base, security=hynix,
+        ws_hynix = WeeklySecurityInvestmentPlan.objects.create(
+            weekly_plan=weekly_base, security=hynix,
             title="SK하이닉스 관망",
             scenario_planning=ScenarioPlanning.BASE, available_amount=Decimal("2000000.00"),
             predicted_trend=MarketTrend.SIDEWAYS,
             thesis="180,000 ~ 195,000 박스. 이탈 확인 전까지 신규 진입 없음.",
             confidence_score=3, allocation_ratio={"000660": 100},
-            valid_from=w_from, valid_until=w_until,
             predicted_price=Decimal("196000.00"), stop_loss_price=Decimal("176000.00"),
         )
         # NAVER 는 월원칙이 없다 — 계층은 이어지지만 근거가 비어 있는 상태.
-        # (v0.0.1 의 '어디에도 안 붙는 주계획' 시나리오가 이걸로 바뀌었다.)
-        WeeklyInvestmentPlan.objects.create(
-            monthly_plan=monthly_base, security=naver,
+        WeeklySecurityInvestmentPlan.objects.create(
+            weekly_plan=weekly_bull, security=naver,
             title="NAVER 단기 반등 노림",
             scenario_planning=ScenarioPlanning.BULL, predicted_trend=MarketTrend.UP,
             thesis="낙폭 과대. 월원칙 없이 매달아 둔 계획이라 화면에 경고가 뜬다.",
             confidence_score=2,
-            valid_from=w_from, valid_until=w_until,
             predicted_price=Decimal("178000.00"), stop_loss_price=Decimal("155000.00"),
         )
 
         DailyInvestmentPlan.objects.create(
-            weekly_plan=weekly_samsung, title="오늘 1차 매수",
+            weekly_security_plan=ws_samsung, title="오늘 1차 매수",
             scenario_planning=ScenarioPlanning.BASE, predicted_trend=MarketTrend.UP,
             thesis="시가 대비 -1% 이탈 시 지정가 71,000 으로 1/3 진입.",
             confidence_score=4, valid_from=today, valid_until=today,
             predicted_price=Decimal("73000.00"), stop_loss_price=Decimal("68000.00"),
         )
         DailyInvestmentPlan.objects.create(
-            weekly_plan=weekly_hynix, title="오늘 관망",
+            weekly_security_plan=ws_hynix, title="오늘 관망",
             scenario_planning=ScenarioPlanning.BASE, predicted_trend=MarketTrend.SIDEWAYS,
             thesis="박스 상단까지 아무것도 하지 않는다.",
             confidence_score=3, valid_from=today, valid_until=today,

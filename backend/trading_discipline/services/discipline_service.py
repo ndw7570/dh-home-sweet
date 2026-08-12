@@ -23,7 +23,7 @@ from trading_discipline.models import (
     Order,
     QuarterlyInvestmentPlan,
     SecuritiesLoan,
-    WeeklyInvestmentPlan,
+    WeeklySecurityInvestmentPlan,
 )
 from trading_discipline.services._common import active_on, labels, num, today
 
@@ -45,12 +45,18 @@ def _today_plans(on: date) -> dict:
 
     dailies = (
         DailyInvestmentPlan.objects.filter(active_on(on=on))
-        .select_related("weekly_plan__security")
-        .order_by("weekly_plan_id", "scenario_planning")
+        .select_related("weekly_security_plan__security")
+        .order_by("weekly_security_plan_id", "scenario_planning")
     )
-    weeklies = (
-        WeeklyInvestmentPlan.objects.filter(active_on(on=on))
-        .select_related("security")
+    # 주계획 자체는 이제 기간 그룹만이라 종목·가격이 없다. 화면에 뿌릴 "오늘 유효한 주계획"은
+    # 종목이 붙은 WeeklySecurityInvestmentPlan 을 그 소속 주계획의 유효기간으로 걸러 뽑는다.
+    weekly_securities = (
+        WeeklySecurityInvestmentPlan.objects.filter(
+            weekly_plan__valid_from__lte=on,
+            weekly_plan__valid_until__gte=on,
+            weekly_plan__is_deleted=False,
+        )
+        .select_related("security", "weekly_plan")
         .order_by("security_id", "scenario_planning")
     )
     return {
@@ -101,7 +107,7 @@ def _today_plans(on: date) -> dict:
                     else None
                 ),
             }
-            for w in weeklies
+            for w in weekly_securities
         ],
     }
 
@@ -135,22 +141,27 @@ def _warnings(on: date) -> list[dict]:
             }
         )
 
-    # 손절가를 이미 뚫었는데 아직 살아 있는 주계획
-    for w in WeeklyInvestmentPlan.objects.filter(active_on(on=on)).select_related("security"):
-        price = w.security.current_price if w.security_id else None
-        if price is not None and w.stop_loss_price and price <= w.stop_loss_price:
+    # 손절가를 이미 뚫었는데 아직 살아 있는 주(종목별)계획
+    active_security_plans = WeeklySecurityInvestmentPlan.objects.filter(
+        weekly_plan__valid_from__lte=on,
+        weekly_plan__valid_until__gte=on,
+        weekly_plan__is_deleted=False,
+    ).select_related("security")
+    for sp in active_security_plans:
+        price = sp.security.current_price if sp.security_id else None
+        if price is not None and sp.stop_loss_price and price <= sp.stop_loss_price:
             out.append(
                 {
                     "kind": "STOP_LOSS_HIT",
                     "severity": "HIGH",
-                    "weekly_plan_id": w.id,
+                    "weekly_security_plan_id": sp.id,
                     "security": {
-                        "id": w.security.id,
-                        "symbol": w.security.symbol,
-                        "name": w.security.name,
+                        "id": sp.security.id,
+                        "symbol": sp.security.symbol,
+                        "name": sp.security.name,
                     },
                     "reasons": [
-                        f"현재가 {num(price)} 가 손절가 {num(w.stop_loss_price)} 이하다. "
+                        f"현재가 {num(price)} 가 손절가 {num(sp.stop_loss_price)} 이하다. "
                         "계획대로면 이미 정리했어야 한다."
                     ],
                 }
@@ -190,18 +201,25 @@ def _gaps(on: date) -> list[dict]:
                 }
             )
 
-    for w in WeeklyInvestmentPlan.objects.filter(active_on(on=on)).filter(
-        Q(stop_loss_price__isnull=True) | Q(confidence_score__isnull=True)
-    ):
+    incomplete = WeeklySecurityInvestmentPlan.objects.filter(
+        weekly_plan__valid_from__lte=on,
+        weekly_plan__valid_until__gte=on,
+        weekly_plan__is_deleted=False,
+    ).filter(Q(stop_loss_price__isnull=True) | Q(confidence_score__isnull=True))
+    for sp in incomplete:
         missing = []
-        if w.stop_loss_price is None:
+        if sp.stop_loss_price is None:
             missing.append("손절가")
-        if w.confidence_score is None:
+        if sp.confidence_score is None:
             missing.append("확신도")
         out.append(
             {
-                "kind": "WEEKLY_PLAN_INCOMPLETE",
-                "target": {"table": "weekly_investment_plan", "id": w.id, "title": w.title},
+                "kind": "WEEKLY_SECURITY_PLAN_INCOMPLETE",
+                "target": {
+                    "table": "weekly_security_investment_plan",
+                    "id": sp.id,
+                    "title": sp.title,
+                },
                 "message": f"{' · '.join(missing)} 가 비어 있다.",
             }
         )

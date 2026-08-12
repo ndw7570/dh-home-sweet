@@ -25,6 +25,7 @@ from trading_discipline.models import (
     TradingStrategy,
     TradingStrategyMethod,
     WeeklyInvestmentPlan,
+    WeeklySecurityInvestmentPlan,
 )
 
 
@@ -48,8 +49,18 @@ class AnnualPlanAdmin(admin.ModelAdmin):
 @admin.register(WeeklyInvestmentPlan)
 class WeeklyPlanAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "title", "security", "predicted_trend",
+        "id", "title", "monthly_plan", "predicted_trend",
         "confidence_score", "valid_from", "valid_until",
+    )
+    list_filter = ("scenario_planning", "predicted_trend")
+    search_fields = ("title", "thesis")
+
+
+@admin.register(WeeklySecurityInvestmentPlan)
+class WeeklySecurityPlanAdmin(admin.ModelAdmin):
+    list_display = (
+        "id", "title", "weekly_plan", "security", "predicted_trend",
+        "confidence_score", "predicted_price", "stop_loss_price",
     )
     list_filter = ("scenario_planning", "predicted_trend")
     search_fields = ("title", "thesis")

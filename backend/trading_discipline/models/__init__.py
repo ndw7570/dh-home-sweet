@@ -21,6 +21,7 @@ from trading_discipline.models.planning import (
     MonthlyInvestmentPlan,
     QuarterlyInvestmentPlan,
     WeeklyInvestmentPlan,
+    WeeklySecurityInvestmentPlan,
 )
 from trading_discipline.models.portfolio import (
     BrokerAccount,
@@ -48,6 +49,7 @@ __all__ = [
     "QuarterlyInvestmentPlan",
     "MonthlyInvestmentPlan",
     "WeeklyInvestmentPlan",
+    "WeeklySecurityInvestmentPlan",
     "DailyInvestmentPlan",
     # principle
     "MandatoryPrinciple",

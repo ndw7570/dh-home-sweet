@@ -78,6 +78,10 @@
   color: #fff;
 }
 .ct-level-WEEK {
+  background: #6d8299;
+  color: #fff;
+}
+.ct-level-WEEKLY_SECURITY {
   background: #8095ab;
   color: #fff;
 }
@@ -154,6 +158,20 @@
   border-radius: var(--radius);
   border: 1px solid var(--line);
   color: var(--text-secondary);
+  background: transparent;
+}
+
+/* 월원칙과 연결된 chip 은 클릭해서 수정할 수 있다는 걸 시각적으로 알려 준다. */
+button.ct-sec-chip.is-clickable {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+button.ct-sec-chip.is-clickable:hover,
+button.ct-sec-chip.is-clickable:focus-visible {
+  border-color: var(--line-strong);
+  color: var(--text-primary);
+  background: var(--surface-sunken);
 }
 
 .ct-broken {

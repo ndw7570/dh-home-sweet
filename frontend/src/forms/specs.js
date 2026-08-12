@@ -176,7 +176,32 @@ export const WEEKLY_PLAN_FIELDS = [
     type: "ref",
     optionsKey: "monthlyPlans",
     required: true,
-    hint: "v0.0.2 부터 주계획은 월계획에 직접 매달린다. DDL 은 NULLABLE 이지만 실질적으로 필수 — 상위 논리 없는 주계획을 만들지 않기 위해서.",
+    hint: "주계획은 월계획에 직접 매달린다. DDL 은 NULLABLE 이지만 실질적으로 필수 — 상위 논리 없는 주계획을 만들지 않기 위해서.",
+  },
+  {
+    name: "title",
+    label: "계획명",
+    required: true,
+    hint: "v0.0.3~ 주계획은 기간 그룹만이다. 종목·가격은 아래의 '종목별 주계획' 이 가진다.",
+  },
+  { name: "scenario_planning", label: "시나리오", type: "choice", choiceKey: "scenario_planning", required: true, default: "BASE", half: true },
+  { name: "predicted_trend", label: "예측추세", type: "choice", choiceKey: "market_trend", required: true, half: true },
+  { name: "thesis", label: "투자논리", type: "textarea", rows: 3, required: true },
+  { name: "confidence_score", label: "계획확신도", type: "confidence" },
+  { name: "valid_from", label: "유효시작일", type: "date", required: true, half: true },
+  { name: "valid_until", label: "유효종료일", type: "date", required: true, half: true },
+  { name: "allocation_ratio", label: "벨런싱비율계획 (JSON)", type: "json", rows: 3 },
+  { name: "remarks", label: "비고", type: "textarea", rows: 2 },
+];
+
+export const WEEKLY_SECURITY_PLAN_FIELDS = [
+  {
+    name: "weekly_plan",
+    label: "주계획",
+    type: "ref",
+    optionsKey: "weeklyPlans",
+    required: true,
+    hint: "어떤 주(기간) 밑에 매달릴지. 유효기간은 주계획에서 상속된다.",
   },
   {
     name: "security",
@@ -184,21 +209,18 @@ export const WEEKLY_PLAN_FIELDS = [
     type: "ref",
     optionsKey: "securities",
     required: true,
-    hint: "주계획은 반드시 한 종목에 대한 것이다(v0.0.2 부터 NOT NULL).",
   },
   { name: "title", label: "계획명", required: true },
   { name: "scenario_planning", label: "시나리오", type: "choice", choiceKey: "scenario_planning", required: true, default: "BASE", half: true },
   { name: "predicted_trend", label: "예측추세", type: "choice", choiceKey: "market_trend", required: true, half: true },
   { name: "thesis", label: "투자논리", type: "textarea", rows: 3, required: true },
   { name: "confidence_score", label: "계획확신도", type: "confidence" },
-  { name: "valid_from", label: "유효시작일", type: "date", required: true, half: true },
-  { name: "valid_until", label: "유효종료일", type: "date", required: true, half: true },
   {
     name: "available_amount",
     label: "가용금액",
     type: "price",
     half: true,
-    hint: "실제로 돈을 쓰는 단위가 주 단위라 이 계층에만 있다.",
+    hint: "실제로 돈을 쓰는 단위가 주 단위라 종목별 계획에 있다.",
   },
   { name: "predicted_price", label: "예상가격", type: "price", half: true },
   {
@@ -213,7 +235,13 @@ export const WEEKLY_PLAN_FIELDS = [
 ];
 
 export const DAILY_PLAN_FIELDS = [
-  { name: "weekly_plan", label: "주계획", type: "ref", optionsKey: "weeklyPlans" },
+  {
+    name: "weekly_security_plan",
+    label: "주(종목별)계획",
+    type: "ref",
+    optionsKey: "weeklySecurityPlans",
+    hint: "일계획은 종목별 주계획 아래에 매달린다.",
+  },
   { name: "title", label: "계획명", required: true },
   { name: "scenario_planning", label: "시나리오", type: "choice", choiceKey: "scenario_planning", required: true, default: "BASE", half: true },
   { name: "predicted_trend", label: "예측추세", type: "choice", choiceKey: "market_trend", required: true, half: true },

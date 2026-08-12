@@ -7,23 +7,25 @@ from trading_discipline.models.planning._mixins import CONFIDENCE_VALIDATORS, Pl
 
 
 class DailyInvestmentPlan(PlanPeriodMixin, BaseDomainModel):
-    """일투자계획 — `daily_investment_plan`. 계획 5계층의 끝.
+    """일투자계획 — `daily_investment_plan`. 계획 계층의 끝.
 
-    주계획을 하루 단위로 쪼갠 것이라, 종목은 주계획을 통해서만 안다(`security` 프로퍼티).
+    v0.0.3 부터 부모가 `WeeklyInvestmentPlan` 이 아니라
+    `WeeklySecurityInvestmentPlan` 이다 — 일계획은 이제 특정 종목의 이번 주 계획
+    아래에 매달린다. 종목은 `weekly_security_plan.security` 를 통해 안다.
     실제 주문(`orders`)이 규율을 지켰는지 대조하는 기준선이 이 계층이다.
     """
 
     PERIOD_LEVEL = "DAY"
 
     id = models.AutoField(primary_key=True, db_comment="ID")
-    weekly_plan = models.ForeignKey(
-        "trading_discipline.WeeklyInvestmentPlan",
+    weekly_security_plan = models.ForeignKey(
+        "trading_discipline.WeeklySecurityInvestmentPlan",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        db_column="weekly_plan_id",
+        db_column="weekly_security_plan_id",
         related_name="daily_plans",
-        db_comment="주계획ID",
+        db_comment="주투자종목별계획ID",
     )
     title = models.CharField(max_length=200, db_comment="계획명")
     scenario_planning = models.CharField(
@@ -54,7 +56,7 @@ class DailyInvestmentPlan(PlanPeriodMixin, BaseDomainModel):
         verbose_name = "일투자계획"
         verbose_name_plural = "일투자계획"
         indexes = [
-            models.Index(fields=["weekly_plan"], name="daily_weekly_idx"),
+            models.Index(fields=["weekly_security_plan"], name="daily_wsec_idx"),
             models.Index(fields=["valid_from", "valid_until"], name="daily_valid_idx"),
         ]
 
@@ -63,5 +65,9 @@ class DailyInvestmentPlan(PlanPeriodMixin, BaseDomainModel):
 
     @property
     def security(self):
-        """일계획은 종목 FK 가 없다. 주계획을 통해서만 종목에 닿는다."""
-        return self.weekly_plan.security if self.weekly_plan_id else None
+        """일계획은 종목 FK 가 없다 — 주투자종목별계획을 거쳐 종목에 닿는다."""
+        return (
+            self.weekly_security_plan.security
+            if self.weekly_security_plan_id
+            else None
+        )

@@ -14,6 +14,6 @@ class DailyPlanViewSet(BaseCommonViewSet):
     FILTER_FIELDS = DAILY_PLAN_FILTER_FIELDS
     list_serializer_class = DailyPlanListSerializer
     detail_serializer_class = DailyPlanDetailSelectSerializer
-    select_list = ("weekly_plan__security",)
-    select_detail = ("weekly_plan__security",)
+    select_list = ("weekly_security_plan__security", "weekly_security_plan__weekly_plan")
+    select_detail = ("weekly_security_plan__security", "weekly_security_plan__weekly_plan")
     default_ordering = ("-valid_from",)

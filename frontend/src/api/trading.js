@@ -86,6 +86,13 @@ export const listWeeklyPlans = (params = {}) =>
   wrap(() => api.get("/weekly-plan/", { no_page: 1, ...params }), () => mock.weeklyPlans);
 export const weeklyPlan = crud("weekly-plan");
 
+export const listWeeklySecurityPlans = (params = {}) =>
+  wrap(
+    () => api.get("/weekly-security-plan/", { no_page: 1, ...params }),
+    () => mock.weeklySecurityPlans || []
+  );
+export const weeklySecurityPlan = crud("weekly-security-plan");
+
 export const listDailyPlans = (params = {}) =>
   wrap(() => api.get("/daily-plan/", { no_page: 1, ...params }), () => mock.dailyPlans);
 export const dailyPlan = crud("daily-plan");

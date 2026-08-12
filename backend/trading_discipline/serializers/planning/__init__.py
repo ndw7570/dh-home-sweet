@@ -23,6 +23,11 @@ from trading_discipline.serializers.planning.weekly_plan import (
     WeeklyPlanListSerializer,
     WeeklyPlanParentSerializer,
 )
+from trading_discipline.serializers.planning.weekly_security_plan import (
+    WeeklySecurityPlanDetailSelectSerializer,
+    WeeklySecurityPlanListSerializer,
+    WeeklySecurityPlanParentSerializer,
+)
 
 __all__ = [
     "AnnualPlanListSerializer",
@@ -37,6 +42,9 @@ __all__ = [
     "WeeklyPlanListSerializer",
     "WeeklyPlanParentSerializer",
     "WeeklyPlanDetailSelectSerializer",
+    "WeeklySecurityPlanListSerializer",
+    "WeeklySecurityPlanParentSerializer",
+    "WeeklySecurityPlanDetailSelectSerializer",
     "DailyPlanListSerializer",
     "DailyPlanParentSerializer",
     "DailyPlanDetailSelectSerializer",

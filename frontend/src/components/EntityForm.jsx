@@ -27,23 +27,32 @@ function toPayload(fields, values) {
   const out = {};
   for (const f of fields) {
     if (f.readOnly) continue;
-    const raw = values[f.name];
+    let raw = values[f.name];
 
     if (f.type === "checkbox") {
       out[f.name] = Boolean(raw);
       continue;
     }
+    // 모든 문자열 입력은 양 끝 공백을 걷어 낸다. 트림 후 빈 값이면 null 로 보낸다.
+    if (typeof raw === "string") raw = raw.trim();
+
     if (EMPTY(raw)) {
       out[f.name] = null;
       continue;
     }
     switch (f.type) {
       case "number":
-      case "price":
       case "ratio":
       case "confidence":
         out[f.name] = Number(raw);
         break;
+      case "price": {
+        // 화면에는 콤마가 있고 상태에도 남을 수 있으니 저장 직전에 걷어 낸다.
+        // 부호만 있는 경우(NaN)는 빈 값으로 취급 — 서버에 NaN 을 보내지 않는다.
+        const n = Number(String(raw).replace(/,/g, ""));
+        out[f.name] = Number.isFinite(n) ? n : null;
+        break;
+      }
       case "ref":
         out[f.name] = Number(raw);
         break;
@@ -65,7 +74,9 @@ function toPayload(fields, values) {
 function validateLocal(fields, values) {
   const errors = {};
   for (const f of fields) {
-    const raw = values[f.name];
+    let raw = values[f.name];
+    // 공백만 채워 두고 "적었다"고 넘어가는 경우를 여기서 잡는다.
+    if (typeof raw === "string") raw = raw.trim();
     if (f.required && EMPTY(raw) && f.type !== "checkbox") {
       errors[f.name] = "필수 항목이다.";
       continue;

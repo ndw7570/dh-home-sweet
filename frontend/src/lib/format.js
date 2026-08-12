@@ -56,6 +56,7 @@ export const LEVEL_LABEL = {
   QUARTER: "분기",
   MONTH: "월",
   WEEK: "주",
+  WEEKLY_SECURITY: "종목별",
   DAY: "일",
 };
 

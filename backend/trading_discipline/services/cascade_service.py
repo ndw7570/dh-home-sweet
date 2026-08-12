@@ -1,9 +1,11 @@
 """계획 캐스케이드 조립.
 
-연 → 분기 → 월 → 주 → 일 다섯 계층을 하나의 트리로 세운다.
-v0.0.2 부터 주계획이 `monthly_plan_id` FK 로 월계획에 직접 매달리게 되면서,
-계층은 FK 만 따라가면 통째로 그려진다 — 예전처럼 종목+기간 겹침으로 조립할
-필요가 없다.
+연 → 분기 → 월 → 주 → 주(종목별) → 일 여섯 계층을 하나의 트리로 세운다.
+
+v0.0.3 부터 주계획(WEEK) 은 기간 그룹만 하고, 종목별 필드는
+`WeeklySecurityInvestmentPlan`(WEEKLY_SECURITY) 이 가진다. 그래서 트리는
+  MONTH → WEEK(기간) → WEEKLY_SECURITY(종목) → DAY
+가 된다. 화면에서 "이번 주에 삼성 / LG 를 어떻게 다루기로 했나" 를 묶어 볼 수 있다.
 
 월계획이 자기 아래 종목에 닿는 통로는 여전히 `monthly_investment_principles` 다.
 월원칙이 하나도 없는 월계획은 '어떤 종목에 대한 것인지' 를 알 수 없어 화면이
@@ -19,6 +21,7 @@ from trading_discipline.models import (
     MonthlyInvestmentPlan,
     QuarterlyInvestmentPlan,
     WeeklyInvestmentPlan,
+    WeeklySecurityInvestmentPlan,
 )
 from trading_discipline.services._common import active_on, labels, num, today
 
@@ -53,13 +56,15 @@ def _daily_node(plan: DailyInvestmentPlan) -> dict:
     }
 
 
-def _weekly_node(plan: WeeklyInvestmentPlan, dailies: list[DailyInvestmentPlan]) -> dict:
+def _weekly_security_node(
+    plan: WeeklySecurityInvestmentPlan, dailies: list[DailyInvestmentPlan]
+) -> dict:
     return {
         "id": plan.id,
-        "level": "WEEK",
+        "level": "WEEKLY_SECURITY",
         "title": plan.title,
         "security": _security_brief(plan.security),
-        "monthly_plan_id": plan.monthly_plan_id,
+        "weekly_plan_id": plan.weekly_plan_id,
         "scenario_planning": plan.scenario_planning,
         "predicted_trend": plan.predicted_trend,
         "confidence_score": plan.confidence_score,
@@ -68,14 +73,29 @@ def _weekly_node(plan: WeeklyInvestmentPlan, dailies: list[DailyInvestmentPlan])
         "stop_loss_price": num(plan.stop_loss_price),
         "risk_reward": plan.risk_reward,
         "thesis": plan.thesis,
-        "valid_from": plan.valid_from,
-        "valid_until": plan.valid_until,
         **labels(plan, "scenario_planning", "predicted_trend"),
         "children": [_daily_node(d) for d in dailies],
     }
 
 
-def _monthly_node(plan: MonthlyInvestmentPlan, weekly_nodes: list[dict], securities: list) -> dict:
+def _weekly_node(plan: WeeklyInvestmentPlan, security_nodes: list[dict]) -> dict:
+    return {
+        "id": plan.id,
+        "level": "WEEK",
+        "title": plan.title,
+        "monthly_plan_id": plan.monthly_plan_id,
+        "scenario_planning": plan.scenario_planning,
+        "predicted_trend": plan.predicted_trend,
+        "confidence_score": plan.confidence_score,
+        "thesis": plan.thesis,
+        "valid_from": plan.valid_from,
+        "valid_until": plan.valid_until,
+        **labels(plan, "scenario_planning", "predicted_trend"),
+        "children": security_nodes,
+    }
+
+
+def _monthly_node(plan: MonthlyInvestmentPlan, weekly_nodes: list[dict], principles: list) -> dict:
     return {
         "id": plan.id,
         "level": "MONTH",
@@ -89,8 +109,11 @@ def _monthly_node(plan: MonthlyInvestmentPlan, weekly_nodes: list[dict], securit
         "valid_until": plan.valid_until,
         **labels(plan, "scenario_planning", "predicted_trend"),
         # 월계획이 종목에 닿는 통로. 비어 있으면 근거가 비어 있다는 경고만 뜨고
-        # 계층 자체는 끊기지 않는다(주계획은 여전히 FK 로 매달릴 수 있다).
-        "securities": [_security_brief(s) for s in securities],
+        # 계층 자체는 끊기지 않는다. principle_id 를 함께 실어 프론트 chip 을
+        # 클릭해서 곧바로 수정 폼을 열 수 있게 한다.
+        "securities": [
+            {**_security_brief(p.security), "principle_id": p.id} for p in principles
+        ],
         "children": weekly_nodes,
     }
 
@@ -166,6 +189,7 @@ def build_cascade(
 
     tree = []
     weekly_total = 0
+    weekly_security_total = 0
 
     for annual in annual_plans:
         quarterly_qs = annual.quarterly_plans.filter(is_deleted=False)
@@ -176,16 +200,16 @@ def build_cascade(
         for quarterly in quarterly_qs.order_by("valid_from"):
             monthly_qs = quarterly.monthly_plans.filter(is_deleted=False).prefetch_related(
                 "principles__security",
-                "weekly_plans__security",
-                "weekly_plans__daily_plans",
+                "weekly_plans__security_plans__security",
+                "weekly_plans__security_plans__daily_plans",
             )
             if only_active:
                 monthly_qs = monthly_qs.filter(active_on(on=on))
             monthly_nodes = []
 
             for monthly in monthly_qs.order_by("valid_from", "scenario_planning"):
-                securities = [
-                    p.security
+                principles = [
+                    p
                     for p in monthly.principles.all()
                     if not p.is_deleted and p.security_id
                 ]
@@ -198,13 +222,23 @@ def build_cascade(
 
                 weekly_nodes = []
                 for wp in weekly_plans:
-                    dailies = [d for d in wp.daily_plans.all() if not d.is_deleted]
-                    if only_active:
-                        dailies = [d for d in dailies if d.is_active_on(on)]
-                    dailies.sort(key=lambda d: d.valid_from)
-                    weekly_nodes.append(_weekly_node(wp, dailies))
+                    security_plans = [
+                        sp for sp in wp.security_plans.all() if not sp.is_deleted
+                    ]
+                    security_plans.sort(key=lambda sp: sp.security_id or 0)
+                    weekly_security_total += len(security_plans)
 
-                monthly_nodes.append(_monthly_node(monthly, weekly_nodes, securities))
+                    security_nodes = []
+                    for sp in security_plans:
+                        dailies = [d for d in sp.daily_plans.all() if not d.is_deleted]
+                        if only_active:
+                            dailies = [d for d in dailies if d.is_active_on(on)]
+                        dailies.sort(key=lambda d: d.valid_from)
+                        security_nodes.append(_weekly_security_node(sp, dailies))
+
+                    weekly_nodes.append(_weekly_node(wp, security_nodes))
+
+                monthly_nodes.append(_monthly_node(monthly, weekly_nodes, principles))
 
             quarterly_nodes.append(_quarterly_node(quarterly, monthly_nodes))
 
@@ -218,23 +252,24 @@ def build_cascade(
         "counts": {
             "annual": len(tree),
             "weekly_total": weekly_total,
+            "weekly_security_total": weekly_security_total,
         },
     }
 
 
 def plans_for_security(security_id: int, on: date | None = None) -> dict:
-    """한 종목에 걸린 계획을 위(연·분기·월)와 아래(주·일) 양쪽으로 훑는다.
+    """한 종목에 걸린 계획을 위(연·분기·월)와 아래(주(종목별)·일) 양쪽으로 훑는다.
 
     이행 화면에서 "이 매매가 어떤 계획 밑에 있었나"를 묻는 데 쓴다.
     """
     on = on or today()
 
-    weekly = list(
-        WeeklyInvestmentPlan.objects.filter(security_id=security_id)
-        .filter(active_on(on=on))
-        .select_related("monthly_plan__quarterly_plan__annual_plan")
+    weekly_security = list(
+        WeeklySecurityInvestmentPlan.objects.filter(security_id=security_id)
+        .filter(is_deleted=False)
+        .select_related("weekly_plan__monthly_plan__quarterly_plan__annual_plan")
         .prefetch_related("daily_plans")
-        .order_by("-valid_from")
+        .order_by("-weekly_plan__valid_from")
     )
     monthly = list(
         MonthlyInvestmentPlan.objects.filter(
@@ -263,19 +298,19 @@ def plans_for_security(security_id: int, on: date | None = None) -> dict:
             }
             for m in monthly
         ],
-        "weekly_plans": [
+        "weekly_security_plans": [
             {
-                "id": w.id,
-                "title": w.title,
-                "monthly_plan_id": w.monthly_plan_id,
-                "predicted_price": num(w.predicted_price),
-                "stop_loss_price": num(w.stop_loss_price),
-                "valid_from": w.valid_from,
-                "valid_until": w.valid_until,
+                "id": sp.id,
+                "title": sp.title,
+                "weekly_plan_id": sp.weekly_plan_id,
+                "predicted_price": num(sp.predicted_price),
+                "stop_loss_price": num(sp.stop_loss_price),
+                "valid_from": sp.weekly_plan.valid_from if sp.weekly_plan_id else None,
+                "valid_until": sp.weekly_plan.valid_until if sp.weekly_plan_id else None,
                 "daily_plans": [
-                    _daily_node(d) for d in w.daily_plans.all() if not d.is_deleted
+                    _daily_node(d) for d in sp.daily_plans.all() if not d.is_deleted
                 ],
             }
-            for w in weekly
+            for sp in weekly_security
         ],
     }

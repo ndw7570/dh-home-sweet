@@ -6,37 +6,46 @@
 판정 규칙 — 위반이라고 단정하지 않고 **표시(flag)** 만 한다.
 계획 밖의 매매가 항상 잘못은 아니다. 다만 그것이 계획 밖이었다는 사실이
 기록에 남아야 나중에 그 결정이 좋았는지 나빴는지 갈라 볼 수 있다.
+
+v0.0.3 부터 대조 기준은 주계획(WeeklyInvestmentPlan) 이 아니라
+주(종목별)계획(WeeklySecurityInvestmentPlan) 이다 — 종목별 예상가/손절가/추세가
+그쪽으로 이동했기 때문.
 """
 
 from datetime import date, timedelta
 
 from trading_discipline.constants.choices import ActionType, MarketTrend, OrderSide
-from trading_discipline.models import Order, WeeklyInvestmentPlan
+from trading_discipline.models import Order, WeeklySecurityInvestmentPlan
 from trading_discipline.services._common import labels, num, today
 
 #: 예상가를 이만큼 넘겨 사면 표시한다(%).
 OVERPAY_TOLERANCE_PCT = 2.0
 
 
-def _plans_covering(security_id: int, on: date) -> list[WeeklyInvestmentPlan]:
+def _plans_covering(security_id: int, on: date) -> list[WeeklySecurityInvestmentPlan]:
     return list(
-        WeeklyInvestmentPlan.objects.filter(
-            security_id=security_id, valid_from__lte=on, valid_until__gte=on
-        ).order_by("scenario_planning")
+        WeeklySecurityInvestmentPlan.objects.filter(
+            security_id=security_id,
+            weekly_plan__valid_from__lte=on,
+            weekly_plan__valid_until__gte=on,
+            weekly_plan__is_deleted=False,
+        )
+        .select_related("weekly_plan")
+        .order_by("scenario_planning")
     )
 
 
-def _is_grounded(plan: WeeklyInvestmentPlan) -> bool:
-    """이 주계획이 위 계층(월계획)에 실제로 매달려 있는가.
+def _is_grounded(plan: WeeklySecurityInvestmentPlan) -> bool:
+    """이 주(종목별)계획이 위 계층(월계획)에 실제로 매달려 있는가.
 
-    v0.0.2 부터 `weekly_investment_plan.monthly_plan_id` FK 가 존재한다.
-    시리얼라이저에서 필수로 강제하지만, DDL 은 여전히 NULLABLE 이므로 방어적으로
-    확인한다(예: DB 에 직접 꽂은 데이터).
+    주(종목별)계획 → 주계획 → 월계획. 사이에 어느 하나라도 끊어져 있으면
+    상위 논리 없이 뜬 계획으로 취급한다.
     """
-    return plan.monthly_plan_id is not None
+    weekly = plan.weekly_plan
+    return bool(weekly and weekly.monthly_plan_id is not None)
 
 
-def _flags_for(order: Order, plans: list[WeeklyInvestmentPlan]) -> list[dict]:
+def _flags_for(order: Order, plans: list[WeeklySecurityInvestmentPlan]) -> list[dict]:
     flags: list[dict] = []
 
     if not plans:
@@ -44,7 +53,7 @@ def _flags_for(order: Order, plans: list[WeeklyInvestmentPlan]) -> list[dict]:
             {
                 "code": "NO_PLAN",
                 "severity": "HIGH",
-                "message": "이 날짜에 이 종목을 덮는 주계획이 없다. 계획 밖의 매매다.",
+                "message": "이 날짜에 이 종목을 덮는 주(종목별)계획이 없다. 계획 밖의 매매다.",
             }
         )
         return flags
@@ -54,7 +63,7 @@ def _flags_for(order: Order, plans: list[WeeklyInvestmentPlan]) -> list[dict]:
             {
                 "code": "UNGROUNDED_PLAN",
                 "severity": "HIGH",
-                "message": "주계획은 있지만 월계획에 매달려 있지 않다(monthly_plan_id 가 비어 있다). "
+                "message": "주(종목별)계획은 있지만 위 계층(월계획)에 매달려 있지 않다. "
                 "상위 논리 없이 세운 계획이라 사실상 계획 밖의 매매다.",
             }
         )
@@ -127,13 +136,13 @@ def compare_with_plan(
     # 계획(PLAN) 행은 대조 대상이 아니라 계획 그 자체라 뺀다.
     qs = qs.exclude(action_type=ActionType.PLAN).order_by("-created_at", "-id")
 
-    plan_cache: dict[tuple[int, date], list[WeeklyInvestmentPlan]] = {}
+    plan_cache: dict[tuple[int, date], list[WeeklySecurityInvestmentPlan]] = {}
     rows = []
     flagged = 0
 
     for order in qs:
         on = order.created_at or date_to
-        plans: list[WeeklyInvestmentPlan] = []
+        plans: list[WeeklySecurityInvestmentPlan] = []
         if order.security_id:
             key = (order.security_id, on)
             if key not in plan_cache:
@@ -176,6 +185,7 @@ def compare_with_plan(
                         "predicted_trend": p.predicted_trend,
                         "predicted_price": num(p.predicted_price),
                         "stop_loss_price": num(p.stop_loss_price),
+                        "weekly_plan_id": p.weekly_plan_id,
                         **labels(p, "scenario_planning", "predicted_trend"),
                     }
                     for p in plans

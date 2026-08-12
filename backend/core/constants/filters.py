@@ -89,7 +89,6 @@ MONTHLY_PLAN_FILTER_FIELDS = {
 
 WEEKLY_PLAN_FILTER_FIELDS = {
     "monthly_plan_id": "monthly_plan_id__exact",
-    "security_id": "security_id__exact",
     "scenario_planning": "scenario_planning__exact",
     "predicted_trend": "predicted_trend__exact",
     "confidence_min": "confidence_score__gte",
@@ -97,8 +96,16 @@ WEEKLY_PLAN_FILTER_FIELDS = {
     "valid_to": "valid_until__lte",
 }
 
-DAILY_PLAN_FILTER_FIELDS = {
+WEEKLY_SECURITY_PLAN_FILTER_FIELDS = {
     "weekly_plan_id": "weekly_plan_id__exact",
+    "security_id": "security_id__exact",
+    "scenario_planning": "scenario_planning__exact",
+    "predicted_trend": "predicted_trend__exact",
+    "confidence_min": "confidence_score__gte",
+}
+
+DAILY_PLAN_FILTER_FIELDS = {
+    "weekly_security_plan_id": "weekly_security_plan_id__exact",
     "scenario_planning": "scenario_planning__exact",
     "predicted_trend": "predicted_trend__exact",
     "valid_from": "valid_from__gte",

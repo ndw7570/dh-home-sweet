@@ -20,6 +20,7 @@ from trading_discipline.views.planning import (
     MonthlyPlanViewSet,
     QuarterlyPlanViewSet,
     WeeklyPlanViewSet,
+    WeeklySecurityPlanViewSet,
 )
 from trading_discipline.views.portfolio import (
     BrokerAccountViewSet,
@@ -44,11 +45,12 @@ router.register(r"security", SecurityViewSet)
 router.register(r"securities-loan", SecuritiesLoanViewSet)
 router.register(r"security-price-data", DailySecurityPriceDataViewSet)
 
-# planning — 연 → 분기 → 월 → 주 → 일
+# planning — 연 → 분기 → 월 → 주 → 주(종목별) → 일
 router.register(r"annual-plan", AnnualPlanViewSet)
 router.register(r"quarterly-plan", QuarterlyPlanViewSet)
 router.register(r"monthly-plan", MonthlyPlanViewSet)
 router.register(r"weekly-plan", WeeklyPlanViewSet)
+router.register(r"weekly-security-plan", WeeklySecurityPlanViewSet)
 router.register(r"daily-plan", DailyPlanViewSet)
 
 # principle

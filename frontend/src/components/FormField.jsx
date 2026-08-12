@@ -1,6 +1,29 @@
 import { optionsFor } from "../lib/useChoices";
 
 /**
+ * 금액 입력은 한국식 세 자리 콤마로 늘 보인다 (100000 → "100,000").
+ * 저장 시엔 EntityForm.toPayload 가 콤마를 떼고 숫자로 바꾼다.
+ * 여기서는 표시/입력만 관리한다 — 상태에는 콤마 없는 원문(디지트, 옵션 부호)만 넣는다.
+ */
+function formatPriceDisplay(raw) {
+  if (raw === "" || raw === null || raw === undefined) return "";
+  const s = String(raw);
+  const neg = s.startsWith("-");
+  const digits = s.replace(/[^\d]/g, "");
+  if (!digits) return neg ? "-" : "";
+  return (neg ? "-" : "") + Number(digits).toLocaleString("ko-KR");
+}
+
+function sanitizePriceInput(v) {
+  // 콤마·공백·문자 다 걷어 내고 부호 하나만 남긴다.
+  const s = String(v ?? "");
+  const neg = s.trim().startsWith("-");
+  const digits = s.replace(/[^\d]/g, "");
+  if (!digits) return neg ? "-" : "";
+  return (neg ? "-" : "") + digits;
+}
+
+/**
  * 필드 하나. 타입은 EntityForm 의 스펙이 정한다.
  *
  * 어떤 타입이든 세 가지를 같은 모양으로 보여 준다.
@@ -25,6 +48,15 @@ export default function FormField({ field, value, error, choices, onChange }) {
   } = field;
 
   const id = `f-${name}`;
+  // 문자열 입력은 blur 때 양 끝 공백을 걷어 낸다. 사용자가 눈으로도 결과를 보게 하고,
+  // 저장 경로(EntityForm.toPayload)에서도 한 번 더 트림해 방어한다.
+  const trimOnBlur = (e) => {
+    const v = e.target.value;
+    if (typeof v === "string") {
+      const t = v.trim();
+      if (t !== v) onChange(name, t);
+    }
+  };
   const common = {
     id,
     name,
@@ -38,17 +70,30 @@ export default function FormField({ field, value, error, choices, onChange }) {
   let control;
   switch (type) {
     case "textarea":
-      control = <textarea {...common} rows={rows || 3} />;
+      control = <textarea {...common} rows={rows || 3} onBlur={trimOnBlur} />;
+      break;
+
+    case "price":
+      // type="number" 로는 콤마를 못 넣는다. text 로 바꾸고 표시만 콤마로 꾸민다.
+      control = (
+        <input
+          {...common}
+          type="text"
+          inputMode="numeric"
+          value={formatPriceDisplay(value)}
+          onChange={(e) => onChange(name, sanitizePriceInput(e.target.value))}
+          onBlur={trimOnBlur}
+        />
+      );
       break;
 
     case "number":
-    case "price":
     case "ratio":
       control = (
         <input
           {...common}
           type="number"
-          step={step ?? (type === "price" ? "1" : type === "ratio" ? "0.01" : "any")}
+          step={step ?? (type === "ratio" ? "0.01" : "any")}
           min={min}
           max={max}
           inputMode="decimal"
@@ -118,6 +163,7 @@ export default function FormField({ field, value, error, choices, onChange }) {
           rows={rows || 3}
           spellCheck={false}
           className={`${common.className} ff-mono`}
+          onBlur={trimOnBlur}
         />
       );
       break;
@@ -137,7 +183,7 @@ export default function FormField({ field, value, error, choices, onChange }) {
       break;
 
     default:
-      control = <input {...common} type="text" />;
+      control = <input {...common} type="text" onBlur={trimOnBlur} />;
   }
 
   return (

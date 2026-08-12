@@ -18,10 +18,12 @@ import {
   listQuarterlyPlans,
   listSecurities,
   listWeeklyPlans,
+  listWeeklySecurityPlans,
   monthlyPlan,
   monthlyPrinciple,
   quarterlyPlan,
   weeklyPlan,
+  weeklySecurityPlan,
 } from "../api/trading";
 import {
   ANNUAL_PLAN_FIELDS,
@@ -30,6 +32,7 @@ import {
   MONTHLY_PRINCIPLE_FIELDS,
   QUARTERLY_PLAN_FIELDS,
   WEEKLY_PLAN_FIELDS,
+  WEEKLY_SECURITY_PLAN_FIELDS,
 } from "../forms/specs";
 import { isoDate } from "../lib/format";
 import { useAsync, useAsyncAll } from "../lib/useAsync";
@@ -49,6 +52,7 @@ const KIND_LABEL = {
   QUARTER: "분기투자계획",
   MONTH: "월투자계획",
   WEEK: "주투자계획",
+  WEEKLY_SECURITY: "종목별 주계획",
   DAY: "일투자계획",
   MONTHLY_PRINCIPLE: "월투자원칙",
 };
@@ -59,7 +63,8 @@ const PARENT_KEY = {
   MONTH: "quarterly_plan",
   MONTHLY_PRINCIPLE: "monthly_plan",
   WEEK: "monthly_plan",
-  DAY: "weekly_plan",
+  WEEKLY_SECURITY: "weekly_plan",
+  DAY: "weekly_security_plan",
 };
 
 const VIEW_TABS = [
@@ -95,6 +100,7 @@ export default function PlanPage() {
       quarterlyPlans: () => listQuarterlyPlans(),
       monthlyPlans: () => listMonthlyPlans(),
       weeklyPlans: () => listWeeklyPlans(),
+      weeklySecurityPlans: () => listWeeklySecurityPlans(),
     },
     []
   );
@@ -105,6 +111,11 @@ export default function PlanPage() {
       QUARTER: { title: KIND_LABEL.QUARTER, fields: QUARTERLY_PLAN_FIELDS, api: quarterlyPlan, wide: true },
       MONTH: { title: KIND_LABEL.MONTH, fields: MONTHLY_PLAN_FIELDS, api: monthlyPlan },
       WEEK: { title: KIND_LABEL.WEEK, fields: WEEKLY_PLAN_FIELDS, api: weeklyPlan },
+      WEEKLY_SECURITY: {
+        title: KIND_LABEL.WEEKLY_SECURITY,
+        fields: WEEKLY_SECURITY_PLAN_FIELDS,
+        api: weeklySecurityPlan,
+      },
       DAY: { title: KIND_LABEL.DAY, fields: DAILY_PLAN_FIELDS, api: dailyPlan },
       MONTHLY_PRINCIPLE: {
         title: KIND_LABEL.MONTHLY_PRINCIPLE,
@@ -137,6 +148,13 @@ export default function PlanPage() {
         label: `${p.title} [${p.scenario_planning_label || p.scenario_planning}]`,
       })),
       weeklyPlans: (refs.data?.weeklyPlans || []).map((p) => ({ value: p.id, label: p.title })),
+      weeklySecurityPlans: (refs.data?.weeklySecurityPlans || []).map((p) => {
+        const sec = p.security_detail;
+        const label = sec
+          ? `${p.title} — ${sec.name} (${sec.symbol})`
+          : p.title;
+        return { value: p.id, label };
+      }),
     }),
     [refs.data]
   );
@@ -289,6 +307,9 @@ export default function PlanPage() {
                     tree={cascade.tree}
                     onEdit={(node) => form.openEdit(node.level, node.id)}
                     onAddChild={handleAddChild}
+                    onEditPrinciple={(principleId) =>
+                      form.openEdit("MONTHLY_PRINCIPLE", principleId)
+                    }
                   />
                 </Panel>
               )}
