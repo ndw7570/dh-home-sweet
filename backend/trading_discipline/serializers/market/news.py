@@ -1,12 +1,14 @@
 from rest_framework import serializers
 
 from trading_discipline.models import News
-from trading_discipline.serializers._base import DomainSerializer
+from trading_discipline.serializers._base import DomainPropertySerializer, DomainSerializer
 from trading_discipline.serializers.market.market_direction import MarketDirectionParentSerializer
 
 
-class NewsListSerializer(DomainSerializer):
+class NewsListSerializer(DomainPropertySerializer):
     """뉴스 — 시장방향과 종목 사이의 한 단."""
+
+    PROPERTY_FIELDS = ("impact_period_label", "expected_impact_days", "is_impact_current")
 
     market_direction_detail = MarketDirectionParentSerializer(
         source="market_direction", read_only=True
@@ -29,13 +31,33 @@ class NewsListSerializer(DomainSerializer):
             raise serializers.ValidationError(
                 {"rationale": "근거 없이 뉴스만 걸어 둘 수 없다. 이 기사를 왜 근거로 삼는지 적는다."}
             )
+
+        start = attrs.get(
+            "expected_impact_from", getattr(self.instance, "expected_impact_from", None)
+        )
+        end = attrs.get(
+            "expected_impact_until", getattr(self.instance, "expected_impact_until", None)
+        )
+        if start and end and start > end:
+            raise serializers.ValidationError(
+                {"expected_impact_until": "예상영향종료일이 시작일보다 앞설 수 없다."}
+            )
         return attrs
 
 
 class NewsParentSerializer(DomainSerializer):
     class Meta:
         model = News
-        fields = ("id", "market_direction", "direction", "factor_type", "factor_value", "content")
+        fields = (
+            "id",
+            "market_direction",
+            "direction",
+            "factor_type",
+            "factor_value",
+            "content",
+            "expected_impact_from",
+            "expected_impact_until",
+        )
 
 
 class NewsDetailSelectSerializer(NewsListSerializer):

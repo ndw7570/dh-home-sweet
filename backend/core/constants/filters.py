@@ -162,8 +162,16 @@ NEWS_FILTER_FIELDS = {
     "direction": "direction__exact",
     "factor_type": "factor_type__exact",
     "content": "content__icontains",
+    # 기사가 난 날(created_at) 로 좁힌다.
     "date_from": "created_at__gte",
     "date_to": "created_at__lte",
+    # 예상 영향 구간으로 좁힌다 — 기사가 난 날과 영향이 먹히는 구간은 다르다.
+    #   impact_on      그날이 영향 구간 안인 뉴스 (가장 자주 쓰는 질문)
+    #   impact_from/to 영향 구간이 이 범위와 겹치는 뉴스
+    "impact_on": ("expected_impact_from__lte", "expected_impact_until__gte"),
+    "impact_from": "expected_impact_until__gte",
+    "impact_to": "expected_impact_from__lte",
+    "impact_undecided": "expected_impact_from__isnull",
 }
 
 AFFECTED_SECURITY_FILTER_FIELDS = {

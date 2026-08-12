@@ -10,6 +10,7 @@ from trading_discipline.views.dashboard import (
     ExecutionCompareView,
     HomeBoardView,
     PerformanceSummaryView,
+    PlanExecutionView,
     SecurityPlansView,
 )
 from trading_discipline.views.execution import OrderViewSet, PerformanceRecordViewSet
@@ -88,6 +89,11 @@ urlpatterns = [
     path("home/board/", HomeBoardView.as_view(), name="home-board"),
     path("execution/compare/", ExecutionCompareView.as_view(), name="execution-compare"),
     path("performance/summary/", PerformanceSummaryView.as_view(), name="performance-summary"),
+    path(
+        "performance/plan-execution/",
+        PlanExecutionView.as_view(),
+        name="performance-plan-execution",
+    ),
     path("ai/digest/", AiDigestView.as_view(), name="ai-digest"),
     path("ai/feedback-for/", AiFeedbackForView.as_view(), name="ai-feedback-for"),
     path("meta/choices/", ChoicesView.as_view(), name="meta-choices"),

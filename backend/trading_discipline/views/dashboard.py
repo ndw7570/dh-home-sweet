@@ -8,6 +8,7 @@ CRUD 로 안 떨어지는 것들만 여기 모은다. ViewSet 에 `@action` 으�
   GET /home/board/         오늘의 규율 (홈 한 방 조회)
   GET /execution/compare/  계획 대비 이행 대조
   GET /performance/summary/ 성과 집계
+  GET /performance/plan-execution/ 계획 대비 이행 (일별/주별 집계)
   GET /ai/digest/          AI 의견 요약
   GET /meta/choices/       코드값 전체 (프론트 셀렉트박스)
 """
@@ -27,6 +28,7 @@ from trading_discipline.services import (
     discipline_service,
     execution_service,
     performance_service,
+    plan_execution_service,
 )
 
 #: 이 화면들은 CRUD 가 아니라 조립된 결과라 시리얼라이저가 없다.
@@ -116,6 +118,20 @@ class PerformanceSummaryView(APIView):
     def get(self, request):
         data = performance_service.summarize(
             period_type=request.query_params.get("period_type"),
+            date_from=_date_param(request, "date_from"),
+            date_to=_date_param(request, "date_to"),
+            security_id=_int_param(request, "security_id"),
+        )
+        return success_response(data)
+
+
+@freeform
+class PlanExecutionView(APIView):
+    """GET /performance/plan-execution/?bucket=DAY|WEEK&date_from=&date_to=&security_id="""
+
+    def get(self, request):
+        data = plan_execution_service.compare_buckets(
+            bucket=(request.query_params.get("bucket") or "DAY").upper(),
             date_from=_date_param(request, "date_from"),
             date_to=_date_param(request, "date_to"),
             security_id=_int_param(request, "security_id"),

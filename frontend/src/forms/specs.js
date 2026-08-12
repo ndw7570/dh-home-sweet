@@ -258,8 +258,27 @@ export const DAILY_PLAN_FIELDS = [
     mirrorTo: "valid_until",
     hint: "일계획은 하루짜리라 유효종료일도 이 날짜로 저장된다.",
   },
-  { name: "predicted_price", label: "예상가격", type: "price", half: true },
-  { name: "stop_loss_price", label: "손절가격", type: "price", half: true },
+  {
+    name: "predicted_price",
+    label: "예상가격",
+    type: "price",
+    half: true,
+    hint: "이 종목이 여기까지 갈 것 같다는 전망.",
+  },
+  {
+    name: "target_fill_price",
+    label: "목표체결가",
+    type: "price",
+    half: true,
+    hint: "내가 걸겠다는 주문 가격. 전망(예상가격)과 따로 적어야 '전망이 틀린 것'과 '자리를 못 잡은 것'이 갈린다.",
+  },
+  {
+    name: "stop_loss_price",
+    label: "손절가격",
+    type: "price",
+    half: true,
+    hint: "변동성 확대 계획의 이행 판정 기준이다 — 이 값이 없으면 판정 불가로 남는다.",
+  },
   { name: "allocation_ratio", label: "벨런싱비율계획 (JSON)", type: "json", rows: 3 },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },
 ];
@@ -439,6 +458,22 @@ export const NEWS_FIELDS = [
     rows: 3,
     required: true,
     hint: "이 기사를 왜 판단의 근거로 삼는지. 안 적으면 서버가 막는다.",
+  },
+  // 기사가 난 날과 영향이 먹히는 구간은 다르다. 금리 결정은 몇 달을 끌고 실적
+  // 서프라이즈는 며칠이면 소화된다. 그 추측을 적어 두면 나중에 대조할 수 있다.
+  {
+    name: "expected_impact_from",
+    label: "예상영향시작일",
+    type: "date",
+    half: true,
+    hint: "모르면 비워 둔다. 아는 척 채운 날짜가 빈칸보다 나쁘다.",
+  },
+  {
+    name: "expected_impact_until",
+    label: "예상영향종료일",
+    type: "date",
+    half: true,
+    hint: "시작일보다 앞서면 서버가 막는다.",
   },
   {
     name: "affected_targets",

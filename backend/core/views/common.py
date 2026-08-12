@@ -2,6 +2,8 @@
 
 여기서 책임지는 것:
   1. strict 쿼리 검증  — FILTER_FIELDS 화이트리스트에 없는 파라미터가 오면 400
+     (FILTER_FIELDS 의 값은 lookup 문자열, `__in` 으로 끝나는 다중값 lookup,
+      또는 한 파라미터로 여러 조건을 AND 로 거는 lookup 튜플)
   2. list / detail 시리얼라이저 분기
   3. select_related / prefetch_related 를 list·detail 각각 다르게
   4. 소프트딜리트 모드 (`?soft_delete_mode=alive|deleted|all`)
@@ -15,6 +17,7 @@
 
 from django.conf import settings
 from django.core.exceptions import FieldError
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status as http_status
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -28,6 +31,13 @@ except ImportError:  # pragma: no cover
     EXCLUDE_FROM_STRICT_CHECK = set()
 
 _TRUE = ("1", "true", "yes", "on")
+
+
+def _describe(exc) -> str:
+    """예외를 한 줄로. DjangoValidationError 는 messages 로 풀어야 사람이 읽는다
+    (str() 하면 `["'bogus' 값은 …"]` 처럼 리스트 표현이 그대로 나온다)."""
+    messages = getattr(exc, "messages", None)
+    return " ".join(messages) if messages else str(exc)
 
 
 class BaseCommonViewSet(viewsets.ModelViewSet):
@@ -106,6 +116,19 @@ class BaseCommonViewSet(viewsets.ModelViewSet):
         for key, lookup in self.FILTER_FIELDS.items():
             if key not in params:
                 continue
+            # 값이 튜플이면 한 파라미터가 여러 lookup 을 AND 로 건다.
+            # "이 날짜가 시작~종료 구간 안" 처럼 한 질문에 조건이 둘 필요한 경우가 있다
+            #   {"impact_on": ("impact_from__lte", "impact_until__gte")}
+            # 파라미터를 둘로 쪼개 쓰게 하면(from 이하 + until 이상) 사용자가 매번
+            # 두 칸을 같은 날짜로 채워야 해서, 한쪽만 채운 반쪽 질의가 조용히 나간다.
+            if isinstance(lookup, (tuple, list)):
+                raw = params.get(key)
+                if raw in (None, ""):
+                    continue
+                value = self._coerce(raw)
+                for one in lookup:
+                    lookups[one] = value
+                continue
             if lookup.endswith("__in"):
                 values = params.getlist(key)
                 if len(values) == 1:
@@ -122,8 +145,12 @@ class BaseCommonViewSet(viewsets.ModelViewSet):
             return qs
         try:
             return qs.filter(**lookups).distinct()
-        except (FieldError, ValueError) as exc:
-            raise ValidationError({"query_params": str(exc)}) from exc
+        except (FieldError, ValueError, DjangoValidationError) as exc:
+            # DjangoValidationError 는 값이 그 컬럼 타입이 아닐 때 난다
+            # (`?date_from=bogus` → "날짜 형식이 아닙니다"). 안 잡으면 500 으로 새는데,
+            # 잘못 친 질의는 서버 잘못이 아니라 요청 잘못이라 400 이어야 한다.
+            # 그래야 화면이 에러 메시지를 필드 밑에 붙여 줄 수 있다.
+            raise ValidationError({"query_params": _describe(exc)}) from exc
 
     @staticmethod
     def _coerce(raw: str):

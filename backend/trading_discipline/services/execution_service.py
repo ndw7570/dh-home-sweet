@@ -96,6 +96,8 @@ def _normalize(plan, level: str) -> dict:
         "scenario_planning": plan.scenario_planning,
         "predicted_trend": plan.predicted_trend,
         "predicted_price": num(plan.predicted_price),
+        # 목표체결가는 일계획에만 있다. 주(종목별)계획으로 물러선 경우엔 None.
+        "target_fill_price": num(getattr(plan, "target_fill_price", None)),
         "stop_loss_price": num(plan.stop_loss_price),
         "weekly_plan_id": weekly.id if weekly else None,
         "weekly_security_plan_id": sec_plan.id if sec_plan else None,

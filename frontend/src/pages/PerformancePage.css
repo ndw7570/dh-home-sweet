@@ -70,3 +70,262 @@
   text-align: right;
   color: var(--text-secondary);
 }
+
+/* 탭 — 계획 화면(pp-viewtab)과 같은 모양으로 맞춘다. 화면마다 탭이 다르게 생기면
+   같은 조작을 매번 다시 찾아야 한다. */
+.pf-viewtabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pf-viewtab {
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+
+.pf-viewtab:hover {
+  color: var(--text-primary);
+}
+
+.pf-viewtab.is-on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* 일별/주별 — 탭보다 한 단 아래라 알약형으로 낮춰 둔다. */
+.pf-buckets {
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 14px;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.pf-bucket {
+  border: 0;
+  background: transparent;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pf-bucket.is-on {
+  background: var(--surface-card);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+}
+
+/* 계획 없이 움직인 구간. 대시(—)로 두면 '값 없음'과 섞여 안 보인다. */
+.pf-noplan {
+  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* 탭 — 계획 화면(pp-viewtab)과 같은 모양으로 맞춘다. 화면마다 탭이 다르게 생기면
+   같은 조작을 매번 다시 찾아야 한다. */
+.pf-viewtabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pf-viewtab {
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+
+.pf-viewtab:hover { color: var(--text-primary); }
+
+.pf-viewtab.is-on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* 일별/주별 — 탭보다 한 단 아래라 알약형으로 낮춰 둔다. */
+.pf-buckets {
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 14px;
+  padding: 2px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.pf-bucket {
+  border: 0;
+  background: transparent;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pf-bucket.is-on {
+  background: var(--surface-card);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+}
+
+/* 계획 없이 움직인 구간. 대시(—)로 두면 '값 없음'과 섞여 안 보인다. */
+.pf-noplan {
+  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.ta-r { text-align: right; }
+
+.pe-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+/**
+ * 구간 줄과 종목 줄을 한 표에 둔다.
+ * 종목 줄은 배경을 낮추고 왼쪽에 세로선을 그어 "이 구간에 딸린 것"임을 표시한다.
+ * 들여쓰기만으로는 스크롤 중에 어느 구간 소속인지 놓친다.
+ */
+.pe .pe-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.pe .pe-toggle > span:first-child {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.pe-seccount {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 1px 6px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.pe tr.pe-sub > td {
+  background: var(--surface-sunken);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.pe tr.pe-sub > td:first-child {
+  padding-left: 26px;
+  box-shadow: inset 2px 0 0 var(--line-strong);
+}
+
+.pe-sec { font-size: 13px; }
+
+.pe-fmini {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/**
+ * 일계획 이행 판정.
+ * 판정 배지 → 언제/무엇 → 이유 순으로 읽히게 둔다. 이유를 안 보여 주면
+ * "미이행" 세 글자만 남아서 무엇을 고쳐야 할지 알 수 없다.
+ */
+.pe-verdicts {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pe-verdict {
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: var(--radius-card);
+  padding: 10px 13px;
+}
+
+.pe-verdict-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.pe-verdict-mark {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: var(--radius);
+}
+
+.pe-verdict-mark.is-ok {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.pe-verdict-mark.is-broken {
+  background: #fdecec;
+  color: #b3261e;
+}
+.pe-verdict-mark.is-unknown {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.pe-verdict-date { font-size: 12px; color: var(--text-muted); }
+.pe-verdict-trend { font-size: 12px; color: var(--text-secondary); }
+.pe-verdict-title { font-size: 13px; color: var(--text-secondary); }
+.pe-verdict-nums { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+
+.pe-verdict-reason {
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.pe-verdict-prices {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pe-verdict-prices em { font-style: normal; font-weight: 600; }

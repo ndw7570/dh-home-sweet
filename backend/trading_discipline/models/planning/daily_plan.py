@@ -47,6 +47,12 @@ class DailyInvestmentPlan(PlanPeriodMixin, BaseDomainModel):
     predicted_price = models.DecimalField(
         max_digits=15, decimal_places=2, null=True, blank=True, db_comment="예상가격"
     )
+    # 예상가격과 다른 숫자다. 예상가격은 "이 종목이 여기까지 갈 것 같다"는 전망이고,
+    # 목표체결가는 "나는 여기에 걸겠다"는 내 주문 가격이다. 전망이 맞았는지와
+    # 내가 원하는 자리에서 체결시켰는지는 따로 재야 고칠 곳이 갈린다.
+    target_fill_price = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True, db_comment="목표체결가"
+    )
     stop_loss_price = models.DecimalField(
         max_digits=15, decimal_places=2, null=True, blank=True, db_comment="손절가격"
     )

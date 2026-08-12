@@ -12,585 +12,760 @@
 
 
 export const cascade = {
-  "as_of": "2026-08-09",
+  "as_of": "2026-08-12",
   "account_id": null,
   "only_active": true,
   "tree": [
     {
-      "id": 3,
+      "id": 1,
       "level": "YEAR",
-      "title": "2026 반도체 사이클 상반기 비중확대",
+      "title": "코스피 12000 버티자",
       "market": "KOSPI",
       "direction": "LONG",
       "status": "ACTIVE",
-      "thesis": "메모리 감산 효과가 재고 정상화로 이어지는 구간. 사이클 초입에서 비중을 싣는다.",
-      "target_return_ratio": 18.0,
-      "stop_loss_ratio": -8.0,
-      "valid_from": "2026-01-01",
+      "thesis": "하이닉스, 삼전 반도체 실적 기반",
+      "target_return_ratio": 100.0,
+      "stop_loss_ratio": 50.0,
+      "valid_from": "2026-08-11",
       "valid_until": "2026-12-31",
       "market_label": "코스피",
       "direction_label": "매수",
       "status_label": "진행중",
       "account": {
-        "id": 3,
-        "broker_name": "미래에셋증권",
-        "account_number": "****8901"
+        "id": 1,
+        "broker_name": "NH나무",
+        "account_number": "****2514"
       },
       "children": [
         {
-          "id": 3,
+          "id": 1,
           "level": "QUARTER",
-          "title": "2026 3분기 반도체 비중 55%",
-          "direction": "LONG",
-          "thesis": "분기 실적 발표에서 재고 감소가 확인되는지가 분기점.",
-          "rebalancing_ratio": {
-            "005930": 30,
-            "000660": 25,
-            "CASH": 45
-          },
+          "title": "코스피 7500 버티자",
+          "direction": "SHORT",
+          "thesis": "하이닉스, 삼전 하락에서 복구..! 주주환원 기대",
+          "rebalancing_ratio": null,
           "strategy_coverage": {
-            "buy": true,
-            "sell": true,
-            "sideways": true,
+            "buy": false,
+            "sell": false,
+            "sideways": false,
             "stop_loss": false
           },
           "strategies": {
-            "buy": "20일선 지지 확인 후 3분할. 1차 -3%, 2차 -7%, 3차 -12%.",
-            "sell": "목표가 도달 시 절반, 나머지는 추세 이탈까지 보유.",
-            "sideways": "2주 이상 횡보하면 신규 매수 중단, 현금 비중 유지.",
+            "buy": null,
+            "sell": null,
+            "sideways": null,
             "stop_loss": null
           },
-          "target_return_ratio": 6.0,
-          "stop_loss_ratio": -5.0,
-          "valid_from": "2026-07-01",
-          "valid_until": "2026-09-30",
-          "direction_label": "매수",
+          "target_return_ratio": null,
+          "stop_loss_ratio": null,
+          "valid_from": "2026-08-11",
+          "valid_until": "2026-08-31",
+          "direction_label": "매도",
+          "securities": [
+            {
+              "id": 1,
+              "symbol": "005930",
+              "name": "삼성전자",
+              "market": "KOSPI",
+              "sector": "반도체",
+              "current_price": 256000.0,
+              "principle_id": 1
+            },
+            {
+              "id": 2,
+              "symbol": "000660",
+              "name": "SK하이닉스",
+              "market": "KOSPI",
+              "sector": "반도체",
+              "current_price": 1505000.0,
+              "principle_id": 2
+            }
+          ],
           "children": [
             {
-              "id": 5,
+              "id": 1,
               "level": "MONTH",
-              "title": "8월 기본 시나리오",
+              "title": "8월 버티면",
               "scenario_planning": "BASE",
               "predicted_trend": "UP",
-              "confidence_score": 4,
-              "allocation_ratio": {
-                "005930": 30,
-                "000660": 25,
-                "CASH": 45
-              },
-              "thesis": "완만한 상승. 조정 시 분할 매수로 비중을 채운다.",
-              "valid_from": "2026-08-01",
+              "confidence_score": 3,
+              "allocation_ratio": null,
+              "thesis": "유동성 줄고, 실적 기반 코스피",
+              "valid_from": "2026-08-11",
               "valid_until": "2026-08-31",
               "scenario_planning_label": "기본",
               "predicted_trend_label": "상승",
               "securities": [
                 {
-                  "id": 7,
+                  "id": 1,
                   "symbol": "005930",
                   "name": "삼성전자",
                   "market": "KOSPI",
                   "sector": "반도체",
-                  "current_price": 71500.0
+                  "current_price": 256000.0,
+                  "principle_id": 1
                 },
                 {
-                  "id": 8,
+                  "id": 2,
                   "symbol": "000660",
                   "name": "SK하이닉스",
                   "market": "KOSPI",
                   "sector": "반도체",
-                  "current_price": 183000.0
+                  "current_price": 1505000.0,
+                  "principle_id": 2
                 }
               ],
               "children": [
                 {
-                  "id": 9,
+                  "id": 1,
                   "level": "WEEK",
-                  "title": "삼성전자 이번 주 3분할 1차",
-                  "security": {
-                    "id": 7,
-                    "symbol": "005930",
-                    "name": "삼성전자",
-                    "market": "KOSPI",
-                    "sector": "반도체",
-                    "current_price": 71500.0
-                  },
+                  "title": "관망과 대응",
+                  "monthly_plan_id": 1,
                   "scenario_planning": "BASE",
                   "predicted_trend": "UP",
-                  "confidence_score": 4,
-                  "available_amount": 3000000.0,
-                  "predicted_price": 76000.0,
-                  "stop_loss_price": 68000.0,
-                  "risk_reward": 1.29,
-                  "thesis": "70,000 지지 확인. 여기서 1차 진입.",
-                  "valid_from": "2026-08-03",
-                  "valid_until": "2026-08-09",
+                  "confidence_score": 3,
+                  "thesis": "환원소식, 유동성 축소, 전반적인 호재 뉴스",
+                  "valid_from": "2026-08-11",
+                  "valid_until": "2026-08-14",
                   "scenario_planning_label": "기본",
                   "predicted_trend_label": "상승",
                   "children": [
                     {
-                      "id": 5,
-                      "level": "DAY",
-                      "title": "오늘 1차 매수",
-                      "scenario_planning": "BASE",
-                      "predicted_trend": "UP",
-                      "confidence_score": 4,
-                      "predicted_price": 73000.0,
-                      "stop_loss_price": 68000.0,
-                      "thesis": "시가 대비 -1% 이탈 시 지정가 71,000 으로 1/3 진입.",
-                      "valid_from": "2026-08-09",
-                      "valid_until": "2026-08-09",
-                      "scenario_planning_label": "기본",
-                      "predicted_trend_label": "상승"
-                    }
-                  ]
-                },
-                {
-                  "id": 10,
-                  "level": "WEEK",
-                  "title": "SK하이닉스 관망",
-                  "security": {
-                    "id": 8,
-                    "symbol": "000660",
-                    "name": "SK하이닉스",
-                    "market": "KOSPI",
-                    "sector": "반도체",
-                    "current_price": 183000.0
-                  },
-                  "scenario_planning": "BASE",
-                  "predicted_trend": "SIDEWAYS",
-                  "confidence_score": 3,
-                  "available_amount": 2000000.0,
-                  "predicted_price": 196000.0,
-                  "stop_loss_price": 176000.0,
-                  "risk_reward": 1.86,
-                  "thesis": "180,000 ~ 195,000 박스. 이탈 확인 전까지 신규 진입 없음.",
-                  "valid_from": "2026-08-03",
-                  "valid_until": "2026-08-09",
-                  "scenario_planning_label": "기본",
-                  "predicted_trend_label": "횡보",
-                  "children": [
-                    {
-                      "id": 6,
-                      "level": "DAY",
-                      "title": "오늘 관망",
+                      "id": 1,
+                      "level": "WEEKLY_SECURITY",
+                      "title": "삼전 버티기",
+                      "security": {
+                        "id": 1,
+                        "symbol": "005930",
+                        "name": "삼성전자",
+                        "market": "KOSPI",
+                        "sector": "반도체",
+                        "current_price": 256000.0
+                      },
+                      "weekly_plan_id": 1,
                       "scenario_planning": "BASE",
                       "predicted_trend": "SIDEWAYS",
                       "confidence_score": 3,
+                      "available_amount": 10000000.0,
                       "predicted_price": null,
-                      "stop_loss_price": 176000.0,
-                      "thesis": "박스 상단까지 아무것도 하지 않는다.",
-                      "valid_from": "2026-08-09",
-                      "valid_until": "2026-08-09",
+                      "stop_loss_price": null,
+                      "risk_reward": null,
+                      "thesis": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
                       "scenario_planning_label": "기본",
-                      "predicted_trend_label": "횡보"
+                      "predicted_trend_label": "횡보",
+                      "children": [
+                        {
+                          "id": 1,
+                          "level": "DAY",
+                          "title": "주식 상승이네(금리 동결 준비)",
+                          "scenario_planning": "BASE",
+                          "predicted_trend": "SIDEWAYS",
+                          "confidence_score": 3,
+                          "predicted_price": null,
+                          "stop_loss_price": null,
+                          "thesis": "다 오르고 뒤늦게 235,000 매입 시도\n다른 가격에라도 사라\n=> 오늘 저녁 9시 연준 기준금리 동결 예상(역대급 실업률)",
+                          "valid_from": "2026-08-12",
+                          "valid_until": "2026-08-12",
+                          "scenario_planning_label": "기본",
+                          "predicted_trend_label": "횡보"
+                        },
+                        {
+                          "id": 3,
+                          "level": "DAY",
+                          "title": "연준 금리 동결(인상하지 않음-실업률 심각 하락)",
+                          "scenario_planning": "BULL",
+                          "predicted_trend": "UP",
+                          "confidence_score": 4,
+                          "predicted_price": 265000.0,
+                          "stop_loss_price": 170000.0,
+                          "thesis": "8.12 오후 9시 연준 금리 하락",
+                          "valid_from": "2026-08-13",
+                          "valid_until": "2026-08-13",
+                          "scenario_planning_label": "낙관",
+                          "predicted_trend_label": "상승"
+                        }
+                      ]
+                    },
+                    {
+                      "id": 2,
+                      "level": "WEEKLY_SECURITY",
+                      "title": "주주환원해라 제발",
+                      "security": {
+                        "id": 2,
+                        "symbol": "000660",
+                        "name": "SK하이닉스",
+                        "market": "KOSPI",
+                        "sector": "반도체",
+                        "current_price": 1505000.0
+                      },
+                      "weekly_plan_id": 1,
+                      "scenario_planning": "BASE",
+                      "predicted_trend": "SIDEWAYS",
+                      "confidence_score": 3,
+                      "available_amount": 10000000.0,
+                      "predicted_price": null,
+                      "stop_loss_price": null,
+                      "risk_reward": null,
+                      "thesis": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
+                      "scenario_planning_label": "기본",
+                      "predicted_trend_label": "횡보",
+                      "children": [
+                        {
+                          "id": 2,
+                          "level": "DAY",
+                          "title": "다 오르고 시도(금리 동결 준비)",
+                          "scenario_planning": "BASE",
+                          "predicted_trend": "SIDEWAYS",
+                          "confidence_score": 3,
+                          "predicted_price": 1500000.0,
+                          "stop_loss_price": null,
+                          "thesis": "1,479,000 4주 매입 시도\n=> 오늘 저녁 9시 연준 기준금리 동결 예상(역대급 실업률)\n다른 가격에라도 사라 => 오늘 저녁 9시 연준 기준금리",
+                          "valid_from": "2026-08-12",
+                          "valid_until": "2026-08-12",
+                          "scenario_planning_label": "기본",
+                          "predicted_trend_label": "횡보"
+                        }
+                      ]
                     }
                   ]
                 }
               ]
-            },
-            {
-              "id": 6,
-              "level": "MONTH",
-              "title": "8월 비관 시나리오",
-              "scenario_planning": "BEAR",
-              "predicted_trend": "DOWN",
-              "confidence_score": 2,
-              "allocation_ratio": {
-                "005930": 20,
-                "CASH": 60
-              },
-              "thesis": "금리 재상승 시 밸류에이션 압축. 현금 비중을 60%까지 올린다.",
-              "valid_from": "2026-08-01",
-              "valid_until": "2026-08-31",
-              "scenario_planning_label": "비관",
-              "predicted_trend_label": "하락",
-              "securities": [],
-              "children": []
             }
           ]
         }
       ]
     }
   ],
-  "orphan_weekly_plans": [
-    {
-      "id": 11,
-      "title": "NAVER 단기 반등 노림",
-      "security": {
-        "id": 9,
-        "symbol": "035420",
-        "name": "NAVER",
-        "market": "KOSPI",
-        "sector": "인터넷",
-        "current_price": 162000.0
-      },
-      "valid_from": "2026-08-03",
-      "valid_until": "2026-08-09",
-      "reason": "이 종목을 가리키는 월투자원칙이 없거나 기간이 겹치지 않는다"
-    }
-  ],
   "counts": {
     "annual": 1,
-    "weekly_total": 3,
-    "weekly_attached": 2,
-    "weekly_orphan": 1
+    "weekly_total": 1,
+    "weekly_security_total": 2
   }
 };
 
 export const homeBoard = {
-  "as_of": "2026-08-09",
+  "as_of": "2026-08-12",
   "mandatory_principles": [
     {
-      "id": 12,
+      "id": 1,
       "priority": 1,
-      "content": "계획에 없는 종목은 사지 않는다."
+      "content": "주식은 의심의 연속, 근거 몇개?-행동\n본질을 보아라\n당장 급할때는 확신보다는 의심의 배반, 근거의 연속"
     },
     {
-      "id": 13,
+      "id": 2,
       "priority": 2,
-      "content": "손절가는 사기 전에 정하고, 정한 뒤에는 내리지 않는다."
+      "content": "공포 경험을 되새기고 공포에 사지 말고, 환희 경험을 되새기고 자만하지 마라"
     },
     {
-      "id": 14,
+      "id": 3,
       "priority": 3,
-      "content": "한 종목에 총자산의 20%를 넘기지 않는다."
+      "content": "10시 이후에 거래를 시작한다"
     },
     {
-      "id": 15,
-      "priority": 4,
-      "content": "물타기는 미리 적어 둔 n차 분할표 안에서만 한다."
-    },
-    {
-      "id": 16,
+      "id": 5,
       "priority": 5,
-      "content": "장중에 계획을 바꾸지 않는다. 바꾸려면 장 끝나고 근거를 적는다."
+      "content": "금리가 최고의 방향이다. 9월 금리에 대해 민감하게 반응"
+    },
+    {
+      "id": 4,
+      "priority": null,
+      "content": "코스피는 올해 최대 10,000까지 상승한다"
     }
   ],
   "plans": {
     "daily": [
       {
-        "id": 5,
-        "title": "오늘 1차 매수",
-        "scenario_planning": "BASE",
-        "predicted_trend": "UP",
-        "confidence_score": 4,
-        "predicted_price": 73000.0,
-        "stop_loss_price": 68000.0,
-        "thesis": "시가 대비 -1% 이탈 시 지정가 71,000 으로 1/3 진입.",
-        "scenario_planning_label": "기본",
-        "predicted_trend_label": "상승",
-        "security": {
-          "id": 7,
-          "symbol": "005930",
-          "name": "삼성전자",
-          "current_price": 71500.0
-        }
-      },
-      {
-        "id": 6,
-        "title": "오늘 관망",
+        "id": 1,
+        "title": "주식 상승이네(금리 동결 준비)",
         "scenario_planning": "BASE",
         "predicted_trend": "SIDEWAYS",
         "confidence_score": 3,
         "predicted_price": null,
-        "stop_loss_price": 176000.0,
-        "thesis": "박스 상단까지 아무것도 하지 않는다.",
+        "stop_loss_price": null,
+        "thesis": "다 오르고 뒤늦게 235,000 매입 시도\n다른 가격에라도 사라\n=> 오늘 저녁 9시 연준 기준금리 동결 예상(역대급 실업률)",
         "scenario_planning_label": "기본",
         "predicted_trend_label": "횡보",
         "security": {
-          "id": 8,
+          "id": 1,
+          "symbol": "005930",
+          "name": "삼성전자",
+          "current_price": 256000.0
+        }
+      },
+      {
+        "id": 2,
+        "title": "다 오르고 시도(금리 동결 준비)",
+        "scenario_planning": "BASE",
+        "predicted_trend": "SIDEWAYS",
+        "confidence_score": 3,
+        "predicted_price": 1500000.0,
+        "stop_loss_price": null,
+        "thesis": "1,479,000 4주 매입 시도\n=> 오늘 저녁 9시 연준 기준금리 동결 예상(역대급 실업률)\n다른 가격에라도 사라 => 오늘 저녁 9시 연준 기준금리",
+        "scenario_planning_label": "기본",
+        "predicted_trend_label": "횡보",
+        "security": {
+          "id": 2,
           "symbol": "000660",
           "name": "SK하이닉스",
-          "current_price": 183000.0
+          "current_price": 1505000.0
         }
       }
     ],
     "weekly": [
       {
-        "id": 9,
-        "title": "삼성전자 이번 주 3분할 1차",
-        "scenario_planning": "BASE",
-        "predicted_trend": "UP",
-        "confidence_score": 4,
-        "predicted_price": 76000.0,
-        "stop_loss_price": 68000.0,
-        "available_amount": 3000000.0,
-        "thesis": "70,000 지지 확인. 여기서 1차 진입.",
-        "scenario_planning_label": "기본",
-        "predicted_trend_label": "상승",
-        "security": {
-          "id": 7,
-          "symbol": "005930",
-          "name": "삼성전자",
-          "current_price": 71500.0
-        }
-      },
-      {
-        "id": 10,
-        "title": "SK하이닉스 관망",
+        "id": 1,
+        "title": "삼전 버티기",
         "scenario_planning": "BASE",
         "predicted_trend": "SIDEWAYS",
         "confidence_score": 3,
-        "predicted_price": 196000.0,
-        "stop_loss_price": 176000.0,
-        "available_amount": 2000000.0,
-        "thesis": "180,000 ~ 195,000 박스. 이탈 확인 전까지 신규 진입 없음.",
+        "predicted_price": null,
+        "stop_loss_price": null,
+        "available_amount": 10000000.0,
+        "thesis": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
         "scenario_planning_label": "기본",
         "predicted_trend_label": "횡보",
         "security": {
-          "id": 8,
-          "symbol": "000660",
-          "name": "SK하이닉스",
-          "current_price": 183000.0
+          "id": 1,
+          "symbol": "005930",
+          "name": "삼성전자",
+          "current_price": 256000.0
         }
       },
       {
-        "id": 11,
-        "title": "NAVER 단기 반등 노림",
-        "scenario_planning": "BULL",
-        "predicted_trend": "UP",
-        "confidence_score": 2,
-        "predicted_price": 178000.0,
-        "stop_loss_price": 155000.0,
-        "available_amount": null,
-        "thesis": "낙폭 과대. 다만 월계획에 없는 종목이다.",
-        "scenario_planning_label": "낙관",
-        "predicted_trend_label": "상승",
+        "id": 2,
+        "title": "주주환원해라 제발",
+        "scenario_planning": "BASE",
+        "predicted_trend": "SIDEWAYS",
+        "confidence_score": 3,
+        "predicted_price": null,
+        "stop_loss_price": null,
+        "available_amount": 10000000.0,
+        "thesis": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
+        "scenario_planning_label": "기본",
+        "predicted_trend_label": "횡보",
         "security": {
-          "id": 9,
-          "symbol": "035420",
-          "name": "NAVER",
-          "current_price": 162000.0
+          "id": 2,
+          "symbol": "000660",
+          "name": "SK하이닉스",
+          "current_price": 1505000.0
         }
       }
     ]
   },
-  "warnings": [
-    {
-      "kind": "LOAN",
-      "severity": "HIGH",
-      "loan_id": 3,
-      "security": {
-        "id": 8,
-        "symbol": "000660",
-        "name": "SK하이닉스"
-      },
-      "reasons": [
-        "담보비율 131.00% (경고선 140%)",
-        "만기까지 20일"
-      ]
-    }
-  ],
+  "warnings": [],
   "gaps": [
     {
       "kind": "QUARTERLY_STRATEGY_MISSING",
       "target": {
         "table": "quarterly_investment_plan",
-        "id": 3,
-        "title": "2026 3분기 반도체 비중 55%"
+        "id": 1,
+        "title": "코스피 7500 버티자"
       },
-      "message": "손절전략 이 비어 있다."
+      "message": "매수전략, 매도전략, 횡보전략, 손절전략 이 비어 있다."
     },
     {
-      "kind": "MONTHLY_PRINCIPLE_MISSING",
+      "kind": "WEEKLY_SECURITY_PLAN_INCOMPLETE",
       "target": {
-        "table": "monthly_investment_plan",
-        "id": 6,
-        "title": "8월 비관 시나리오"
+        "table": "weekly_security_investment_plan",
+        "id": 1,
+        "title": "삼전 버티기"
       },
-      "message": "월투자원칙이 없어 이 계획이 종목에 닿지 않는다. 아래 계층이 끊긴다."
-    }
-  ],
-  "ai_feedback": [
-    {
-      "id": 6,
-      "opinion_type": "SUGGESTION",
-      "opinion_type_label": "제안",
-      "is_expired": false,
-      "table_name": "weekly_investment_plan",
-      "object_id": 9,
-      "ai_decision": "손익비 약 1.29. 3분할 1차 비중을 낮추면 평균 진입가가 개선된다.",
-      "score": 71.0,
-      "confidence_score": 64.0,
-      "risk_summary": "1차에 비중을 실으면 2·3차 여력이 줄어든다.",
-      "valid_until": "2026-08-16",
-      "model_name": "claude-opus-5"
+      "message": "손절가 가 비어 있다."
     },
     {
-      "id": 5,
-      "opinion_type": "WARNING",
-      "opinion_type_label": "경고",
-      "is_expired": false,
-      "table_name": "quarterly_investment_plan",
-      "object_id": 3,
-      "ai_decision": "손절전략이 비어 있다. 나머지 세 전략만으로는 하락 국면에서 기준이 없다.",
-      "score": 62.0,
-      "confidence_score": 81.0,
-      "risk_summary": "분기 손절비율 -5% 도달 시 행동 규칙이 정의돼 있지 않다.",
-      "valid_until": "2026-08-23",
-      "model_name": "claude-opus-5"
+      "kind": "WEEKLY_SECURITY_PLAN_INCOMPLETE",
+      "target": {
+        "table": "weekly_security_investment_plan",
+        "id": 2,
+        "title": "주주환원해라 제발"
+      },
+      "message": "손절가 가 비어 있다."
     }
   ],
+  "ai_feedback": [],
   "counters": {
     "daily_plan_count": 2,
-    "weekly_plan_count": 3,
-    "warning_count": 1,
-    "gap_count": 2,
-    "order_count_today": 2
+    "weekly_plan_count": 2,
+    "warning_count": 0,
+    "gap_count": 3,
+    "order_count_today": 6
   },
   "next_action": {
-    "kind": "LOAN",
-    "message": "담보비율 131.00% (경고선 140%)",
+    "kind": "QUARTERLY_STRATEGY_MISSING",
+    "message": "매수전략, 매도전략, 횡보전략, 손절전략 이 비어 있다.",
     "goto": {
-      "tab": "security"
+      "tab": "plan",
+      "focus": {
+        "table": "quarterly_investment_plan",
+        "id": 1,
+        "title": "코스피 7500 버티자"
+      }
     }
   }
 };
 
 export const securityPlans = {
-  "as_of": "2026-08-09",
-  "security_id": 9,
-  "monthly_plans": [],
-  "weekly_plans": [
+  "as_of": "2026-08-12",
+  "security_id": 1,
+  "monthly_plans": [
     {
-      "id": 11,
-      "title": "NAVER 단기 반등 노림",
-      "predicted_price": 178000.0,
-      "stop_loss_price": 155000.0,
-      "valid_from": "2026-08-03",
-      "valid_until": "2026-08-09",
-      "daily_plans": []
+      "id": 1,
+      "title": "8월 버티면",
+      "scenario_planning": "BASE",
+      "predicted_trend": "UP",
+      "confidence_score": 3,
+      "quarterly_plan_id": 1,
+      "annual_plan_id": 1
+    }
+  ],
+  "weekly_security_plans": [
+    {
+      "id": 1,
+      "title": "삼전 버티기",
+      "weekly_plan_id": 1,
+      "predicted_price": null,
+      "stop_loss_price": null,
+      "valid_from": "2026-08-11",
+      "valid_until": "2026-08-14",
+      "daily_plans": [
+        {
+          "id": 1,
+          "level": "DAY",
+          "title": "주식 상승이네(금리 동결 준비)",
+          "scenario_planning": "BASE",
+          "predicted_trend": "SIDEWAYS",
+          "confidence_score": 3,
+          "predicted_price": null,
+          "stop_loss_price": null,
+          "thesis": "다 오르고 뒤늦게 235,000 매입 시도\n다른 가격에라도 사라\n=> 오늘 저녁 9시 연준 기준금리 동결 예상(역대급 실업률)",
+          "valid_from": "2026-08-12",
+          "valid_until": "2026-08-12",
+          "scenario_planning_label": "기본",
+          "predicted_trend_label": "횡보"
+        },
+        {
+          "id": 3,
+          "level": "DAY",
+          "title": "연준 금리 동결(인상하지 않음-실업률 심각 하락)",
+          "scenario_planning": "BULL",
+          "predicted_trend": "UP",
+          "confidence_score": 4,
+          "predicted_price": 265000.0,
+          "stop_loss_price": 170000.0,
+          "thesis": "8.12 오후 9시 연준 금리 하락",
+          "valid_from": "2026-08-13",
+          "valid_until": "2026-08-13",
+          "scenario_planning_label": "낙관",
+          "predicted_trend_label": "상승"
+        }
+      ]
     }
   ]
 };
 
 export const executionCompare = {
-  "date_from": "2026-07-10",
-  "date_to": "2026-08-09",
+  "date_from": "2026-07-13",
+  "date_to": "2026-08-12",
   "security_id": null,
   "rows": [
     {
-      "order": {
-        "id": 7,
-        "action_type": "FILL",
-        "order_type": "MARKET",
-        "side": "BUY",
-        "quantity": 10,
-        "limit_price": 162000.0,
-        "notional": 1620000.0,
-        "executed_at": "2026-08-09T04:40:00Z",
-        "created_at": "2026-08-09",
-        "remarks": "장중 급등 보고 들어감. 월계획에 없는 종목.",
-        "action_type_label": "체결",
-        "order_type_label": "시장가",
-        "side_label": "매수"
-      },
-      "security": {
-        "id": 9,
-        "symbol": "035420",
-        "name": "NAVER"
-      },
-      "matched_plans": [
-        {
-          "id": 11,
-          "title": "NAVER 단기 반등 노림",
-          "scenario_planning": "BULL",
-          "predicted_trend": "UP",
-          "predicted_price": 178000.0,
-          "stop_loss_price": 155000.0,
-          "scenario_planning_label": "낙관",
-          "predicted_trend_label": "상승"
-        }
-      ],
-      "flags": [
-        {
-          "code": "UNGROUNDED_PLAN",
-          "severity": "HIGH",
-          "message": "주계획은 있지만 어느 월계획에도 매달려 있지 않다. 상위 논리 없이 세운 계획이라 사실상 계획 밖의 매매다."
-        }
-      ]
-    },
-    {
+      "date": "2026-08-12",
       "order": {
         "id": 6,
         "action_type": "FILL",
         "order_type": "LIMIT",
         "side": "BUY",
-        "quantity": 40,
-        "limit_price": 71000.0,
-        "notional": 2840000.0,
-        "executed_at": "2026-08-09T01:12:00Z",
-        "created_at": "2026-08-09",
-        "remarks": "주계획 1차 진입. 계획대로.",
+        "quantity": 25,
+        "limit_price": 258000.0,
+        "notional": 6450000.0,
+        "executed_at": "2026-08-12T10:57:00Z",
+        "created_at": "2026-08-12",
+        "remarks": null,
         "action_type_label": "체결",
         "order_type_label": "지정가",
         "side_label": "매수"
       },
       "security": {
-        "id": 7,
+        "id": 1,
         "symbol": "005930",
         "name": "삼성전자"
       },
       "matched_plans": [
         {
-          "id": 9,
-          "title": "삼성전자 이번 주 3분할 1차",
+          "level": "DAY",
+          "id": 1,
+          "title": "주식 상승이네(금리 동결 준비)",
           "scenario_planning": "BASE",
-          "predicted_trend": "UP",
-          "predicted_price": 76000.0,
-          "stop_loss_price": 68000.0,
+          "predicted_trend": "SIDEWAYS",
+          "predicted_price": null,
+          "stop_loss_price": null,
+          "weekly_plan_id": 1,
+          "weekly_security_plan_id": 1,
+          "valid_from": "2026-08-12",
+          "valid_until": "2026-08-12",
+          "grounded": true,
           "scenario_planning_label": "기본",
-          "predicted_trend_label": "상승"
+          "predicted_trend_label": "횡보"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "date": "2026-08-12",
+      "order": {
+        "id": 5,
+        "action_type": "FILL",
+        "order_type": "LIMIT",
+        "side": "BUY",
+        "quantity": 3,
+        "limit_price": 1523000.0,
+        "notional": 4569000.0,
+        "executed_at": "2026-08-12T10:57:00Z",
+        "created_at": "2026-08-12",
+        "remarks": null,
+        "action_type_label": "체결",
+        "order_type_label": "지정가",
+        "side_label": "매수"
+      },
+      "security": {
+        "id": 2,
+        "symbol": "000660",
+        "name": "SK하이닉스"
+      },
+      "matched_plans": [
+        {
+          "level": "DAY",
+          "id": 2,
+          "title": "다 오르고 시도(금리 동결 준비)",
+          "scenario_planning": "BASE",
+          "predicted_trend": "SIDEWAYS",
+          "predicted_price": 1500000.0,
+          "stop_loss_price": null,
+          "weekly_plan_id": 1,
+          "weekly_security_plan_id": 2,
+          "valid_from": "2026-08-12",
+          "valid_until": "2026-08-12",
+          "grounded": true,
+          "scenario_planning_label": "기본",
+          "predicted_trend_label": "횡보"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "date": "2026-08-12",
+      "order": {
+        "id": 4,
+        "action_type": "ORDER",
+        "order_type": "LIMIT",
+        "side": "BUY",
+        "quantity": 4,
+        "limit_price": 1497000.0,
+        "notional": 5988000.0,
+        "executed_at": "2026-08-12T07:34:00Z",
+        "created_at": "2026-08-12",
+        "remarks": null,
+        "action_type_label": "주문",
+        "order_type_label": "지정가",
+        "side_label": "매수"
+      },
+      "security": {
+        "id": 2,
+        "symbol": "000660",
+        "name": "SK하이닉스"
+      },
+      "matched_plans": [
+        {
+          "level": "DAY",
+          "id": 2,
+          "title": "다 오르고 시도(금리 동결 준비)",
+          "scenario_planning": "BASE",
+          "predicted_trend": "SIDEWAYS",
+          "predicted_price": 1500000.0,
+          "stop_loss_price": null,
+          "weekly_plan_id": 1,
+          "weekly_security_plan_id": 2,
+          "valid_from": "2026-08-12",
+          "valid_until": "2026-08-12",
+          "grounded": true,
+          "scenario_planning_label": "기본",
+          "predicted_trend_label": "횡보"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "date": "2026-08-12",
+      "order": {
+        "id": 3,
+        "action_type": "ORDER",
+        "order_type": "MARKET",
+        "side": "BUY",
+        "quantity": 2,
+        "limit_price": 1430000.0,
+        "notional": 2860000.0,
+        "executed_at": "2026-08-12T07:33:00Z",
+        "created_at": "2026-08-12",
+        "remarks": null,
+        "action_type_label": "주문",
+        "order_type_label": "시장가",
+        "side_label": "매수"
+      },
+      "security": {
+        "id": 2,
+        "symbol": "000660",
+        "name": "SK하이닉스"
+      },
+      "matched_plans": [
+        {
+          "level": "DAY",
+          "id": 2,
+          "title": "다 오르고 시도(금리 동결 준비)",
+          "scenario_planning": "BASE",
+          "predicted_trend": "SIDEWAYS",
+          "predicted_price": 1500000.0,
+          "stop_loss_price": null,
+          "weekly_plan_id": 1,
+          "weekly_security_plan_id": 2,
+          "valid_from": "2026-08-12",
+          "valid_until": "2026-08-12",
+          "grounded": true,
+          "scenario_planning_label": "기본",
+          "predicted_trend_label": "횡보"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "date": "2026-08-12",
+      "order": {
+        "id": 2,
+        "action_type": "FILL",
+        "order_type": "LIMIT",
+        "side": "BUY",
+        "quantity": 5,
+        "limit_price": 245000.0,
+        "notional": 1225000.0,
+        "executed_at": "2026-08-12T07:33:00Z",
+        "created_at": "2026-08-12",
+        "remarks": null,
+        "action_type_label": "체결",
+        "order_type_label": "지정가",
+        "side_label": "매수"
+      },
+      "security": {
+        "id": 1,
+        "symbol": "005930",
+        "name": "삼성전자"
+      },
+      "matched_plans": [
+        {
+          "level": "DAY",
+          "id": 1,
+          "title": "주식 상승이네(금리 동결 준비)",
+          "scenario_planning": "BASE",
+          "predicted_trend": "SIDEWAYS",
+          "predicted_price": null,
+          "stop_loss_price": null,
+          "weekly_plan_id": 1,
+          "weekly_security_plan_id": 1,
+          "valid_from": "2026-08-12",
+          "valid_until": "2026-08-12",
+          "grounded": true,
+          "scenario_planning_label": "기본",
+          "predicted_trend_label": "횡보"
+        }
+      ],
+      "flags": []
+    },
+    {
+      "date": "2026-08-12",
+      "order": {
+        "id": 1,
+        "action_type": "ORDER",
+        "order_type": "LIMIT",
+        "side": "BUY",
+        "quantity": 25,
+        "limit_price": 235000.0,
+        "notional": 5875000.0,
+        "executed_at": "2026-08-12T07:31:00Z",
+        "created_at": "2026-08-12",
+        "remarks": null,
+        "action_type_label": "주문",
+        "order_type_label": "지정가",
+        "side_label": "매수"
+      },
+      "security": {
+        "id": 1,
+        "symbol": "005930",
+        "name": "삼성전자"
+      },
+      "matched_plans": [
+        {
+          "level": "DAY",
+          "id": 1,
+          "title": "주식 상승이네(금리 동결 준비)",
+          "scenario_planning": "BASE",
+          "predicted_trend": "SIDEWAYS",
+          "predicted_price": null,
+          "stop_loss_price": null,
+          "weekly_plan_id": 1,
+          "weekly_security_plan_id": 1,
+          "valid_from": "2026-08-12",
+          "valid_until": "2026-08-12",
+          "grounded": true,
+          "scenario_planning_label": "기본",
+          "predicted_trend_label": "횡보"
         }
       ],
       "flags": []
     }
   ],
   "summary": {
-    "order_count": 2,
-    "flagged_count": 1,
-    "discipline_rate": 50.0
+    "order_count": 6,
+    "flagged_count": 0,
+    "discipline_rate": 100.0
   }
 };
 
 export const performanceSummary = {
-  "date_from": "2025-08-09",
-  "date_to": "2026-08-09",
+  "date_from": "2025-08-12",
+  "date_to": "2026-08-12",
   "period_type": null,
   "security_id": null,
   "totals": {
-    "realized_profit": 210000.0,
-    "unrealized_profit": 1085000.0,
-    "dividend_income": 43000.0,
-    "interest_cost": 31000.0,
-    "commission": 12800.0,
-    "tax": 64000.0,
-    "etc_cost": 0.0,
-    "net_profit": 1230200.0,
-    "cost_total": 107800.0,
-    "income_total": 1338000.0,
-    "cost_bite_pct": 8.06,
-    "return_rate": 0.8,
-    "benchmark_return_rate": 3.1,
-    "excess_return": -2.3,
-    "max_drawdown": -6.9,
-    "record_count": 2
+    "realized_profit": null,
+    "unrealized_profit": null,
+    "dividend_income": null,
+    "interest_cost": null,
+    "commission": null,
+    "tax": null,
+    "etc_cost": null,
+    "net_profit": null,
+    "cost_total": 0,
+    "income_total": 0,
+    "cost_bite_pct": null,
+    "return_rate": null,
+    "benchmark_return_rate": null,
+    "excess_return": null,
+    "max_drawdown": null,
+    "record_count": 0
   },
   "cost_breakdown": [
     {
       "field": "interest_cost",
       "label": "이자비용",
-      "value": 31000.0
+      "value": 0.0
     },
     {
       "field": "commission",
       "label": "수수료",
-      "value": 12800.0
+      "value": 0.0
     },
     {
       "field": "tax",
       "label": "세금",
-      "value": 64000.0
+      "value": 0.0
     },
     {
       "field": "etc_cost",
@@ -598,64 +773,17 @@ export const performanceSummary = {
       "value": 0.0
     }
   ],
-  "by_security": [
-    {
-      "security_id": 7,
-      "symbol": "005930",
-      "name": "삼성전자",
-      "net_profit": 1570400.0,
-      "return_rate": 6.4,
-      "benchmark_return_rate": 3.1,
-      "excess_return": 3.3,
-      "record_count": 1
-    },
-    {
-      "security_id": 9,
-      "symbol": "035420",
-      "name": "NAVER",
-      "net_profit": -340200.0,
-      "return_rate": -4.8,
-      "benchmark_return_rate": 3.1,
-      "excess_return": -7.9,
-      "record_count": 1
-    }
-  ]
+  "by_security": []
 };
 
 export const aiDigest = {
-  "as_of": "2026-08-09",
-  "valid_count": 2,
+  "as_of": "2026-08-12",
+  "valid_count": 0,
   "expired_count": 0,
-  "by_opinion_type": {
-    "WARNING": 1,
-    "SUGGESTION": 1
-  }
+  "by_opinion_type": {}
 };
 
-export const aiFeedbackFor = {
-  "9": [
-    {
-      "id": 6,
-      "opinion_type": "SUGGESTION",
-      "opinion_type_label": "제안",
-      "table_name": "weekly_investment_plan",
-      "object_id": 9,
-      "ai_decision": "손익비 약 1.29. 3분할 1차 비중을 낮추면 평균 진입가가 개선된다.",
-      "score": 71.0,
-      "confidence_score": 64.0,
-      "reasoning_summary": "예상가 76,000 / 손절가 68,000 / 현재가 71,500 기준.",
-      "risk_summary": "1차에 비중을 실으면 2·3차 여력이 줄어든다.",
-      "valid_until": "2026-08-16",
-      "is_expired": false,
-      "model": {
-        "id": 3,
-        "model_name": "claude-opus-5",
-        "model_version": "2026-05",
-        "prompt_version": "discipline-v3"
-      }
-    }
-  ]
-};
+export const aiFeedbackFor = {};
 
 export const choices = {
   "market": [
@@ -1074,201 +1202,136 @@ export const choices = {
 
 export const brokerAccounts = [
   {
-    "id": 3,
+    "id": 1,
     "is_deleted": false,
-    "masked_account_number": "****8901",
-    "security_count": 3,
-    "broker_name": "미래에셋증권"
+    "masked_account_number": "****2514",
+    "security_count": 2,
+    "broker_name": "NH나무"
   }
 ];
 
 export const securities = [
   {
-    "id": 9,
+    "id": 1,
     "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "market": "KOSPI",
-    "symbol": "035420",
-    "name": "NAVER",
-    "asset_type": "STOCK",
-    "currency": "KRW",
-    "holding_quantity": 25,
-    "current_price": "162000.00",
-    "sector": "인터넷",
-    "is_active": true,
-    "account": 3,
-    "market_label": "코스피",
-    "asset_type_label": "주식",
-    "currency_label": "원",
-    "market_value": 4050000.0
-  },
-  {
-    "id": 8,
-    "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "market": "KOSPI",
-    "symbol": "000660",
-    "name": "SK하이닉스",
-    "asset_type": "STOCK",
-    "currency": "KRW",
-    "holding_quantity": 40,
-    "current_price": "183000.00",
-    "sector": "반도체",
-    "is_active": true,
-    "account": 3,
-    "market_label": "코스피",
-    "asset_type_label": "주식",
-    "currency_label": "원",
-    "market_value": 7320000.0
-  },
-  {
-    "id": 7,
-    "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
     "market": "KOSPI",
     "symbol": "005930",
     "name": "삼성전자",
     "asset_type": "STOCK",
     "currency": "KRW",
-    "holding_quantity": 120,
-    "current_price": "71500.00",
+    "holding_quantity": 400,
+    "current_price": "256000.00",
     "sector": "반도체",
     "is_active": true,
-    "account": 3,
+    "account": 1,
     "market_label": "코스피",
     "asset_type_label": "주식",
     "currency_label": "원",
-    "market_value": 8580000.0
-  }
-];
-
-export const loans = [
+    "market_value": 102400000.0
+  },
   {
-    "id": 3,
+    "id": 2,
     "is_deleted": false,
-    "security_detail": {
-      "id": 8,
-      "symbol": "000660",
-      "name": "SK하이닉스",
-      "market": "KOSPI",
-      "currency": "KRW",
-      "sector": "반도체",
-      "current_price": "183000.00",
-      "market_label": "코스피",
-      "currency_label": "원"
-    },
-    "days_to_maturity": 20,
-    "principal_amount": "5000000.00",
-    "interest_rate": "6.20",
-    "opened_at": "2026-05-11",
-    "maturity_at": "2026-08-29",
-    "quantity": 40,
-    "reference_price": "183000.00",
-    "collateral_value": "7320000.00",
-    "collateral_ratio": "131.00",
-    "evaluated_at": null,
-    "security": 8
-  }
-];
-
-export const priceData = [
-  {
-    "id": 3,
-    "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "price_at": "2026-08-09T09:30:00+09:00",
-    "high_price": "72400.00",
-    "low_price": "70800.00",
-    "quote_price": "71500.00",
-    "security": 7
+    "market": "KOSPI",
+    "symbol": "000660",
+    "name": "SK하이닉스",
+    "asset_type": "STOCK",
+    "currency": "KRW",
+    "holding_quantity": 99,
+    "current_price": "1505000.00",
+    "sector": "반도체",
+    "is_active": true,
+    "account": 1,
+    "market_label": "코스피",
+    "asset_type_label": "주식",
+    "currency_label": "원",
+    "market_value": 148995000.0
   }
 ];
+
+export const loans = [];
+
+export const priceData = [];
 
 export const annualPlans = [
   {
-    "id": 3,
+    "id": 1,
     "is_deleted": false,
     "account_detail": {
-      "id": 3,
-      "broker_name": "미래에셋증권",
-      "masked_account_number": "****8901"
+      "id": 1,
+      "broker_name": "NH나무",
+      "masked_account_number": "****2514"
     },
     "quarterly_count": 1,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
     "market": "KOSPI",
-    "title": "2026 반도체 사이클 상반기 비중확대",
-    "thesis": "메모리 감산 효과가 재고 정상화로 이어지는 구간. 사이클 초입에서 비중을 싣는다.",
+    "title": "코스피 12000 버티자",
+    "thesis": "하이닉스, 삼전 반도체 실적 기반",
     "direction": "LONG",
     "status": "ACTIVE",
-    "valid_from": "2026-01-01",
+    "valid_from": "2026-08-11",
     "valid_until": "2026-12-31",
-    "target_return_ratio": "18.00",
-    "stop_loss_ratio": "-8.00",
-    "account": 3,
+    "target_return_ratio": "100.00",
+    "stop_loss_ratio": "50.00",
+    "account": 1,
     "market_label": "코스피",
     "direction_label": "매수",
     "status_label": "진행중",
-    "period_label": "2026.01.01 ~ 2026.12.31",
+    "period_label": "2026.08.11 ~ 2026.12.31",
     "is_current": true
   }
 ];
 
 export const quarterlyPlans = [
   {
-    "id": 3,
+    "id": 1,
     "is_deleted": false,
     "annual_plan_detail": {
-      "id": 3,
-      "title": "2026 반도체 사이클 상반기 비중확대",
+      "id": 1,
+      "title": "코스피 12000 버티자",
       "market": "KOSPI",
       "direction": "LONG",
       "status": "ACTIVE",
-      "valid_from": "2026-01-01",
+      "valid_from": "2026-08-11",
       "valid_until": "2026-12-31",
       "market_label": "코스피",
       "direction_label": "매수",
       "status_label": "진행중"
     },
-    "monthly_count": 2,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "monthly_count": 1,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "title": "2026 3분기 반도체 비중 55%",
-    "rebalancing_ratio": {
-      "005930": 30,
-      "000660": 25,
-      "CASH": 45
-    },
-    "rebalancing_start_date": "2026-07-01",
-    "rebalancing_end_date": "2026-07-15",
-    "buy_strategy": "20일선 지지 확인 후 3분할. 1차 -3%, 2차 -7%, 3차 -12%.",
-    "sell_strategy": "목표가 도달 시 절반, 나머지는 추세 이탈까지 보유.",
-    "sideways_strategy": "2주 이상 횡보하면 신규 매수 중단, 현금 비중 유지.",
+    "title": "코스피 7500 버티자",
+    "rebalancing_ratio": null,
+    "rebalancing_start_date": "2026-09-21",
+    "rebalancing_end_date": "2026-09-30",
+    "buy_strategy": null,
+    "sell_strategy": null,
+    "sideways_strategy": null,
     "stop_loss_strategy": null,
-    "direction": "LONG",
-    "thesis": "분기 실적 발표에서 재고 감소가 확인되는지가 분기점.",
-    "valid_from": "2026-07-01",
-    "valid_until": "2026-09-30",
-    "target_return_ratio": "6.00",
-    "stop_loss_ratio": "-5.00",
-    "annual_plan": 3,
-    "direction_label": "매수",
-    "period_label": "2026.07.01 ~ 2026.09.30",
+    "direction": "SHORT",
+    "thesis": "하이닉스, 삼전 하락에서 복구..! 주주환원 기대",
+    "valid_from": "2026-08-11",
+    "valid_until": "2026-08-31",
+    "target_return_ratio": null,
+    "stop_loss_ratio": null,
+    "annual_plan": 1,
+    "direction_label": "매도",
+    "period_label": "2026.08.11 ~ 2026.08.31",
     "is_current": true,
     "strategy_coverage": {
-      "buy": true,
-      "sell": true,
-      "sideways": true,
+      "buy": false,
+      "sell": false,
+      "sideways": false,
       "stop_loss": false
     }
   }
@@ -1276,409 +1339,395 @@ export const quarterlyPlans = [
 
 export const monthlyPlans = [
   {
-    "id": 5,
+    "id": 1,
     "is_deleted": false,
     "quarterly_plan_detail": {
-      "id": 3,
-      "title": "2026 3분기 반도체 비중 55%",
-      "direction": "LONG",
-      "valid_from": "2026-07-01",
-      "valid_until": "2026-09-30",
-      "annual_plan": 3,
-      "direction_label": "매수"
+      "id": 1,
+      "title": "코스피 7500 버티자",
+      "direction": "SHORT",
+      "valid_from": "2026-08-11",
+      "valid_until": "2026-08-31",
+      "annual_plan": 1,
+      "direction_label": "매도"
     },
     "principle_count": 2,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "title": "8월 기본 시나리오",
+    "title": "8월 버티면",
     "scenario_planning": "BASE",
     "predicted_trend": "UP",
-    "thesis": "완만한 상승. 조정 시 분할 매수로 비중을 채운다.",
-    "confidence_score": 4,
-    "allocation_ratio": {
-      "005930": 30,
-      "000660": 25,
-      "CASH": 45
-    },
-    "valid_from": "2026-08-01",
+    "thesis": "유동성 줄고, 실적 기반 코스피",
+    "confidence_score": 3,
+    "allocation_ratio": null,
+    "valid_from": "2026-08-11",
     "valid_until": "2026-08-31",
-    "quarterly_plan": 3,
+    "quarterly_plan": 1,
     "scenario_planning_label": "기본",
     "predicted_trend_label": "상승",
-    "period_label": "2026.08.01 ~ 2026.08.31",
-    "is_current": true
-  },
-  {
-    "id": 6,
-    "is_deleted": false,
-    "quarterly_plan_detail": {
-      "id": 3,
-      "title": "2026 3분기 반도체 비중 55%",
-      "direction": "LONG",
-      "valid_from": "2026-07-01",
-      "valid_until": "2026-09-30",
-      "annual_plan": 3,
-      "direction_label": "매수"
-    },
-    "principle_count": 0,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "title": "8월 비관 시나리오",
-    "scenario_planning": "BEAR",
-    "predicted_trend": "DOWN",
-    "thesis": "금리 재상승 시 밸류에이션 압축. 현금 비중을 60%까지 올린다.",
-    "confidence_score": 2,
-    "allocation_ratio": {
-      "005930": 20,
-      "CASH": 60
-    },
-    "valid_from": "2026-08-01",
-    "valid_until": "2026-08-31",
-    "quarterly_plan": 3,
-    "scenario_planning_label": "비관",
-    "predicted_trend_label": "하락",
-    "period_label": "2026.08.01 ~ 2026.08.31",
+    "period_label": "2026.08.11 ~ 2026.08.31",
     "is_current": true
   }
 ];
 
 export const weeklyPlans = [
   {
-    "id": 11,
+    "id": 1,
     "is_deleted": false,
-    "security_detail": {
-      "id": 9,
-      "symbol": "035420",
-      "name": "NAVER",
-      "market": "KOSPI",
-      "currency": "KRW",
-      "sector": "인터넷",
-      "current_price": "162000.00",
-      "market_label": "코스피",
-      "currency_label": "원"
-    },
-    "daily_count": 0,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "security_plan_count": 2,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "title": "NAVER 단기 반등 노림",
-    "scenario_planning": "BULL",
-    "available_amount": null,
+    "title": "관망과 대응",
+    "scenario_planning": "BASE",
     "predicted_trend": "UP",
-    "thesis": "낙폭 과대. 다만 월계획에 없는 종목이다.",
-    "confidence_score": 2,
+    "thesis": "환원소식, 유동성 축소, 전반적인 호재 뉴스",
+    "confidence_score": 3,
     "allocation_ratio": null,
-    "valid_from": "2026-08-03",
-    "valid_until": "2026-08-09",
-    "predicted_price": "178000.00",
-    "stop_loss_price": "155000.00",
-    "security": 9,
-    "scenario_planning_label": "낙관",
+    "valid_from": "2026-08-11",
+    "valid_until": "2026-08-14",
+    "monthly_plan": 1,
+    "scenario_planning_label": "기본",
     "predicted_trend_label": "상승",
-    "period_label": "2026.08.03 ~ 2026.08.09",
-    "is_current": true,
-    "risk_reward": 2.29
-  },
+    "period_label": "2026.08.11 ~ 2026.08.14",
+    "is_current": true
+  }
+];
+
+export const weeklySecurityPlans = [
   {
-    "id": 10,
+    "id": 2,
     "is_deleted": false,
     "security_detail": {
-      "id": 8,
+      "id": 2,
       "symbol": "000660",
       "name": "SK하이닉스",
       "market": "KOSPI",
       "currency": "KRW",
       "sector": "반도체",
-      "current_price": "183000.00",
+      "current_price": "1505000.00",
       "market_label": "코스피",
       "currency_label": "원"
     },
-    "daily_count": 1,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "title": "SK하이닉스 관망",
-    "scenario_planning": "BASE",
-    "available_amount": "2000000.00",
-    "predicted_trend": "SIDEWAYS",
-    "thesis": "180,000 ~ 195,000 박스. 이탈 확인 전까지 신규 진입 없음.",
-    "confidence_score": 3,
-    "allocation_ratio": {
-      "000660": 100
+    "weekly_plan_detail": {
+      "id": 1,
+      "title": "관망과 대응",
+      "monthly_plan": 1,
+      "scenario_planning": "BASE",
+      "predicted_trend": "UP",
+      "confidence_score": 3,
+      "valid_from": "2026-08-11",
+      "valid_until": "2026-08-14",
+      "scenario_planning_label": "기본",
+      "predicted_trend_label": "상승"
     },
-    "valid_from": "2026-08-03",
-    "valid_until": "2026-08-09",
-    "predicted_price": "196000.00",
-    "stop_loss_price": "176000.00",
-    "security": 8,
+    "daily_count": 1,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "title": "주주환원해라 제발",
+    "scenario_planning": "BASE",
+    "available_amount": "10000000.00",
+    "predicted_trend": "SIDEWAYS",
+    "thesis": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
+    "confidence_score": 3,
+    "allocation_ratio": null,
+    "predicted_price": null,
+    "stop_loss_price": null,
+    "weekly_plan": 1,
+    "security": 2,
     "scenario_planning_label": "기본",
     "predicted_trend_label": "횡보",
-    "period_label": "2026.08.03 ~ 2026.08.09",
-    "is_current": true,
-    "risk_reward": 1.86
+    "risk_reward": null
   },
   {
-    "id": 9,
+    "id": 1,
     "is_deleted": false,
     "security_detail": {
-      "id": 7,
+      "id": 1,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
       "currency": "KRW",
       "sector": "반도체",
-      "current_price": "71500.00",
+      "current_price": "256000.00",
       "market_label": "코스피",
       "currency_label": "원"
     },
-    "daily_count": 1,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "title": "삼성전자 이번 주 3분할 1차",
-    "scenario_planning": "BASE",
-    "available_amount": "3000000.00",
-    "predicted_trend": "UP",
-    "thesis": "70,000 지지 확인. 여기서 1차 진입.",
-    "confidence_score": 4,
-    "allocation_ratio": {
-      "005930": 100
+    "weekly_plan_detail": {
+      "id": 1,
+      "title": "관망과 대응",
+      "monthly_plan": 1,
+      "scenario_planning": "BASE",
+      "predicted_trend": "UP",
+      "confidence_score": 3,
+      "valid_from": "2026-08-11",
+      "valid_until": "2026-08-14",
+      "scenario_planning_label": "기본",
+      "predicted_trend_label": "상승"
     },
-    "valid_from": "2026-08-03",
-    "valid_until": "2026-08-09",
-    "predicted_price": "76000.00",
-    "stop_loss_price": "68000.00",
-    "security": 7,
+    "daily_count": 2,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "title": "삼전 버티기",
+    "scenario_planning": "BASE",
+    "available_amount": "10000000.00",
+    "predicted_trend": "SIDEWAYS",
+    "thesis": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
+    "confidence_score": 3,
+    "allocation_ratio": null,
+    "predicted_price": null,
+    "stop_loss_price": null,
+    "weekly_plan": 1,
+    "security": 1,
     "scenario_planning_label": "기본",
-    "predicted_trend_label": "상승",
-    "period_label": "2026.08.03 ~ 2026.08.09",
-    "is_current": true,
-    "risk_reward": 1.29
+    "predicted_trend_label": "횡보",
+    "risk_reward": null
   }
 ];
 
 export const dailyPlans = [
   {
-    "id": 6,
+    "id": 3,
     "is_deleted": false,
-    "weekly_plan_detail": {
-      "id": 10,
-      "title": "SK하이닉스 관망",
-      "security": 8,
+    "weekly_security_plan_detail": {
+      "id": 1,
+      "title": "삼전 버티기",
+      "weekly_plan": 1,
+      "security": 1,
+      "security_detail": {
+        "id": 1,
+        "symbol": "005930",
+        "name": "삼성전자",
+        "market": "KOSPI",
+        "currency": "KRW",
+        "sector": "반도체",
+        "current_price": "256000.00",
+        "market_label": "코스피",
+        "currency_label": "원"
+      },
       "scenario_planning": "BASE",
       "predicted_trend": "SIDEWAYS",
       "confidence_score": 3,
-      "predicted_price": "196000.00",
-      "stop_loss_price": "176000.00",
-      "valid_from": "2026-08-03",
-      "valid_until": "2026-08-09",
+      "available_amount": "10000000.00",
+      "predicted_price": null,
+      "stop_loss_price": null,
       "scenario_planning_label": "기본",
       "predicted_trend_label": "횡보"
     },
     "security_detail": {
-      "id": 8,
-      "symbol": "000660",
-      "name": "SK하이닉스",
-      "market": "KOSPI",
-      "currency": "KRW",
-      "sector": "반도체",
-      "current_price": "183000.00",
-      "market_label": "코스피",
-      "currency_label": "원"
-    },
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "title": "오늘 관망",
-    "scenario_planning": "BASE",
-    "predicted_trend": "SIDEWAYS",
-    "thesis": "박스 상단까지 아무것도 하지 않는다.",
-    "confidence_score": 3,
-    "allocation_ratio": null,
-    "valid_from": "2026-08-09",
-    "valid_until": "2026-08-09",
-    "predicted_price": null,
-    "stop_loss_price": "176000.00",
-    "weekly_plan": 10,
-    "scenario_planning_label": "기본",
-    "predicted_trend_label": "횡보",
-    "period_label": "2026.08.09 ~ 2026.08.09",
-    "is_current": true
-  },
-  {
-    "id": 5,
-    "is_deleted": false,
-    "weekly_plan_detail": {
-      "id": 9,
-      "title": "삼성전자 이번 주 3분할 1차",
-      "security": 7,
-      "scenario_planning": "BASE",
-      "predicted_trend": "UP",
-      "confidence_score": 4,
-      "predicted_price": "76000.00",
-      "stop_loss_price": "68000.00",
-      "valid_from": "2026-08-03",
-      "valid_until": "2026-08-09",
-      "scenario_planning_label": "기본",
-      "predicted_trend_label": "상승"
-    },
-    "security_detail": {
-      "id": 7,
+      "id": 1,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
       "currency": "KRW",
       "sector": "반도체",
-      "current_price": "71500.00",
+      "current_price": "256000.00",
       "market_label": "코스피",
       "currency_label": "원"
     },
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "title": "오늘 1차 매수",
-    "scenario_planning": "BASE",
+    "title": "연준 금리 동결(인상하지 않음-실업률 심각 하락)",
+    "scenario_planning": "BULL",
     "predicted_trend": "UP",
-    "thesis": "시가 대비 -1% 이탈 시 지정가 71,000 으로 1/3 진입.",
+    "thesis": "8.12 오후 9시 연준 금리 하락",
     "confidence_score": 4,
     "allocation_ratio": null,
-    "valid_from": "2026-08-09",
-    "valid_until": "2026-08-09",
-    "predicted_price": "73000.00",
-    "stop_loss_price": "68000.00",
-    "weekly_plan": 9,
-    "scenario_planning_label": "기본",
+    "valid_from": "2026-08-13",
+    "valid_until": "2026-08-13",
+    "predicted_price": "265000.00",
+    "stop_loss_price": "170000.00",
+    "weekly_security_plan": 1,
+    "scenario_planning_label": "낙관",
     "predicted_trend_label": "상승",
-    "period_label": "2026.08.09 ~ 2026.08.09",
+    "period_label": "2026.08.13 ~ 2026.08.13",
+    "is_current": false
+  },
+  {
+    "id": 2,
+    "is_deleted": false,
+    "weekly_security_plan_detail": {
+      "id": 2,
+      "title": "주주환원해라 제발",
+      "weekly_plan": 1,
+      "security": 2,
+      "security_detail": {
+        "id": 2,
+        "symbol": "000660",
+        "name": "SK하이닉스",
+        "market": "KOSPI",
+        "currency": "KRW",
+        "sector": "반도체",
+        "current_price": "1505000.00",
+        "market_label": "코스피",
+        "currency_label": "원"
+      },
+      "scenario_planning": "BASE",
+      "predicted_trend": "SIDEWAYS",
+      "confidence_score": 3,
+      "available_amount": "10000000.00",
+      "predicted_price": null,
+      "stop_loss_price": null,
+      "scenario_planning_label": "기본",
+      "predicted_trend_label": "횡보"
+    },
+    "security_detail": {
+      "id": 2,
+      "symbol": "000660",
+      "name": "SK하이닉스",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "1505000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
+    },
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "title": "다 오르고 시도(금리 동결 준비)",
+    "scenario_planning": "BASE",
+    "predicted_trend": "SIDEWAYS",
+    "thesis": "1,479,000 4주 매입 시도\n=> 오늘 저녁 9시 연준 기준금리 동결 예상(역대급 실업률)\n다른 가격에라도 사라 => 오늘 저녁 9시 연준 기준금리",
+    "confidence_score": 3,
+    "allocation_ratio": null,
+    "valid_from": "2026-08-12",
+    "valid_until": "2026-08-12",
+    "predicted_price": "1500000.00",
+    "stop_loss_price": null,
+    "weekly_security_plan": 2,
+    "scenario_planning_label": "기본",
+    "predicted_trend_label": "횡보",
+    "period_label": "2026.08.12 ~ 2026.08.12",
+    "is_current": true
+  },
+  {
+    "id": 1,
+    "is_deleted": false,
+    "weekly_security_plan_detail": {
+      "id": 1,
+      "title": "삼전 버티기",
+      "weekly_plan": 1,
+      "security": 1,
+      "security_detail": {
+        "id": 1,
+        "symbol": "005930",
+        "name": "삼성전자",
+        "market": "KOSPI",
+        "currency": "KRW",
+        "sector": "반도체",
+        "current_price": "256000.00",
+        "market_label": "코스피",
+        "currency_label": "원"
+      },
+      "scenario_planning": "BASE",
+      "predicted_trend": "SIDEWAYS",
+      "confidence_score": 3,
+      "available_amount": "10000000.00",
+      "predicted_price": null,
+      "stop_loss_price": null,
+      "scenario_planning_label": "기본",
+      "predicted_trend_label": "횡보"
+    },
+    "security_detail": {
+      "id": 1,
+      "symbol": "005930",
+      "name": "삼성전자",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "256000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
+    },
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "title": "주식 상승이네(금리 동결 준비)",
+    "scenario_planning": "BASE",
+    "predicted_trend": "SIDEWAYS",
+    "thesis": "다 오르고 뒤늦게 235,000 매입 시도\n다른 가격에라도 사라\n=> 오늘 저녁 9시 연준 기준금리 동결 예상(역대급 실업률)",
+    "confidence_score": 3,
+    "allocation_ratio": null,
+    "valid_from": "2026-08-12",
+    "valid_until": "2026-08-12",
+    "predicted_price": null,
+    "stop_loss_price": null,
+    "weekly_security_plan": 1,
+    "scenario_planning_label": "기본",
+    "predicted_trend_label": "횡보",
+    "period_label": "2026.08.12 ~ 2026.08.12",
     "is_current": true
   }
 ];
 
 export const mandatoryPrinciples = [
   {
-    "id": 12,
+    "id": 1,
     "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
     "priority": 1,
-    "content": "계획에 없는 종목은 사지 않는다."
+    "content": "주식은 의심의 연속, 근거 몇개?-행동\n본질을 보아라\n당장 급할때는 확신보다는 의심의 배반, 근거의 연속"
   },
   {
-    "id": 13,
+    "id": 2,
     "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
     "priority": 2,
-    "content": "손절가는 사기 전에 정하고, 정한 뒤에는 내리지 않는다."
+    "content": "공포 경험을 되새기고 공포에 사지 말고, 환희 경험을 되새기고 자만하지 마라"
   },
-  {
-    "id": 14,
-    "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "priority": 3,
-    "content": "한 종목에 총자산의 20%를 넘기지 않는다."
-  },
-  {
-    "id": 15,
-    "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "priority": 4,
-    "content": "물타기는 미리 적어 둔 n차 분할표 안에서만 한다."
-  },
-  {
-    "id": 16,
-    "is_deleted": false,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "priority": 5,
-    "content": "장중에 계획을 바꾸지 않는다. 바꾸려면 장 끝나고 근거를 적는다."
-  }
-];
-
-export const principleSources = [
   {
     "id": 3,
     "is_deleted": false,
-    "principle_count": 2,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "name": "현명한 투자자",
-    "source_type": "BOOK",
-    "url": null,
-    "content": "벤저민 그레이엄. 안전마진과 미스터 마켓.",
-    "source_type_label": "책"
-  }
-];
-
-export const investmentPrinciples = [
-  {
-    "id": 6,
-    "is_deleted": false,
-    "source_detail": {
-      "id": 3,
-      "name": "현명한 투자자",
-      "source_type": "BOOK",
-      "url": null,
-      "source_type_label": "책"
-    },
-    "has_cautions": true,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "teacher_name": "벤저민 그레이엄",
-    "principle_type": "MINDSET",
-    "content": "시장은 하인이지 주인이 아니다.",
-    "rationale": "가격은 매일 제시될 뿐, 받아들일 의무는 없다.",
-    "cautions": "유동성이 마르는 국면에서는 '무시'가 곧 탈출 기회 상실이 된다.",
-    "source": 3,
-    "principle_type_label": "태도"
+    "priority": 3,
+    "content": "10시 이후에 거래를 시작한다"
   },
   {
     "id": 5,
     "is_deleted": false,
-    "source_detail": {
-      "id": 3,
-      "name": "현명한 투자자",
-      "source_type": "BOOK",
-      "url": null,
-      "source_type_label": "책"
-    },
-    "has_cautions": true,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "teacher_name": "벤저민 그레이엄",
-    "principle_type": "VALUATION",
-    "content": "내재가치보다 충분히 싸게 살 것 — 안전마진.",
-    "rationale": "추정이 틀려도 손실을 흡수할 여유가 가격에 이미 들어 있어야 한다.",
-    "cautions": "성장주에는 내재가치 추정 자체가 흔들려서 안전마진 계산이 무의미해질 수 있다.",
-    "source": 3,
-    "principle_type_label": "가치평가"
+    "priority": 5,
+    "content": "금리가 최고의 방향이다. 9월 금리에 대해 민감하게 반응"
+  },
+  {
+    "id": 4,
+    "is_deleted": false,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "priority": null,
+    "content": "코스피는 올해 최대 10,000까지 상승한다"
   }
 ];
 
+export const principleSources = [];
+
+export const investmentPrinciples = [];
+
 export const quarterlyPrinciples = [
   {
-    "id": 3,
+    "id": 2,
     "is_deleted": false,
     "security_detail": {
-      "id": 7,
-      "symbol": "005930",
-      "name": "삼성전자",
+      "id": 2,
+      "symbol": "000660",
+      "name": "SK하이닉스",
       "market": "KOSPI",
       "currency": "KRW",
       "sector": "반도체",
-      "current_price": "71500.00",
+      "current_price": "1505000.00",
       "market_label": "코스피",
       "currency_label": "원"
     },
@@ -1687,581 +1736,579 @@ export const quarterlyPrinciples = [
         {
           "field": "revenue",
           "label": "매출액",
-          "value": 74000000.0
+          "value": null
         },
         {
           "field": "revenue_growth_rate",
           "label": "매출증가율",
-          "value": 12.4
+          "value": null
         },
         {
           "field": "new_orders_amount",
           "label": "신규 수주액",
-          "value": 8200000.0
+          "value": null
         },
         {
           "field": "order_backlog",
           "label": "수주잔고",
-          "value": 15300000.0
+          "value": null
         }
       ],
       "수익성": [
         {
           "field": "operating_margin",
           "label": "영업이익률",
-          "value": 14.8
+          "value": null
         },
         {
           "field": "net_income",
           "label": "순이익",
-          "value": 9600000.0
+          "value": null
         },
         {
           "field": "roe",
           "label": "ROE",
-          "value": 9.1
+          "value": null
         },
         {
           "field": "roic",
           "label": "ROIC",
-          "value": 8.4
+          "value": null
         }
       ],
       "현금·안정성": [
         {
           "field": "free_cash_flow",
           "label": "잉여현금흐름",
-          "value": 5100000.0
+          "value": null
         },
         {
           "field": "cash_conversion_rate",
           "label": "현금전환율",
-          "value": 68.0
+          "value": null
         },
         {
           "field": "interest_coverage_ratio",
           "label": "이자보상배율",
-          "value": 22.3
+          "value": null
         }
       ],
       "가격": [
         {
           "field": "per",
           "label": "PER",
-          "value": 14.2
+          "value": null
         },
         {
           "field": "pbr",
           "label": "PBR",
-          "value": 1.31
+          "value": null
         },
         {
           "field": "ev_ebitda",
           "label": "EV/EBITDA",
-          "value": 5.8
+          "value": null
         },
         {
           "field": "psr",
           "label": "PSR",
-          "value": 1.42
+          "value": null
         },
         {
           "field": "fcf_yield",
           "label": "FCF수익률",
-          "value": 4.1
+          "value": null
         }
       ]
     },
-    "predicted_price": "84000.00",
-    "stop_loss_price": "66000.00",
-    "revenue": "74000000.00",
-    "revenue_growth_rate": "12.40",
-    "new_orders_amount": "8200000.00",
-    "order_backlog": "15300000.00",
-    "operating_margin": "14.80",
-    "net_income": "9600000.00",
-    "roe": "9.10",
-    "roic": "8.40",
-    "free_cash_flow": "5100000.00",
-    "cash_conversion_rate": "68.00",
-    "interest_coverage_ratio": "22.30",
-    "per": "14.20",
-    "pbr": "1.31",
-    "ev_ebitda": "5.80",
-    "psr": "1.42",
-    "fcf_yield": "4.10",
-    "valuation_type": "UNDERVALUED",
-    "performance_summary": "메모리 재고 정상화 진행. 파운드리 적자폭 축소.",
-    "quarterly_plan": 3,
-    "security": 7,
-    "valuation_type_label": "저평가",
-    "filled_ratio": 1.0
-  }
-];
-
-export const monthlyPrinciples = [
-  {
-    "id": 7,
-    "is_deleted": false,
-    "security_detail": {
-      "id": 8,
-      "symbol": "000660",
-      "name": "SK하이닉스",
-      "market": "KOSPI",
-      "currency": "KRW",
-      "sector": "반도체",
-      "current_price": "183000.00",
-      "market_label": "코스피",
-      "currency_label": "원"
-    },
-    "upside_ratio": 17.49,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "direction": "LONG",
-    "rationale": "HBM3E 공급 계약 물량이 내년 상반기까지 확보돼 있다.",
-    "predicted_price": "215000.00",
-    "stop_loss_price": "168000.00",
-    "monthly_plan": 5,
-    "security": 8,
-    "direction_label": "매수"
+    "predicted_price": "2400000.00",
+    "stop_loss_price": "1270000.00",
+    "revenue": null,
+    "revenue_growth_rate": null,
+    "new_orders_amount": null,
+    "order_backlog": null,
+    "operating_margin": null,
+    "net_income": null,
+    "roe": null,
+    "roic": null,
+    "free_cash_flow": null,
+    "cash_conversion_rate": null,
+    "interest_coverage_ratio": null,
+    "per": null,
+    "pbr": null,
+    "ev_ebitda": null,
+    "psr": null,
+    "fcf_yield": null,
+    "valuation_type": null,
+    "performance_summary": null,
+    "quarterly_plan": 1,
+    "security": 2,
+    "valuation_type_label": null,
+    "filled_ratio": 0.0
   },
   {
-    "id": 6,
+    "id": 1,
     "is_deleted": false,
     "security_detail": {
-      "id": 7,
+      "id": 1,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
       "currency": "KRW",
       "sector": "반도체",
-      "current_price": "71500.00",
+      "current_price": "256000.00",
       "market_label": "코스피",
       "currency_label": "원"
     },
-    "upside_ratio": 17.48,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "metric_groups": {
+      "성장성": [
+        {
+          "field": "revenue",
+          "label": "매출액",
+          "value": null
+        },
+        {
+          "field": "revenue_growth_rate",
+          "label": "매출증가율",
+          "value": null
+        },
+        {
+          "field": "new_orders_amount",
+          "label": "신규 수주액",
+          "value": null
+        },
+        {
+          "field": "order_backlog",
+          "label": "수주잔고",
+          "value": null
+        }
+      ],
+      "수익성": [
+        {
+          "field": "operating_margin",
+          "label": "영업이익률",
+          "value": null
+        },
+        {
+          "field": "net_income",
+          "label": "순이익",
+          "value": null
+        },
+        {
+          "field": "roe",
+          "label": "ROE",
+          "value": null
+        },
+        {
+          "field": "roic",
+          "label": "ROIC",
+          "value": null
+        }
+      ],
+      "현금·안정성": [
+        {
+          "field": "free_cash_flow",
+          "label": "잉여현금흐름",
+          "value": null
+        },
+        {
+          "field": "cash_conversion_rate",
+          "label": "현금전환율",
+          "value": null
+        },
+        {
+          "field": "interest_coverage_ratio",
+          "label": "이자보상배율",
+          "value": null
+        }
+      ],
+      "가격": [
+        {
+          "field": "per",
+          "label": "PER",
+          "value": null
+        },
+        {
+          "field": "pbr",
+          "label": "PBR",
+          "value": null
+        },
+        {
+          "field": "ev_ebitda",
+          "label": "EV/EBITDA",
+          "value": null
+        },
+        {
+          "field": "psr",
+          "label": "PSR",
+          "value": null
+        },
+        {
+          "field": "fcf_yield",
+          "label": "FCF수익률",
+          "value": null
+        }
+      ]
+    },
+    "predicted_price": "290000.00",
+    "stop_loss_price": "170000.00",
+    "revenue": null,
+    "revenue_growth_rate": null,
+    "new_orders_amount": null,
+    "order_backlog": null,
+    "operating_margin": null,
+    "net_income": null,
+    "roe": null,
+    "roic": null,
+    "free_cash_flow": null,
+    "cash_conversion_rate": null,
+    "interest_coverage_ratio": null,
+    "per": null,
+    "pbr": null,
+    "ev_ebitda": null,
+    "psr": null,
+    "fcf_yield": null,
+    "valuation_type": null,
+    "performance_summary": null,
+    "quarterly_plan": 1,
+    "security": 1,
+    "valuation_type_label": null,
+    "filled_ratio": 0.0
+  }
+];
+
+export const monthlyPrinciples = [
+  {
+    "id": 2,
+    "is_deleted": false,
+    "security_detail": {
+      "id": 2,
+      "symbol": "000660",
+      "name": "SK하이닉스",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "1505000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
+    },
+    "upside_ratio": 9.63,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
     "direction": "LONG",
-    "rationale": "HBM 비중 확대와 파운드리 가동률 회복이 동시에 잡히는 구간.",
-    "predicted_price": "84000.00",
-    "stop_loss_price": "66000.00",
-    "monthly_plan": 5,
-    "security": 7,
+    "rationale": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
+    "predicted_price": "1650000.00",
+    "stop_loss_price": "1270000.00",
+    "monthly_plan": 1,
+    "security": 2,
+    "direction_label": "매수"
+  },
+  {
+    "id": 1,
+    "is_deleted": false,
+    "security_detail": {
+      "id": 1,
+      "symbol": "005930",
+      "name": "삼성전자",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "256000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
+    },
+    "upside_ratio": 9.38,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "direction": "LONG",
+    "rationale": "회복, 주주환원 뉴스, 금리 동결, 전쟁 완화",
+    "predicted_price": "280000.00",
+    "stop_loss_price": "170000.00",
+    "monthly_plan": 1,
+    "security": 1,
     "direction_label": "매수"
   }
 ];
 
 export const marketDirections = [
   {
-    "id": 3,
+    "id": 4,
     "is_deleted": false,
-    "affected_count": 2,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "news_count": 1,
+    "affected_count": 0,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
     "direction": "UP",
-    "factor_type": "RATE",
-    "content": "연준 금리 인하 기대가 반도체 밸류에이션에 우호적으로 작용.",
-    "rationale": "10년물이 3개월간 60bp 하락. 성장주 할인율 부담 완화.",
-    "factor_value": "3.85",
-    "affected_targets": {
-      "sectors": [
-        "반도체"
-      ],
-      "indices": [
-        "KOSPI"
-      ]
-    },
+    "factor_type": "SENTIMENT",
+    "content": "M&A , 주주",
+    "rationale": "주가가 상승할만한 이유들 모음",
+    "factor_value": null,
+    "affected_targets": null,
     "direction_label": "상승",
-    "factor_type_label": "금리"
-  }
-];
-
-export const strategies = [
+    "factor_type_label": "투자심리"
+  },
   {
     "id": 3,
     "is_deleted": false,
-    "price_data_detail": {
-      "id": 3,
-      "security": 7,
-      "price_at": "2026-08-09T09:30:00+09:00",
-      "high_price": "72400.00",
-      "low_price": "70800.00",
-      "quote_price": "71500.00"
-    },
-    "method_count": 5,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "news_count": 0,
+    "affected_count": 0,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
     "remarks": null,
-    "policy_name": "삼성전자 3분할 매수",
-    "sector": "반도체",
-    "reference_at": "2026-08-09T09:30:00+09:00",
-    "price_data": 3
+    "direction": "DOWN",
+    "factor_type": "RATE",
+    "content": "금리로 인한 주가 하락",
+    "rationale": "26.08.21 기 준 5.26(마지노선 4.5 초과)",
+    "factor_value": null,
+    "affected_targets": null,
+    "direction_label": "하락",
+    "factor_type_label": "금리"
+  },
+  {
+    "id": 2,
+    "is_deleted": false,
+    "news_count": 0,
+    "affected_count": 0,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "direction": "DOWN",
+    "factor_type": "GEOPOLITICS",
+    "content": "트럼프 계엄 vs 탄핵",
+    "rationale": "트럼프는 이성적인 사람이 아니다. 짐승적 돌발성으로 문제를 일으키는 저질인",
+    "factor_value": null,
+    "affected_targets": null,
+    "direction_label": "하락",
+    "factor_type_label": "지정학"
+  },
+  {
+    "id": 1,
+    "is_deleted": false,
+    "news_count": 0,
+    "affected_count": 0,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "direction": "SIDEWAYS",
+    "factor_type": "GEOPOLITICS",
+    "content": "전쟁 종식",
+    "rationale": "11월 선거",
+    "factor_value": null,
+    "affected_targets": null,
+    "direction_label": "횡보",
+    "factor_type_label": "지정학"
   }
 ];
 
-export const strategyDetail = {
-  "id": 3,
-  "is_deleted": false,
-  "price_data_detail": {
-    "id": 3,
-    "security": 7,
-    "price_at": "2026-08-09T09:30:00+09:00",
-    "high_price": "72400.00",
-    "low_price": "70800.00",
-    "quote_price": "71500.00"
-  },
-  "method_count": 5,
-  "methods": {
-    "BUY_SPLIT": [
-      {
-        "id": 11,
-        "is_deleted": false,
-        "created_at": "2026-08-09",
-        "updated_at": "2026-08-09",
-        "remarks": null,
-        "strategy_type": "BUY_SPLIT",
-        "step_no": 1,
-        "price_ratio": "-3.00",
-        "quantity_ratio": "30.00",
-        "sector": "반도체",
-        "strategy": 3,
-        "strategy_type_label": "분할매수"
-      },
-      {
-        "id": 12,
-        "is_deleted": false,
-        "created_at": "2026-08-09",
-        "updated_at": "2026-08-09",
-        "remarks": null,
-        "strategy_type": "BUY_SPLIT",
-        "step_no": 2,
-        "price_ratio": "-7.00",
-        "quantity_ratio": "30.00",
-        "sector": "반도체",
-        "strategy": 3,
-        "strategy_type_label": "분할매수"
-      },
-      {
-        "id": 13,
-        "is_deleted": false,
-        "created_at": "2026-08-09",
-        "updated_at": "2026-08-09",
-        "remarks": null,
-        "strategy_type": "BUY_SPLIT",
-        "step_no": 3,
-        "price_ratio": "-12.00",
-        "quantity_ratio": "40.00",
-        "sector": "반도체",
-        "strategy": 3,
-        "strategy_type_label": "분할매수"
-      }
-    ],
-    "SELL_SPLIT": [
-      {
-        "id": 14,
-        "is_deleted": false,
-        "created_at": "2026-08-09",
-        "updated_at": "2026-08-09",
-        "remarks": null,
-        "strategy_type": "SELL_SPLIT",
-        "step_no": 1,
-        "price_ratio": "8.00",
-        "quantity_ratio": "50.00",
-        "sector": "반도체",
-        "strategy": 3,
-        "strategy_type_label": "분할매도"
-      },
-      {
-        "id": 15,
-        "is_deleted": false,
-        "created_at": "2026-08-09",
-        "updated_at": "2026-08-09",
-        "remarks": null,
-        "strategy_type": "SELL_SPLIT",
-        "step_no": 2,
-        "price_ratio": "15.00",
-        "quantity_ratio": "50.00",
-        "sector": "반도체",
-        "strategy": 3,
-        "strategy_type_label": "분할매도"
-      }
-    ]
-  },
-  "created_at": "2026-08-09",
-  "updated_at": "2026-08-09",
-  "remarks": null,
-  "policy_name": "삼성전자 3분할 매수",
-  "sector": "반도체",
-  "reference_at": "2026-08-09T09:30:00+09:00",
-  "price_data": 3
-};
+export const news = [
+  {
+    "id": 2,
+    "is_deleted": false,
+    "market_direction_detail": {
+      "id": 4,
+      "direction": "UP",
+      "factor_type": "SENTIMENT",
+      "factor_value": null,
+      "content": "M&A , 주주",
+      "direction_label": "상승",
+      "factor_type_label": "투자심리"
+    },
+    "affected_count": 0,
+    "created_at": "2026-08-12",
+    "updated_at": "2026-08-12",
+    "remarks": null,
+    "direction": "UP",
+    "factor_type": "SENTIMENT",
+    "content": "하이닉스 키옥시아 대주주",
+    "rationale": "하이닉스 키옥시아 대주주, 넨드 메모리 강함, 하이닉스 HBM메모리 + 낸드 메모리(키옥시아) + 인텔의 낸드플래시 및 SSD(저장장치)",
+    "factor_value": null,
+    "affected_targets": null,
+    "market_direction": 4,
+    "direction_label": "상승",
+    "factor_type_label": "투자심리"
+  }
+];
+
+export const strategies = [];
+
+export const strategyDetail = {};
 
 export const orders = [
-  {
-    "id": 7,
-    "is_deleted": false,
-    "security_detail": {
-      "id": 9,
-      "symbol": "035420",
-      "name": "NAVER",
-      "market": "KOSPI",
-      "currency": "KRW",
-      "sector": "인터넷",
-      "current_price": "162000.00",
-      "market_label": "코스피",
-      "currency_label": "원"
-    },
-    "action_type": "FILL",
-    "order_type": "MARKET",
-    "side": "BUY",
-    "quantity": 10,
-    "limit_price": "162000.00",
-    "executed_at": "2026-08-09T13:40:00+09:00",
-    "created_at": "2026-08-09",
-    "remarks": "장중 급등 보고 들어감. 월계획에 없는 종목.",
-    "security": 9,
-    "action_type_label": "체결",
-    "order_type_label": "시장가",
-    "side_label": "매수",
-    "notional": 1620000.0
-  },
   {
     "id": 6,
     "is_deleted": false,
     "security_detail": {
-      "id": 7,
+      "id": 1,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
       "currency": "KRW",
       "sector": "반도체",
-      "current_price": "71500.00",
+      "current_price": "256000.00",
       "market_label": "코스피",
       "currency_label": "원"
     },
     "action_type": "FILL",
     "order_type": "LIMIT",
     "side": "BUY",
-    "quantity": 40,
-    "limit_price": "71000.00",
-    "executed_at": "2026-08-09T10:12:00+09:00",
-    "created_at": "2026-08-09",
-    "remarks": "주계획 1차 진입. 계획대로.",
-    "security": 7,
+    "quantity": 25,
+    "limit_price": "258000.00",
+    "executed_at": "2026-08-12T19:57:00+09:00",
+    "created_at": "2026-08-12",
+    "remarks": null,
+    "security": 1,
     "action_type_label": "체결",
     "order_type_label": "지정가",
     "side_label": "매수",
-    "notional": 2840000.0
-  }
-];
-
-export const performanceRecords = [
-  {
-    "id": 6,
-    "is_deleted": false,
-    "security_detail": {
-      "id": 9,
-      "symbol": "035420",
-      "name": "NAVER",
-      "market": "KOSPI",
-      "currency": "KRW",
-      "sector": "인터넷",
-      "current_price": "162000.00",
-      "market_label": "코스피",
-      "currency_label": "원"
-    },
-    "cost_breakdown": [
-      {
-        "field": "interest_cost",
-        "label": "이자비용",
-        "value": 31000.0
-      },
-      {
-        "field": "commission",
-        "label": "수수료",
-        "value": 4200.0
-      },
-      {
-        "field": "tax",
-        "label": "세금",
-        "value": 0.0
-      },
-      {
-        "field": "etc_cost",
-        "label": "기티비용",
-        "value": 0.0
-      }
-    ],
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "period_type": "MONTH",
-    "period_start": "2026-08-01",
-    "period_end": "2026-08-31",
-    "realized_profit": "-210000.00",
-    "unrealized_profit": "-95000.00",
-    "dividend_income": "0.00",
-    "interest_cost": "31000.00",
-    "commission": "4200.00",
-    "tax": "0.00",
-    "etc_cost": "0.00",
-    "net_profit": "-340200.00",
-    "return_rate": "-4.80",
-    "benchmark_return_rate": "3.10",
-    "max_drawdown": "-9.60",
-    "security": 9,
-    "period_type_label": "월",
-    "total_cost": 35200.0,
-    "excess_return": -7.9
+    "notional": 6450000.0
   },
   {
     "id": 5,
     "is_deleted": false,
     "security_detail": {
-      "id": 7,
+      "id": 2,
+      "symbol": "000660",
+      "name": "SK하이닉스",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "1505000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
+    },
+    "action_type": "FILL",
+    "order_type": "LIMIT",
+    "side": "BUY",
+    "quantity": 3,
+    "limit_price": "1523000.00",
+    "executed_at": "2026-08-12T19:57:00+09:00",
+    "created_at": "2026-08-12",
+    "remarks": null,
+    "security": 2,
+    "action_type_label": "체결",
+    "order_type_label": "지정가",
+    "side_label": "매수",
+    "notional": 4569000.0
+  },
+  {
+    "id": 4,
+    "is_deleted": false,
+    "security_detail": {
+      "id": 2,
+      "symbol": "000660",
+      "name": "SK하이닉스",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "1505000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
+    },
+    "action_type": "ORDER",
+    "order_type": "LIMIT",
+    "side": "BUY",
+    "quantity": 4,
+    "limit_price": "1497000.00",
+    "executed_at": "2026-08-12T16:34:00+09:00",
+    "created_at": "2026-08-12",
+    "remarks": null,
+    "security": 2,
+    "action_type_label": "주문",
+    "order_type_label": "지정가",
+    "side_label": "매수",
+    "notional": 5988000.0
+  },
+  {
+    "id": 3,
+    "is_deleted": false,
+    "security_detail": {
+      "id": 2,
+      "symbol": "000660",
+      "name": "SK하이닉스",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "1505000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
+    },
+    "action_type": "ORDER",
+    "order_type": "MARKET",
+    "side": "BUY",
+    "quantity": 2,
+    "limit_price": "1430000.00",
+    "executed_at": "2026-08-12T16:33:00+09:00",
+    "created_at": "2026-08-12",
+    "remarks": null,
+    "security": 2,
+    "action_type_label": "주문",
+    "order_type_label": "시장가",
+    "side_label": "매수",
+    "notional": 2860000.0
+  },
+  {
+    "id": 2,
+    "is_deleted": false,
+    "security_detail": {
+      "id": 1,
       "symbol": "005930",
       "name": "삼성전자",
       "market": "KOSPI",
       "currency": "KRW",
       "sector": "반도체",
-      "current_price": "71500.00",
+      "current_price": "256000.00",
       "market_label": "코스피",
       "currency_label": "원"
     },
-    "cost_breakdown": [
-      {
-        "field": "interest_cost",
-        "label": "이자비용",
-        "value": 0.0
-      },
-      {
-        "field": "commission",
-        "label": "수수료",
-        "value": 8600.0
-      },
-      {
-        "field": "tax",
-        "label": "세금",
-        "value": 64000.0
-      },
-      {
-        "field": "etc_cost",
-        "label": "기티비용",
-        "value": 0.0
-      }
-    ],
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "action_type": "FILL",
+    "order_type": "LIMIT",
+    "side": "BUY",
+    "quantity": 5,
+    "limit_price": "245000.00",
+    "executed_at": "2026-08-12T16:33:00+09:00",
+    "created_at": "2026-08-12",
     "remarks": null,
-    "period_type": "MONTH",
-    "period_start": "2026-08-01",
-    "period_end": "2026-08-31",
-    "realized_profit": "420000.00",
-    "unrealized_profit": "1180000.00",
-    "dividend_income": "43000.00",
-    "interest_cost": "0.00",
-    "commission": "8600.00",
-    "tax": "64000.00",
-    "etc_cost": "0.00",
-    "net_profit": "1570400.00",
-    "return_rate": "6.40",
-    "benchmark_return_rate": "3.10",
-    "max_drawdown": "-4.20",
-    "security": 7,
-    "period_type_label": "월",
-    "total_cost": 72600.0,
-    "excess_return": 3.3
-  }
-];
-
-export const aiModelRuns = [
-  {
-    "id": 3,
-    "is_deleted": false,
-    "feedback_count": 2,
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "model_name": "claude-opus-5",
-    "model_version": "2026-05",
-    "prompt_version": "discipline-v3",
-    "started_at": "2026-08-09T08:00:00+09:00",
-    "completed_at": "2026-08-09T08:00:14+09:00",
-    "output_json": {
-      "verdict": "plan_ok",
-      "notes": 2
-    },
-    "status": "SUCCESS",
-    "status_label": "성공",
-    "duration_seconds": 14.0
-  }
-];
-
-export const aiFeedback = [
-  {
-    "id": 6,
-    "is_deleted": false,
-    "model_detail": {
-      "id": 3,
-      "model_name": "claude-opus-5",
-      "model_version": "2026-05",
-      "prompt_version": "discipline-v3",
-      "status": "SUCCESS",
-      "started_at": "2026-08-09T08:00:00+09:00",
-      "status_label": "성공"
-    },
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
-    "remarks": null,
-    "opinion_type": "SUGGESTION",
-    "object_id": 9,
-    "table_name": "weekly_investment_plan",
-    "ai_decision": "손익비 약 1.29. 3분할 1차 비중을 낮추면 평균 진입가가 개선된다.",
-    "score": "71.00",
-    "confidence_score": "64.00",
-    "reasoning_summary": "예상가 76,000 / 손절가 68,000 / 현재가 71,500 기준.",
-    "risk_summary": "1차에 비중을 실으면 2·3차 여력이 줄어든다.",
-    "valid_until": "2026-08-16",
-    "model": 3,
-    "opinion_type_label": "제안",
-    "is_expired": false
+    "security": 1,
+    "action_type_label": "체결",
+    "order_type_label": "지정가",
+    "side_label": "매수",
+    "notional": 1225000.0
   },
   {
-    "id": 5,
+    "id": 1,
     "is_deleted": false,
-    "model_detail": {
-      "id": 3,
-      "model_name": "claude-opus-5",
-      "model_version": "2026-05",
-      "prompt_version": "discipline-v3",
-      "status": "SUCCESS",
-      "started_at": "2026-08-09T08:00:00+09:00",
-      "status_label": "성공"
+    "security_detail": {
+      "id": 1,
+      "symbol": "005930",
+      "name": "삼성전자",
+      "market": "KOSPI",
+      "currency": "KRW",
+      "sector": "반도체",
+      "current_price": "256000.00",
+      "market_label": "코스피",
+      "currency_label": "원"
     },
-    "created_at": "2026-08-09",
-    "updated_at": "2026-08-09",
+    "action_type": "ORDER",
+    "order_type": "LIMIT",
+    "side": "BUY",
+    "quantity": 25,
+    "limit_price": "235000.00",
+    "executed_at": "2026-08-12T16:31:00+09:00",
+    "created_at": "2026-08-12",
     "remarks": null,
-    "opinion_type": "WARNING",
-    "object_id": 3,
-    "table_name": "quarterly_investment_plan",
-    "ai_decision": "손절전략이 비어 있다. 나머지 세 전략만으로는 하락 국면에서 기준이 없다.",
-    "score": "62.00",
-    "confidence_score": "81.00",
-    "reasoning_summary": "매수·매도·횡보 전략은 기재됐으나 손절 기준이 없다.",
-    "risk_summary": "분기 손절비율 -5% 도달 시 행동 규칙이 정의돼 있지 않다.",
-    "valid_until": "2026-08-23",
-    "model": 3,
-    "opinion_type_label": "경고",
-    "is_expired": false
+    "security": 1,
+    "action_type_label": "주문",
+    "order_type_label": "지정가",
+    "side_label": "매수",
+    "notional": 5875000.0
   }
 ];
 
-// dump_mock 이 아직 안 담고 있던 자원들. `manage.py dump_mock` 을 다시 돌리면
-// 실제 데이터로 채워진다. 여기 비어 있어도 목 모드 화면은 뜬다(빈 목록으로 그려짐).
-export const weeklySecurityPlans = [];
+export const performanceRecords = [];
 
-export const news = [];
+export const aiModelRuns = [];
+
+export const aiFeedback = [];

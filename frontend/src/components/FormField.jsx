@@ -3,24 +3,42 @@ import { optionsFor } from "../lib/useChoices";
 /**
  * 금액 입력은 한국식 세 자리 콤마로 늘 보인다 (100000 → "100,000").
  * 저장 시엔 EntityForm.toPayload 가 콤마를 떼고 숫자로 바꾼다.
- * 여기서는 표시/입력만 관리한다 — 상태에는 콤마 없는 원문(디지트, 옵션 부호)만 넣는다.
+ * 여기서는 표시/입력만 관리한다 — 상태에는 콤마 없는 원문만 넣는다.
+ *
+ * ⚠ 소수점을 반드시 살려야 한다. DRF 의 DecimalField 는 `"10000000.00"` 처럼
+ * **문자열**로 내려온다. 예전 코드는 숫자가 아닌 문자를 전부 걷어 냈는데, 그러면
+ * 점이 사라지면서 소수부 `00` 이 정수부에 붙어 값이 100배가 됐다
+ * (10,000,000원 → 1,000,000,000원). 그 상태로 저장하면 100배가 그대로 DB 에 남는다.
  */
 function formatPriceDisplay(raw) {
   if (raw === "" || raw === null || raw === undefined) return "";
-  const s = String(raw);
+  const s = String(raw).trim();
   const neg = s.startsWith("-");
-  const digits = s.replace(/[^\d]/g, "");
-  if (!digits) return neg ? "-" : "";
-  return (neg ? "-" : "") + Number(digits).toLocaleString("ko-KR");
+  const cleaned = s.replace(/[^\d.]/g, "");
+  if (!cleaned) return neg ? "-" : "";
+  const dot = cleaned.indexOf(".");
+  const intPart = dot === -1 ? cleaned : cleaned.slice(0, dot);
+  // 점 뒤는 숫자만 남긴다(점을 두 번 친 경우까지 방어).
+  const frac = dot === -1 ? null : cleaned.slice(dot + 1).replace(/\./g, "");
+  const head = intPart ? Number(intPart).toLocaleString("ko-KR") : "0";
+  const sign = neg ? "-" : "";
+  // 입력 중인 "170000." 은 점을 남겨야 다음 타이핑이 이어진다.
+  if (frac === null) return sign + head;
+  return `${sign}${head}.${frac}`;
 }
 
 function sanitizePriceInput(v) {
-  // 콤마·공백·문자 다 걷어 내고 부호 하나만 남긴다.
+  // 콤마·공백·문자를 걷어 내고 부호 하나와 소수점 하나만 남긴다.
   const s = String(v ?? "");
   const neg = s.trim().startsWith("-");
-  const digits = s.replace(/[^\d]/g, "");
-  if (!digits) return neg ? "-" : "";
-  return (neg ? "-" : "") + digits;
+  const cleaned = s.replace(/[^\d.]/g, "");
+  if (!cleaned) return neg ? "-" : "";
+  const dot = cleaned.indexOf(".");
+  const body =
+    dot === -1
+      ? cleaned
+      : `${cleaned.slice(0, dot)}.${cleaned.slice(dot + 1).replace(/\./g, "")}`;
+  return (neg ? "-" : "") + body;
 }
 
 /**

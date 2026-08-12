@@ -116,6 +116,18 @@ function serverErrors(err) {
   return { __all__: payload?.message || err?.message || "저장하지 못했다." };
 }
 
+/**
+ * DRF 의 DecimalField 는 `"10000000.00"` 처럼 소수부를 달아 문자열로 내려온다.
+ * 원화 금액은 소수부가 늘 0 이라 떼어 낸다 — 남겨 두면 입력칸이 지저분하고,
+ * 사용자가 뒤에서부터 지우다 점을 건드리면 자릿수가 통째로 틀어진다.
+ * 0 이 아닌 소수부는 값이므로 그대로 둔다.
+ */
+function trimZeroFraction(raw) {
+  const s = String(raw);
+  const m = s.match(/^(-?\d+)\.0*$/);
+  return m ? m[1] : s;
+}
+
 function initialValues(fields, instance) {
   const v = {};
   for (const f of fields) {
@@ -127,6 +139,7 @@ function initialValues(fields, instance) {
     if (f.type === "json") v[f.name] = JSON.stringify(raw, null, 2);
     else if (f.type === "date") v[f.name] = String(raw).slice(0, 10);
     else if (f.type === "datetime") v[f.name] = String(raw).slice(0, 16);
+    else if (f.type === "price") v[f.name] = trimZeroFraction(raw);
     else v[f.name] = raw;
   }
   return v;

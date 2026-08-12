@@ -37,6 +37,13 @@ export const fetchExecutionCompare = (params = {}) =>
 export const fetchPerformanceSummary = (params = {}) =>
   wrap(() => api.get("/performance/summary/", params), () => mock.performanceSummary);
 
+/** 계획 대비 이행을 일별/주별로 접어 센 것. bucket = "DAY" | "WEEK" */
+export const fetchPlanExecution = (params = {}) =>
+  wrap(
+    () => api.get("/performance/plan-execution/", params),
+    () => mock.planExecution || { buckets: [], totals: {} }
+  );
+
 export const fetchAiDigest = (params = {}) =>
   wrap(() => api.get("/ai/digest/", params), () => mock.aiDigest);
 
