@@ -10,8 +10,21 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "0.0.0.0",
       port: 9070,
+      allowedHosts: [
+        "namddww.iptime.org",
+        "namddww.duckdns.org",
+        "namddww2.duckdns.org",
+      ],
       proxy: { "/api": { target, changeOrigin: true } },
     },
-    preview: { host: "0.0.0.0", port: 9070 },
+    preview: {
+      host: "0.0.0.0",
+      port: 9070,
+      allowedHosts: [
+        "namddww.iptime.org",
+        "namddww.duckdns.org",
+        "namddww2.duckdns.org",
+      ],
+    },
   };
 });
