@@ -36,7 +36,7 @@ services:
   backend:
     build: ./backend
     # ASGI 로 승격 — Channels(웹소켓) 를 함께 서비스하기 위해서. HTTP 도 daphne 가 처리.
-    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "core.asgi:application"]
+    command: ["daphne", "-b", "0.0.0.0", "-p", "9071", "core.asgi:application"]
     # DB/Django/CORS 등은 backend/.env 에서 읽는다. 여기엔 도커 네트워크 특유값만 둔다.
     # (backend 컨테이너 안에서 redis 는 서비스명 `redis` 로만 해석되므로 REDIS_URL 은 여기서 고정.)
     environment: &django-env
@@ -44,7 +44,7 @@ services:
       # KIS 연동은 mock 으로 시작 (phase 3~6 에서 실제 연동)
       KIS_ENV: paper
     ports:
-      - "8000:8000"
+      - "9071:9071"
     volumes:
       - ./backend:/app
     depends_on:
@@ -95,7 +95,7 @@ services:
     build: ./frontend
     environment:
       # 컨테이너 내부에서 백엔드를 부를 때는 서비스명(backend)으로.
-      VITE_API_TARGET: http://backend:8000
+      VITE_API_TARGET: http://backend:9071
       VITE_API_BASE: /api/trading
       VITE_USE_MOCK: "0"
     ports:
