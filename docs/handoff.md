@@ -151,3 +151,100 @@ cd frontend && npm run build
 
 셸에서 한글을 curl 본문에 직접 넣으면 인코딩이 깨진다. POST 검증은 ASCII 로 하거나
 파일로 넘길 것. Django shell 스크립트는 `encoding='utf-8-sig'` 로 읽어야 BOM 에 안 걸린다.
+
+---
+
+## 2026-08-13 세션 (추가) — 보유수량 자동집계 · 가격데이터 라벨
+
+### 0. 지금 당장 알아야 할 것
+
+1. **`Security.holding_quantity` 의 의미가 바뀌었다.** 예전엔 "지금 총 보유수량"이었다.
+   지금은 "**시스템 도입 시점의 기초 보유수량**"이다. DB 컬럼은 그대로 두고 의미만 갈렸다.
+   최종 보유수량은 `computed_holding_quantity` 프로퍼티가 (기초 + FILL 순증감) 으로 낸다.
+   마이그레이션 없음. `db_comment` 만 갱신.
+2. **Django `annotate` 는 관련 모델의 소프트딜리트 필터를 자동 적용하지 않는다.** 이 세션의
+   가장 큰 함정이었다. 아래 「함정」 1번 참고.
+
+### 1. 무엇을 왜 바꿨나
+
+**보유수량 아키텍처** — 예전엔 `holding_quantity` 를 사람이 총량으로 직접 관리했다.
+FILL 이행 기록이 쌓여도 그 컬럼과 자동으로 맞물리지 않아, 두 곳이 어긋나면
+어느 쪽이 진실인지 알 수 없었다. 그렇다고 과거 매매를 전부 소급 입력하게 하면
+앱이 짐이 된다. 그래서 두 조각으로 갈랐다:
+
+- `holding_quantity` (컬럼) = 시스템 도입 시점의 **기초 잔고**만
+- FILL(체결) 이행 = 이후 매매의 **순증감** (BUY - SELL)
+- `computed_holding_quantity` (프로퍼티) = 위 둘의 합
+- `market_value` = 최종 수량 × `current_price`
+
+사용자는 종목 등록 시 "기초 보유수량" 만 한 번 입력하고, 이후는 이행에서 굴러간다.
+
+**가격데이터 라벨** — 전략 폼의 "기준 가격데이터" 드롭다운이 `#12 25.08.13 호가 2,608`
+처럼 짧게 나와, 종목이 뭐였는지 안 잡혔다. 지금은
+`#12  삼성전자(005930)  2,608원  26-08-13 10:30` 형식이다. 연도 포함 필수 —
+빠지면 지난 해 데이터가 올해 것과 조용히 섞인다.
+
+### 2. 파일 변경
+
+**백엔드**
+
+| 파일 | 무엇 |
+|---|---|
+| `models/portfolio/security.py` | `computed_holding_quantity` 프로퍼티 추가, `market_value` 를 그 값으로 재계산. `holding_quantity` db_comment 를 "기초 보유수량" 으로 |
+| `views/portfolio/security.py` | 리스트 액션에서 `_fill_qty` annotate. `_fill_qty_annotation()` 헬퍼로 분리 |
+| `serializers/portfolio/security.py` | 두 시리얼라이저의 `PROPERTY_FIELDS` 에 `computed_holding_quantity` 추가 |
+| `core/constants/filters.py` | 폐용된 `?held=` 필터 제거 (컬럼 기반이라 이제 의미가 안 맞음) |
+| `admin.py` | admin list 도 `computed_holding_quantity` 사용 |
+
+**프론트**
+
+| 파일 | 무엇 |
+|---|---|
+| `forms/specs.js` | `SECURITY_FIELDS.holding_quantity` 라벨을 "기초 보유수량" 으로, 힌트로 의미 명시. `current_price` 힌트도 갱신 |
+| `pages/SecurityPage.jsx` | 표의 "보유" 컬럼이 `computed_holding_quantity` 참조 |
+| `pages/StrategyPage.jsx` | 가격데이터 옵션 라벨 재편. `securityLabelById` 를 `optionsMap` 앞으로 이동해 재사용 |
+
+### 3. 함정
+
+1. **Django `annotate` + JOIN 은 관련 모델의 소프트딜리트를 안 거른다.** 처음엔
+   `filter=Q(orders__action_type=ActionType.FILL)` 만 걸었는데, 하닉 보유수량이 9주로
+   찍혔다(실제 4). 소프트딜리트된 FILL BUY 5(id=11) 가 유령처럼 SUM 에 섞였기
+   때문이다. `security.orders`(관련 매니저) 는 소프트딜리트를 걸러 주지만,
+   `security__orders__` (annotate 의 JOIN lookup) 는 걸러 주지 않는다.
+   **해결**: annotation 의 `filter=Q(...)` 에 `orders__is_deleted=False` 를 반드시 함께.
+   앞으로 SoftDelete 관련 모델로 JOIN annotate 하는 모든 자리에 이 규칙이 적용된다.
+
+2. **프로퍼티와 annotation 이름이 같으면 프로퍼티가 이긴다.** Django annotate 는
+   인스턴스 `__dict__` 에 값을 꽂는데, `@property` 가 데이터 디스크립터라 늘 프로퍼티가
+   먼저 호출된다. 그래서 annotation 은 **다른 이름**(`_fill_qty`) 으로 붙이고, 프로퍼티가
+   `self.__dict__.get("_fill_qty")` 로 캐시를 우선 참조하게 했다. 이 패턴이면
+   리스트(annotated)와 디테일(fallback aggregate) 이 같은 프로퍼티 하나로 굴러간다.
+
+3. **seed 데이터는 손대지 않았다.** `seed_demo.py` 의 `holding_quantity=120/40/25` 는
+   이제 의미상 "기초 잔고" 로 자연스럽게 들어맞아, 값은 그대로 두어도 신 의미와
+   충돌하지 않는다. 다만 seed 의 FILL 이행이 실제 계산과 어떻게 합쳐지는지는
+   `삼전 400+63=463 / 하닉 99+4=103` 로 확인됨.
+
+### 4. 미결
+
+- **`holding_quantity` 컬럼의 최종 처리** — 한동안 이 의미(기초 잔고) 로 굴려 보고
+  아무 문제 없으면 그대로 유지. 만약 사용자가 "기초 잔고를 나중에 소급 수정"하는
+  실수가 잦으면, 별도 모델(`OpeningBalance`) 로 분리하는 것도 옵션.
+- **다른 SoftDelete 관계에서 같은 annotate 함정 있는지 스캔**. 위 함정 1번의 패턴이
+  이 파일 말고 다른 곳(예: `weekly_security_plan` 의 집계, `performance_record` 등)
+  에도 있는지 아직 안 봤다.
+
+### 5. 빠른 검증
+
+```bash
+# 보유수량 자동집계 종단 확인 (list 경로 + detail 경로 모두)
+cd backend && .venv/Scripts/python.exe -c "
+import os, django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE','core.settings')
+django.setup()
+from trading_discipline.views.portfolio.security import _fill_qty_annotation
+from trading_discipline.models import Security
+for s in Security.objects.annotate(_fill_qty=_fill_qty_annotation())[:5]:
+    print(f'{s.symbol}: 기초 {s.holding_quantity} + FILL {s._fill_qty} = {s.computed_holding_quantity}주')
+"
+```
