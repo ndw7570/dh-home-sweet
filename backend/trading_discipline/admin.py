@@ -33,7 +33,7 @@ from trading_discipline.models import (
 class SecurityAdmin(admin.ModelAdmin):
     list_display = (
         "id", "symbol", "name", "market", "account",
-        "holding_quantity", "current_price", "is_active",
+        "computed_holding_quantity", "current_price", "is_active",
     )
     search_fields = ("symbol", "name", "sector")
     list_filter = ("market", "asset_type", "is_active", "is_deleted")

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 import AsyncState from "../components/AsyncState";
+import DataTable from "../components/DataTable";
 import EntityForm from "../components/EntityForm";
+import { EditButton } from "../components/EntityModal";
 import Modal from "../components/Modal";
 import Panel from "../components/Panel";
 import SplitTable from "../components/SplitTable";
@@ -31,7 +33,13 @@ import "./StrategyPage.css";
  * '지금 가격 기준'이 아니라 '그때 그 가격 기준'으로 못박혀 있어서,
  * 나중에 왜 이 가격대에 분할을 걸었는지 되짚을 수 있다.
  */
+const VIEW_TABS = [
+  { key: "STRATEGY", label: "매수매도전략" },
+  { key: "PRICE", label: "가격데이터" },
+];
+
 export default function StrategyPage() {
+  const [view, setView] = useState("STRATEGY");
   const [selectedId, setSelectedId] = useState(null);
 
   const list = useAsync(() => listTradingStrategies(), []);
@@ -65,22 +73,47 @@ export default function StrategyPage() {
   );
   const form = useMultiForm(kinds, reloadAll);
 
+  const securityLabelById = useMemo(() => {
+    const map = new Map();
+    (refs.data?.securities || []).forEach((s) => {
+      map.set(s.id, `${s.name} (${s.symbol})`);
+    });
+    return map;
+  }, [refs.data]);
+
   const optionsMap = useMemo(
     () => ({
       securities: (refs.data?.securities || []).map((s) => ({
         value: s.id,
         label: `${s.name} (${s.symbol})`,
       })),
-      priceData: (refs.data?.priceData || []).map((p) => ({
-        value: p.id,
-        label: `#${p.id} ${dateTime(p.price_at)} 호가 ${price(p.quote_price)}`,
-      })),
+      // 라벨은 ID · 종목 · 호가 · YY-MM-DD HH:MM 을 한 줄에 —
+      // 전략을 세우던 그때가 언제·어느 종목·어느 가격이었는지 다 보여야 헷갈리지 않는다.
+      // 연도가 빠지면 지난 해 것과 올해 것이 섞여도 눈에 안 잡힌다.
+      priceData: (refs.data?.priceData || []).map((p) => {
+        const sec = securityLabelById.get(p.security) || `#${p.security}`;
+        const t = p.price_at ? new Date(p.price_at) : null;
+        const when =
+          t && !Number.isNaN(t.getTime())
+            ? `${String(t.getFullYear()).slice(-2)}-${String(t.getMonth() + 1).padStart(
+                2,
+                "0"
+              )}-${String(t.getDate()).padStart(2, "0")} ${String(t.getHours()).padStart(
+                2,
+                "0"
+              )}:${String(t.getMinutes()).padStart(2, "0")}`
+            : "—";
+        return {
+          value: p.id,
+          label: `#${p.id}  ${sec}  ${price(p.quote_price)}원  ${when}`,
+        };
+      }),
       strategies: (list.data || []).map((s) => ({
         value: s.id,
         label: s.policy_name || `전략#${s.id}`,
       })),
     }),
-    [refs.data, list.data]
+    [refs.data, list.data, securityLabelById]
   );
 
   return (
@@ -89,6 +122,81 @@ export default function StrategyPage() {
         <p className="stp-loaderr">원본을 불러오지 못했다 — {String(form.loadError.message)}</p>
       )}
 
+      <div className="stp-viewtabs" role="tablist" aria-label="전략 보기 방식">
+        {VIEW_TABS.map((t) => (
+          <button
+            key={t.key}
+            role="tab"
+            aria-selected={view === t.key}
+            className={`stp-viewtab ${view === t.key ? "is-on" : ""}`}
+            onClick={() => setView(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {view === "PRICE" && (
+        <AsyncState loading={refs.loading} error={refs.error} onRetry={refs.reload}>
+          {refs.data && (
+            <Panel
+              title="가격데이터"
+              meta={`${(refs.data.priceData || []).length}건`}
+              note="전략은 이 행을 가리켜 '그때 그 가격 기준'을 못박는다. 함부로 지우면 전략의 근거가 사라진다."
+              actions={
+                <button className="btn is-sm" onClick={() => form.openCreate("PRICE")}>
+                  + 가격데이터
+                </button>
+              }
+            >
+              <DataTable
+                rows={refs.data.priceData || []}
+                empty="가격데이터가 없다. 전략을 세우려면 먼저 기준 가격을 남겨 둔다."
+                columns={[
+                  {
+                    key: "security",
+                    label: "종목",
+                    render: (r) => securityLabelById.get(r.security) || `#${r.security}`,
+                  },
+                  {
+                    key: "price_at",
+                    label: "시각",
+                    render: (r) => <span className="num">{dateTime(r.price_at)}</span>,
+                  },
+                  {
+                    key: "high_price",
+                    label: "고가",
+                    align: "right",
+                    render: (r) => price(r.high_price),
+                  },
+                  {
+                    key: "low_price",
+                    label: "저가",
+                    align: "right",
+                    render: (r) => price(r.low_price),
+                  },
+                  {
+                    key: "quote_price",
+                    label: "호가",
+                    align: "right",
+                    render: (r) => price(r.quote_price),
+                  },
+                  { key: "remarks", label: "비고" },
+                  {
+                    key: "_edit",
+                    label: "",
+                    align: "right",
+                    width: 60,
+                    render: (r) => <EditButton onClick={() => form.openEdit("PRICE", r.id)} />,
+                  },
+                ]}
+              />
+            </Panel>
+          )}
+        </AsyncState>
+      )}
+
+      {view === "STRATEGY" && (
       <AsyncState loading={list.loading} error={list.error} onRetry={list.reload}>
         {list.data && (
           <>
@@ -110,9 +218,6 @@ export default function StrategyPage() {
               <div className="panel-actions">
                 <button className="btn is-sm" onClick={() => form.openCreate("STRATEGY")}>
                   + 전략
-                </button>
-                <button className="btn is-sm" onClick={() => form.openCreate("PRICE")}>
-                  + 가격데이터
                 </button>
               </div>
             </div>
@@ -180,6 +285,7 @@ export default function StrategyPage() {
           </>
         )}
       </AsyncState>
+      )}
 
       {form.isOpen && (
         <Modal

@@ -223,10 +223,10 @@ export default function SecurityPage() {
                 },
                 { key: "sector", label: "업종" },
                 {
-                  key: "holding_quantity",
+                  key: "computed_holding_quantity",
                   label: "보유",
                   align: "right",
-                  render: (r) => qty(r.holding_quantity),
+                  render: (r) => qty(r.computed_holding_quantity),
                 },
                 {
                   key: "current_price",

@@ -1,3 +1,29 @@
+/* 탭 — 성과/계획 화면의 뷰탭과 같은 모양으로 맞춘다. */
+.stp-viewtabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.stp-viewtab {
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+
+.stp-viewtab:hover { color: var(--text-primary); }
+
+.stp-viewtab.is-on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
 .stp-bar {
   display: flex;
   align-items: flex-start;

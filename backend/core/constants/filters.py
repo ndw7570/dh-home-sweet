@@ -42,7 +42,8 @@ SECURITY_FILTER_FIELDS = {
     "currency": "currency__exact",
     "sector": "sector__icontains",
     "is_active": "is_active__exact",
-    "held": "holding_quantity__gt",  # ?held=0 → 보유 중인 것만
+    # 예전에 있던 `held` (holding_quantity 컬럼 기반) 는 뺐다 — 보유수량이 이제
+    # 체결 이행에서 집계되어 컬럼 필터로는 못 잡는다. 필요하면 아나테이션 필터를 새로 넣는다.
 }
 
 SECURITIES_LOAN_FILTER_FIELDS = {

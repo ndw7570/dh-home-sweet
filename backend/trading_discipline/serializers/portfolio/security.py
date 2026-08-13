@@ -4,7 +4,7 @@ from trading_discipline.serializers.portfolio.broker_account import BrokerAccoun
 
 
 class SecurityListSerializer(DomainPropertySerializer):
-    PROPERTY_FIELDS = ("market_value",)
+    PROPERTY_FIELDS = ("computed_holding_quantity", "market_value")
 
     class Meta:
         model = Security
@@ -20,7 +20,7 @@ class SecurityParentSerializer(DomainSerializer):
 
 
 class SecurityDetailSelectSerializer(DomainPropertySerializer):
-    PROPERTY_FIELDS = ("market_value",)
+    PROPERTY_FIELDS = ("computed_holding_quantity", "market_value")
     account_detail = BrokerAccountParentSerializer(source="account", read_only=True)
 
     class Meta:
