@@ -254,13 +254,19 @@ export default function PlanPage() {
             ))}
           </select>
         </label>
-        <label className="pp-check">
+        {/* "유효한" 이라는 말이 '중요한 것만' 으로 읽혀서, 기준일을 라벨에 박아 둔다.
+            빠지는 자리가 주로 주계획이라(월~금이라 주말·공휴일엔 걸치는 주가 없다)
+            무엇이 왜 빠지는지도 툴팁으로 붙인다. */}
+        <label
+          className="pp-check"
+          title={`계획의 유효기간이 ${on} 을 품고 있는 것만 보여 준다. 주계획은 보통 월~금이라 주말·공휴일을 기준일로 두면 주 이하가 통째로 빠진다.`}
+        >
           <input
             type="checkbox"
             checked={onlyActive}
             onChange={(e) => setOnlyActive(e.target.checked)}
           />
-          <span>기준일에 유효한 계획만</span>
+          <span>기준일({on})에 걸친 계획만</span>
         </label>
       </div>
 
