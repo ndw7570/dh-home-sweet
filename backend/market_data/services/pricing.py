@@ -146,22 +146,36 @@ def price_snapshot(security, at=None) -> dict:
     at = at or timezone.now()
     day = timezone.localtime(at).date()
     symbol = Symbol.objects.filter(symbol=security.symbol, market=security.market).first()
-    empty = {"high": None, "low": None, "source": None, "at": at}
+    empty = {"high": None, "low": None, "current": None, "source": None, "at": at}
     if symbol is None:
         return empty
 
     if day < timezone.localdate():
         candle = DailyCandle.objects.filter(symbol=symbol, date=day).first()
         if candle is not None:
-            return {"high": candle.high, "low": candle.low, "source": SOURCE_DAILY, "at": at}
+            # 과거 날짜의 "그때 현재가" 는 그날 종가다. 장이 끝난 뒤에 남는 값이 그것뿐이다.
+            return {
+                "high": candle.high,
+                "low": candle.low,
+                "current": candle.close,
+                "source": SOURCE_DAILY,
+                "at": at,
+            }
         # 일봉이 아직 안 들어온 과거 날짜. 그날 분봉이 있으면 그것으로 낸다.
 
-    agg = MinuteCandle.objects.filter(symbol=symbol, ts__date=day, ts__lte=at).aggregate(
-        high=Max("high"), low=Min("low")
-    )
+    minutes = MinuteCandle.objects.filter(symbol=symbol, ts__date=day, ts__lte=at)
+    agg = minutes.aggregate(high=Max("high"), low=Min("low"))
     if agg["high"] is None:
         return empty
-    return {"high": agg["high"], "low": agg["low"], "source": SOURCE_MINUTE, "at": at}
+    # 당일의 현재가는 기준 시각에 가장 가까운 봉의 종가다.
+    latest = minutes.order_by("-ts").values_list("close", flat=True).first()
+    return {
+        "high": agg["high"],
+        "low": agg["low"],
+        "current": latest,
+        "source": SOURCE_MINUTE,
+        "at": at,
+    }
 
 
 def sync_security_prices(codes: list[str] | None = None) -> int:

@@ -21,12 +21,13 @@ class DailySecurityPriceDataListSerializer(DomainSerializer):
     같은 이유로 **수정할 때는 자동 채움이 없다.** 빈 칸을 나중에 채우려고 PATCH 를 보내면
     그 시점 시세가 들어와 스냅샷이 오염된다. 값을 바꾸려면 명시적으로 실어 보내야 한다.
 
-    ## 호가는 채우지 않는다
+    ## `current_price` 는 기준 시점의 가격이다
 
-    `quote_price` 는 체결가가 아니라 주문 대기 가격이라 봉 어디에도 없다. KIS 도 과거
-    호가는 주지 않는다(실시간 10호가만 준다). 자동 채움 대상에서 빼고, 필요하면 사람이
-    적어 넣도록 비워 둔다. 종가나 현재가로 대신 채우면 컬럼 이름과 값의 뜻이 어긋나서
-    나중에 읽는 사람이 호가인 줄 알고 틀린 판단을 한다.
+        과거 일자   그날 종가
+        당일        기준 시각에 가장 가까운 분봉의 종가
+
+    `securities.current_price`(지금 시세, 5분마다 갱신) 와 이름은 같지만 뜻이 다르다.
+    이쪽은 한 번 뜨면 고정이다.
     """
 
     # 이 스냅샷이 어느 봉에서 나왔는지. 모델 컬럼이 아니라 응답에만 실린다.
@@ -58,6 +59,9 @@ class DailySecurityPriceDataListSerializer(DomainSerializer):
                 )
             validated_data["high_price"] = snapshot["high"]
             validated_data["low_price"] = snapshot["low"]
+            # 사람이 직접 넣은 현재가가 있으면 그것을 존중한다.
+            if validated_data.get("current_price") is None:
+                validated_data["current_price"] = snapshot["current"]
             validated_data.setdefault("price_at", snapshot["at"])
             instance = super().create(validated_data)
             instance._snapshot_source = snapshot["source"]
@@ -70,7 +74,7 @@ class DailySecurityPriceDataParentSerializer(DomainSerializer):
 
     class Meta:
         model = DailySecurityPriceData
-        fields = ("id", "security", "price_at", "high_price", "low_price", "quote_price")
+        fields = ("id", "security", "price_at", "high_price", "low_price", "current_price")
 
 
 class DailySecurityPriceDataDetailSelectSerializer(DailySecurityPriceDataListSerializer):

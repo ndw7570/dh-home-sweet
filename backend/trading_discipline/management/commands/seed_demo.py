@@ -312,7 +312,7 @@ class Command(BaseCommand):
         price = DailySecurityPriceData.objects.create(
             security=samsung, price_at=_at(today, 9, 30),
             high_price=Decimal("72400.00"), low_price=Decimal("70800.00"),
-            quote_price=Decimal("71500.00"),
+            current_price=Decimal("71500.00"),
         )
         strategy = TradingStrategy.objects.create(
             price_data=price, policy_name="삼성전자 3분할 매수", sector="반도체",

@@ -2222,7 +2222,7 @@ CREATE TABLE "trading_discipline_management"."daily_security_price_data"
 	"price_at"    TIMESTAMP     NULL,     -- 시각
 	"high_price"  NUMERIC(15,2) NULL,     -- 고가
 	"low_price"   NUMERIC(15,2) NULL,     -- 저가
-	"quote_price" NUMERIC(15,2) NULL,     -- 호가
+	"current_price" NUMERIC(15,2) NULL,     -- 현재가
 	"created_at"  DATE          NULL,     -- 생성일
 	"updated_at"  DATE          NULL,     -- 수정일
 	"remarks"     TEXT          NULL,     -- 비고
@@ -2248,7 +2248,7 @@ COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."h
 COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."low_price" IS '저가';
 
 -- 호가
-COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."quote_price" IS '호가';
+COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."current_price" IS '현재가';
 
 -- 생성일
 COMMENT ON COLUMN "trading_discipline_management"."daily_security_price_data"."created_at" IS '생성일';
