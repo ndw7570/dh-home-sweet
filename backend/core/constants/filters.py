@@ -194,6 +194,9 @@ AFFECTED_SECURITY_FILTER_FIELDS = {
 # 2026-08-18 계층을 뒤집었다. 방법이 상위(가격데이터·정책명), 전략이 n차 줄이다.
 TRADING_STRATEGY_METHOD_FILTER_FIELDS = {
     "price_data_id": "price_data_id__exact",
+    # 가격데이터가 안 붙은 방법 = 종목·시점과 무관한 재사용 템플릿.
+    #   ?template=1  템플릿만    ?template=0  실제 계획만
+    "template": "price_data__isnull",
     "policy_name": "policy_name__icontains",
     "sector": "sector__icontains",
     "reference_from": "reference_at__gte",

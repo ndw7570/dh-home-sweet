@@ -181,3 +181,57 @@ SELL_SPLIT 합계  80%  ← 20% 남음
 | `backend/core/constants/filters.py` | 필터 교체 |
 | `backend/trading_discipline/management/commands/seed_demo.py` | 새 구조로 |
 | `investments-nam.sql` | 테이블 2개 + FK 2개 반영 |
+
+---
+
+## 6. 템플릿 (요청하신 두 가지, 구현 완료)
+
+`docs/backend-request-method-template.md` 로 요청하신 것에 대한 답이다.
+
+**`name` 컬럼은 만들지 않았다.** 계층을 뒤집으면서 `policy_name` 이 그 역할을 하게 됐다.
+방법 한 행이 이미 "n차 표 한 벌" 이라 이름칸이 따로 필요 없다.
+
+### 6-1. 템플릿 = 가격데이터가 안 붙은 방법
+
+```
+GET /api/trading/trading-strategy-method/?template=1&no_page=1   → 재사용 템플릿만
+GET /api/trading/trading-strategy-method/?template=0&no_page=1   → 실제 계획만
+```
+
+`price_data` 가 비어 있으면 종목·시점과 무관한 순수 비율 패턴이다.
+
+```
+"3단 보수적 분할"     price_data 없음   ← 템플릿
+   1차 -3% 30% / 2차 -7% 30% / 3차 -12% 40%
+
+"현대차 8월 분할매수"  price_data 있음   ← 실제 계획
+```
+
+템플릿 만들기는 그냥 `POST` 에서 `price_data` 를 빼면 된다. 별도 엔드포인트 없다.
+
+### 6-2. 적용 = 복사 (한 트랜잭션)
+
+```js
+POST /api/trading/trading-strategy-method/{대상id}/copy-from/
+{ "source": 템플릿id }
+```
+
+응답은 대상 방법의 상세 + 두 숫자:
+
+```json
+{ "...방법 필드...", "strategies": {...}, "copied": 3, "removed": 2 }
+```
+
+- **덮어쓰기다.** `removed` 가 지워진 줄 수, `copied` 가 새로 넣은 줄 수다.
+  화면에서 "2줄을 3줄로 바꿨습니다" 로 알릴 수 있다
+- 지워진 줄은 소프트딜리트라 잘못 덮었으면 되살릴 수 있다
+- **업종은 대상 것을 유지한다.** 템플릿 업종을 끌고 오면 반도체 템플릿을 쓴 자동차 계획이
+  반도체로 뒤바뀐다
+- 원본은 템플릿이 아니어도 된다 — 지난달 방법의 분할표를 이번 달로 가져오는 것도 같은 동작이다
+
+400 나는 경우:
+```
+source 없음 / 못 찾음 / 자기 자신 / 원본에 분할표가 없음
+```
+
+마지막 것은 빈 표로 덮어써서 대상의 분할표만 사라지는 사고를 막는 것이다.

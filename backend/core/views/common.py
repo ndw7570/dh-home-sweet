@@ -138,6 +138,14 @@ class BaseCommonViewSet(viewsets.ModelViewSet):
                 if values:
                     lookups[lookup] = values
                 continue
+            if lookup.endswith("__isnull"):
+                # `?template=0` 을 그냥 넘기면 Django 가 문자열 "0" 을 truthy 로 읽어
+                # 정반대 결과가 나온다. 조용히 틀리는 종류라 여기서 못박는다.
+                raw = params.get(key)
+                if raw in (None, ""):
+                    continue
+                lookups[lookup] = str(raw).strip().lower() in _TRUE
+                continue
             raw = params.get(key)
             if raw in (None, ""):
                 continue
