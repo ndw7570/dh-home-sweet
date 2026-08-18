@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
@@ -47,7 +48,7 @@ class DailySecurityPriceDataViewSet(BaseCommonViewSet):
         마감(15:30 KST) 기준으로, 오늘이면 지금 시각 기준으로 계산한다.
         시각까지 지정하려면 `price_at` 을 쓴다. 둘을 함께 보내면 `price_at` 이 이긴다.
         """
-        allowed = {"security_id", "price_at", "date"}
+        allowed = {"security_id", "price_at", "date", "base_price"}
         unknown = set(request.query_params) - allowed
         if unknown:
             raise ValidationError(
@@ -70,22 +71,65 @@ class DailySecurityPriceDataViewSet(BaseCommonViewSet):
         at = self._resolve_at(request)
         snapshot = price_snapshot(security, at)
 
+        # 저장하지 않는 인스턴스로 변동률을 낸다. 계산식을 모델과 뷰 두 곳에 두면
+        # 한쪽만 고쳐졌을 때 미리보기와 저장 결과가 달라진다.
+        draft = DailySecurityPriceData(
+            high_price=snapshot["high"],
+            low_price=snapshot["low"],
+            current_price=snapshot["current"],
+        )
+
         def num(value):
+            """가격은 문자열로. 모델의 DecimalField 가 나가는 형식과 맞춘다."""
             return str(value) if value is not None else None
 
-        return success_response(
-            {
-                "security": security.id,
-                "security_name": security.name,
-                "symbol": security.symbol,
-                "price_at": snapshot["at"].isoformat(),
-                "high_price": num(snapshot["high"]),
-                "low_price": num(snapshot["low"]),
-                "current_price": num(snapshot["current"]),
-                # MINUTE(당일 분봉 집계) | DAILY(과거 일봉) | null(수집분 없음)
-                "price_source": snapshot["source"],
+        def rate(value):
+            """변동률은 숫자로. 저장 응답의 프로퍼티 필드와 형식을 맞춘다 —
+            같은 값이 미리보기에서는 문자열, 저장 뒤에는 숫자로 오면 화면이 둘을
+            따로 다뤄야 하고 그 자리에서 버그가 난다."""
+            return float(value) if value is not None else None
+
+        body = {
+            "security": security.id,
+            "security_name": security.name,
+            "symbol": security.symbol,
+            "price_at": snapshot["at"].isoformat(),
+            "high_price": num(snapshot["high"]),
+            "low_price": num(snapshot["low"]),
+            "current_price": num(snapshot["current"]),
+            # MINUTE(당일 분봉 집계) | DAILY(과거 일봉) | null(수집분 없음)
+            "price_source": snapshot["source"],
+            # 현재가 대비 변동폭. 전략은 가격이 아니라 이 비율로 짠다.
+            "high_rate": rate(draft.high_rate),
+            "low_rate": rate(draft.low_rate),
+            "band_width": rate(draft.band_width),
+        }
+
+        base_price = self._resolve_base_price(request)
+        if base_price is not None:
+            projected = draft.project(base_price)
+            # 같은 변동폭을 다른 기준가에 적용하면 얼마가 되는가.
+            # 200만 기준 +20%/-20% 를 100만에 적용하면 120만 ~ 80만.
+            body["projection"] = {
+                "base_price": num(base_price),
+                "high": num(projected["high"]),
+                "low": num(projected["low"]),
             }
-        )
+
+        return success_response(body)
+
+    @staticmethod
+    def _resolve_base_price(request):
+        raw = request.query_params.get("base_price")
+        if raw in (None, ""):
+            return None
+        try:
+            value = Decimal(str(raw))
+        except (InvalidOperation, ValueError) as exc:
+            raise ValidationError({"base_price": f"숫자여야 한다: {raw!r}"}) from exc
+        if value <= 0:
+            raise ValidationError({"base_price": "0 보다 커야 한다."})
+        return value
 
     @staticmethod
     def _resolve_at(request):

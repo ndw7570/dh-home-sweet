@@ -61,12 +61,32 @@ GET /api/trading/market-daily-candle/?symbol=005380&no_page=1&ordering=-date
 
 ---
 
-## 2. 저장 전 미리보기
+## 2. 변동률 — 전략이 실제로 쓰는 값
+
+**전략은 가격이 아니라 "현재가 대비 몇 %까지 벌어졌는가"로 짠다.** 절대 가격은 시간이
+지나면 쓸모가 없어지지만 변동폭 비율은 남는다.
+
+```
+고가 240만 / 저가 160만 / 현재가 200만
+   → high_rate  +20.00 %
+     low_rate   -20.00 %
+     band_width  40.00 %
+
+이 비율을 1년 뒤 100만원짜리가 됐을 때 적용하면 → 120만 ~ 80만
+```
+
+이 값들이 응답에 함께 온다. **컬럼으로 저장하지 않는다** — 고가·저가·현재가에서 언제든
+나오는 파생값이고, 스냅샷이라 원본이 바뀌지 않아 어긋날 여지가 없다.
+
+이 밴드가 `trading_strategy_methods.price_ratio`(n차 분할을 몇 %에 걸지)를 정하는 기준이 된다.
+
+## 3. 저장 전 미리보기
 
 ```
 GET /api/trading/security-price-data/preview/?security_id=3&date=2026-08-14
 GET /api/trading/security-price-data/preview/?security_id=3               (오늘)
 GET /api/trading/security-price-data/preview/?security_id=3&price_at=2026-08-18T13:00:00Z
+GET /api/trading/security-price-data/preview/?security_id=3&date=2026-08-14&base_price=1000000
 ```
 
 ```json
@@ -76,19 +96,44 @@ GET /api/trading/security-price-data/preview/?security_id=3&price_at=2026-08-18T
   "high_price": "456000.00",
   "low_price": "421500.00",
   "current_price": "453000.00",
-  "price_source": "DAILY"
+  "price_source": "DAILY",
+
+  "high_rate": 0.66,
+  "low_rate": -6.95,
+  "band_width": 7.61,
+
+  "projection": {                    // base_price 를 줬을 때만 나온다
+    "base_price": "1000000",
+    "high": "1006600.00",
+    "low": "930500.00"
+  }
 }
 ```
 
 - **아무것도 저장하지 않는다.** 값만 계산해 보여 준다
 - `date`(YYYY-MM-DD)는 일자 목록 흐름용. 과거면 그날 15:30 KST 기준, 오늘이면 지금 기준
 - `price_at`(ISO 8601)은 시각까지 지정할 때. 둘 다 보내면 `price_at`이 이긴다
-- 미래 날짜는 400이다
-- 받는 파라미터는 `security_id`, `date`, `price_at` 셋뿐. 다른 걸 붙이면 400
+- **`base_price`**를 주면 그 변동폭을 다른 기준가에 적용한 밴드를 함께 준다.
+  "이 종목이 100만원이 되면 어느 구간에서 움직일까"를 화면에서 바로 보여 줄 수 있다
+- 미래 날짜, 0 이하 `base_price`는 400이다
+- 받는 파라미터는 `security_id`, `date`, `price_at`, `base_price` 넷뿐. 다른 걸 붙이면 400
+
+### 타입 주의
+
+**가격은 문자열, 변동률은 숫자다.**
+
+```js
+Number(res.high_price)   // "456000.00" → 456000
+res.high_rate            // 0.66  (이미 숫자)
+Number(res.projection.high)
+```
+
+저장 응답(`POST`/`GET` 목록)도 같은 형식이다 — 가격은 문자열, `high_rate`·`low_rate`·
+`band_width`는 숫자. 미리보기와 저장 뒤 형식이 다르면 화면이 둘을 따로 다뤄야 해서 맞춰 뒀다.
 
 ---
 
-## 3. 저장
+## 4. 저장
 
 ```js
 POST /api/trading/security-price-data/
@@ -119,7 +164,7 @@ const priceAt = new Date().toISOString();   // 오늘
 
 ---
 
-## 4. 주의할 것
+## 5. 주의할 것
 
 **필드명이 바뀌었다.** `quote_price` → `current_price`. 폼·표·목록에서 쓰던 이름을 전부 바꿔야 한다.
 
@@ -134,7 +179,7 @@ daily_security_price_data.current_price  스냅샷을 뜬 그 시점 가격. 다
 스냅샷이 오염된다. "시세로 다시 채우기" 버튼은 두지 말 것 — 값을 다시 뜨려면 새 스냅샷을
 만드는 게 맞다.
 
-## 5. 백엔드 변경 파일
+## 6. 백엔드 변경 파일
 
 | 파일 | 내용 |
 |---|---|
@@ -144,3 +189,4 @@ daily_security_price_data.current_price  스냅샷을 뜬 그 시점 가격. 다
 | `backend/trading_discipline/serializers/portfolio/daily_security_price_data.py` | 생성 시 자동 채움 |
 | `backend/trading_discipline/views/portfolio/daily_security_price_data.py` | `preview` 액션 (`date` 지원) |
 | `investments-nam.sql` | 컬럼명·주석 반영 |
+| (같은 모델) | `high_rate` · `low_rate` · `band_width` 계산 프로퍼티, `project()` |

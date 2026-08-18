@@ -2,11 +2,11 @@ from rest_framework import serializers
 
 from market_data.services.pricing import price_snapshot
 from trading_discipline.models import DailySecurityPriceData
-from trading_discipline.serializers._base import DomainSerializer
+from trading_discipline.serializers._base import DomainPropertySerializer, DomainSerializer
 from trading_discipline.serializers.portfolio.security import SecurityParentSerializer
 
 
-class DailySecurityPriceDataListSerializer(DomainSerializer):
+class DailySecurityPriceDataListSerializer(DomainPropertySerializer):
     """일별 가격데이터 = **전략을 세운 순간의 가격 스냅샷**.
 
     고가·저가를 보내지 않으면 수집분(당일이면 분봉 집계, 과거면 일봉) 에서 읽어 채운다.
@@ -29,6 +29,10 @@ class DailySecurityPriceDataListSerializer(DomainSerializer):
     `securities.current_price`(지금 시세, 5분마다 갱신) 와 이름은 같지만 뜻이 다르다.
     이쪽은 한 번 뜨면 고정이다.
     """
+
+    # 전략이 실제로 쓰는 값은 가격이 아니라 변동폭 비율이다. 절대 가격은 시간이
+    # 지나면 쓸모가 없어지지만 "현재가 대비 ±20%" 는 나중에도 그대로 적용된다.
+    PROPERTY_FIELDS = ("high_rate", "low_rate", "band_width")
 
     # 이 스냅샷이 어느 봉에서 나왔는지. 모델 컬럼이 아니라 응답에만 실린다.
     price_source = serializers.SerializerMethodField()
