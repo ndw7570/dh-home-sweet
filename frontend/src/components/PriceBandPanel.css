@@ -284,3 +284,27 @@
   font-size: 12.5px;
   color: var(--text-muted);
 }
+
+.pb-split-modes {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* 정비율 표 — 가격 사다리라 세로 순서가 곧 뜻이다. */
+.pb-split-table td.is-up,
+.pb-split-table td.is-down {
+  font-weight: 600;
+}
+
+.pb-cum {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+/* 양 끝(고가·저가)에 닿는 계단. 여기가 구간의 마지막이다. */
+.pb-split-table tr.is-edge td {
+  background: var(--surface-sunken);
+}
+

@@ -172,13 +172,23 @@ export const news = crud("news");
 export const affectedSecurity = crud("affected-security");
 
 // ── 전략 ──────────────────────────────────────────
-export const listTradingStrategies = (params = {}) =>
-  wrap(() => api.get("/trading-strategy/", { no_page: 1, ...params }), () => mock.strategies);
-export const getTradingStrategy = (id) =>
-  wrap(() => api.get(`/trading-strategy/${id}/`), () => mock.strategyDetail);
-export const tradingStrategy = crud("trading-strategy");
-
+/**
+ * 매수매도방법 — 분할 계획 한 벌의 **머리**(가격데이터·정책명·기준시각).
+ * 상세를 부르면 `strategies` 에 n차 줄이 전략종류별로 묶여 온다.
+ *
+ * 2026-08-18 에 방법/전략의 상하가 뒤집혔다. 경로 이름은 그대로고 담는 것만 바뀌었다 —
+ * `trading-strategy-method` 가 상위, `trading-strategy` 가 n차 줄이다.
+ */
+export const listStrategyMethods = (params = {}) =>
+  wrap(() => api.get("/trading-strategy-method/", { no_page: 1, ...params }), () => mock.strategies);
+export const getStrategyMethod = (id) =>
+  wrap(() => api.get(`/trading-strategy-method/${id}/`), () => mock.strategyDetail);
 export const strategyMethod = crud("trading-strategy-method");
+
+/** 매수매도전략 — n차 분할 **한 줄**. 방법에 딸린다. */
+export const listTradingStrategies = (params = {}) =>
+  wrap(() => api.get("/trading-strategy/", { no_page: 1, ...params }), () => []);
+export const tradingStrategy = crud("trading-strategy");
 
 // ── 이행 · 성과 ───────────────────────────────────
 export const listOrders = (params = {}) =>

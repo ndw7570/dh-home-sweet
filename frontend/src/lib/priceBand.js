@@ -95,3 +95,60 @@ export function splitLadder({ base, target, ratioPct }) {
     };
   });
 }
+
+/**
+ * 계단 행 — **두 탭이 같은 표를 쓴다.** 바뀌는 것은 재는 자(尺) 하나뿐이다.
+ *
+ *   상승·하락분  한쪽 구간(현재가→저가 또는 →고가)을 100% 로 두고 잰다.
+ *   정비율       고가~저가 **전체**를 100% 로 두고 잰다.
+ *
+ * 계단이 걸리는 자리(가격)는 두 기준이 똑같다. 다른 것은 그 자리를 몇 %로 부르느냐다.
+ * 고저 폭이 80만이고 현재가가 가운데(40만씩)일 때 비중 30% 로 자르면 —
+ *
+ *   상승·하락분  30%p 30%p 30%p 10%p  (한쪽 구간 기준, 합 100%)
+ *   정비율       15%p 15%p 15%p  5%p  (전체 기준, 반대편까지 합쳐야 100%)
+ *
+ * `share` 는 이쪽 구간이 전체에서 차지하는 몫이다. 현재가가 가운데가 아니면 50%가 아니고,
+ * 그 치우침이 정비율 기준이 알려 주는 것이다.
+ */
+export function ladderRows({ high, low, base, ratioPct, side = "buy", mode = "side" }) {
+  const h = num(high);
+  const l = num(low);
+  const b = num(base);
+  const buying = side !== "sell";
+  const target = buying ? l : h;
+  if (b == null || target == null) return null;
+
+  const steps = splitLadder({ base: b, target, ratioPct });
+  if (!steps.length) return null;
+
+  // 전체 폭 대비 이쪽 구간의 몫. 정비율은 이 몫만큼으로 눈금을 줄여 잰다.
+  const range = h != null && l != null ? h - l : null;
+  const share = range && range > 0 ? (Math.abs(target - b) / range) * 100 : null;
+  if (mode === "even" && share == null) return null;
+  const scale = mode === "even" ? share / 100 : 1;
+
+  let prev = 0;
+  const rows = steps.map((r) => {
+    const inc = r.portion - prev;
+    prev = r.portion;
+    return {
+      step: r.step,
+      incPct: inc * scale,
+      cumPct: r.portion * scale,
+      delta: r.delta,
+      pctOfBase: r.pctOfBase,
+      price: r.price,
+      isEdge: r.portion >= 100,
+    };
+  });
+
+  return {
+    rows,
+    buying,
+    target,
+    span: target - b,
+    share,
+    otherShare: share == null ? null : 100 - share,
+  };
+}

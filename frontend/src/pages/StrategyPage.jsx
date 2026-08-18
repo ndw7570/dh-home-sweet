@@ -9,18 +9,18 @@ import Panel from "../components/Panel";
 import PriceBandPanel from "../components/PriceBandPanel";
 import SplitTable from "../components/SplitTable";
 import {
-  getTradingStrategy,
+  getStrategyMethod,
   listPriceData,
   listSecurities,
-  listTradingStrategies,
+  listStrategyMethods,
   priceData as priceDataApi,
   strategyMethod,
   tradingStrategy,
 } from "../api/trading";
 import {
   PRICE_DATA_FIELDS,
-  STRATEGY_METHOD_FIELDS,
   TRADING_STRATEGY_FIELDS,
+  TRADING_STRATEGY_METHOD_FIELDS,
 } from "../forms/specs";
 import { dateTime, dateWithWeekday, isoDate, price } from "../lib/format";
 import { bandRatios, pct } from "../lib/priceBand";
@@ -29,14 +29,21 @@ import { useMultiForm } from "../lib/useMultiForm";
 import "./StrategyPage.css";
 
 /**
- * 전략 — n차 분할표.
+ * 매수매도방법 — 분할 계획 한 벌.
  *
- * 전략이 일별 가격데이터(`daily_security_price_data`)를 가리킨다는 게 이 화면의 요점이다.
- * '지금 가격 기준'이 아니라 '그때 그 가격 기준'으로 못박혀 있어서,
- * 나중에 왜 이 가격대에 분할을 걸었는지 되짚을 수 있다.
+ * 2026-08-18 에 계층이 뒤집혔다. 전에는 전략(상위) 1:N 방법(n차 줄) 이었는데, n차 한 줄은
+ * '방법' 이 아니라 그 방법을 이루는 한 단계라서 이름과 역할이 어긋나 있었다.
+ *
+ *   매수매도방법 #1                 ← 가격데이터 · 정책명 · 기준시각
+ *     ├ 매수매도전략 1차  -3%  30%   ← n차 줄
+ *     ├ 매수매도전략 2차  -7%  30%
+ *     └ 매수매도전략 3차 -12%  40%
+ *
+ * 방법이 가격데이터를 가리킨다는 게 이 화면의 요점이다. '지금 가격 기준' 이 아니라
+ * '그때 그 가격 기준' 으로 못박혀 있어서, 나중에 왜 이 가격대에 분할을 걸었는지 되짚을 수 있다.
  */
 const VIEW_TABS = [
-  { key: "STRATEGY", label: "매수매도전략" },
+  { key: "METHOD", label: "매수매도방법" },
   { key: "PRICE", label: "가격데이터" },
 ];
 
@@ -46,10 +53,10 @@ const VIEW_TABS = [
  * 비어 있으면 사람이 직접 적은 값이다.
  */
 /**
- * 전략 목록을 무엇으로 묶어 볼 것인가.
- *   일자별  같은 날 세운 전략을 나란히 본다. "그날 무엇을 대비했나" 가 단위다.
- *   종목별  한 종목의 전략이 시간에 따라 어떻게 바뀌었나를 본다.
- * 어느 쪽도 목록을 걸러 내지 않는다 — 묶는 방법만 바뀐다.
+ * 방법 목록을 무엇으로 묶어 볼 것인가.
+ *   일자별  같은 날 세운 방법을 나란히 본다. "그날 무엇을 대비했나" 가 단위다.
+ *   종목별  한 종목의 방법이 시간에 따라 어떻게 바뀌었나를 본다.
+ * 어느 쪽도 목록을 걸러 내지 않는다 — 묶는 기준만 바뀐다.
  */
 const GROUP_TABS = [
   { key: "date", label: "일자별" },
@@ -62,11 +69,11 @@ const PRICE_SOURCE_LABEL = {
 };
 
 export default function StrategyPage() {
-  const [view, setView] = useState("STRATEGY");
+  const [view, setView] = useState("METHOD");
   const [groupBy, setGroupBy] = useState("date");
   const [selectedId, setSelectedId] = useState(null);
 
-  const list = useAsync(() => listTradingStrategies(), []);
+  const list = useAsync(() => listStrategyMethods(), []);
   const refs = useAsyncAll(
     { securities: () => listSecurities(), priceData: () => listPriceData() },
     []
@@ -79,7 +86,7 @@ export default function StrategyPage() {
   }, [list.data, selectedId]);
 
   const detail = useAsync(
-    () => (selectedId ? getTradingStrategy(selectedId) : Promise.resolve(null)),
+    () => (selectedId ? getStrategyMethod(selectedId) : Promise.resolve(null)),
     [selectedId]
   );
 
@@ -89,8 +96,8 @@ export default function StrategyPage() {
 
   const kinds = useMemo(
     () => ({
-      STRATEGY: { title: "매수매도전략", fields: TRADING_STRATEGY_FIELDS, api: tradingStrategy },
-      METHOD: { title: "분할 단계", fields: STRATEGY_METHOD_FIELDS, api: strategyMethod },
+      METHOD: { title: "매수매도방법", fields: TRADING_STRATEGY_METHOD_FIELDS, api: strategyMethod },
+      STEP: { title: "분할 단계", fields: TRADING_STRATEGY_FIELDS, api: tradingStrategy },
       PRICE: { title: "가격데이터", fields: PRICE_DATA_FIELDS, api: priceDataApi },
     }),
     []
@@ -111,7 +118,7 @@ export default function StrategyPage() {
   );
 
   /**
-   * 전략을 묶는다. 기준일은 **전략의 기준시각**(`reference_at`) 이다 — 실제로 그날 대응하려고
+   * 방법을 묶는다. 기준일은 **방법의 기준시각**(`reference_at`) 이다 — 실제로 그날 대응하려고
    * 세운 것이라서다. 없으면 근거 스냅샷의 일자로 물러난다.
    */
   const groups = useMemo(() => {
@@ -147,9 +154,9 @@ export default function StrategyPage() {
       })),
       // 가격데이터는 더 이상 드롭다운이 아니다 — 전략 폼이 종목·거래일 목록으로 직접
       // 고르고(`PriceDataPicker`), 원본 행은 아래 `ctx.priceRows` 로 넘어간다.
-      strategies: (list.data || []).map((s) => ({
-        value: s.id,
-        label: s.policy_name || `전략#${s.id}`,
+      methods: (list.data || []).map((m) => ({
+        value: m.id,
+        label: m.policy_name || `방법#${m.id}`,
       })),
     }),
     [refs.data, list.data, securityLabelById]
@@ -161,7 +168,7 @@ export default function StrategyPage() {
         <p className="stp-loaderr">원본을 불러오지 못했다 — {String(form.loadError.message)}</p>
       )}
 
-      <div className="stp-viewtabs" role="tablist" aria-label="전략 보기 방식">
+      <div className="stp-viewtabs" role="tablist" aria-label="보기 방식">
         {VIEW_TABS.map((t) => (
           <button
             key={t.key}
@@ -247,12 +254,12 @@ export default function StrategyPage() {
         </AsyncState>
       )}
 
-      {view === "STRATEGY" && (
+      {view === "METHOD" && (
       <AsyncState loading={list.loading} error={list.error} onRetry={list.reload}>
         {list.data && (
           <>
             <div className="stp-bar">
-              <div className="stp-grouptabs" role="group" aria-label="전략 묶는 기준">
+              <div className="stp-grouptabs" role="group" aria-label="방법 묶는 기준">
                 {GROUP_TABS.map((t) => (
                   <button
                     key={t.key}
@@ -266,8 +273,8 @@ export default function StrategyPage() {
                 ))}
               </div>
               <div className="panel-actions">
-                <button className="btn is-sm" onClick={() => form.openCreate("STRATEGY")}>
-                  + 전략
+                <button className="btn is-sm" onClick={() => form.openCreate("METHOD")}>
+                  + 방법
                 </button>
               </div>
             </div>
@@ -290,14 +297,14 @@ export default function StrategyPage() {
                           className={`stp-item ${selectedId === s.id ? "is-on" : ""}`}
                           onClick={() => setSelectedId(s.id)}
                         >
-                          <strong>{s.policy_name || `전략#${s.id}`}</strong>
+                          <strong>{s.policy_name || `방법#${s.id}`}</strong>
                           <span className="stp-item-meta num">
                             {/* 묶은 기준은 머리에 이미 있으니 여기엔 나머지 축을 적는다. */}
                             {groupBy === "date"
                               ? sec?.name || s.sector || "종목 미지정"
                               : isoDate(s.reference_at) || "기준일 없음"}
                             {" · "}
-                            {s.method_count}단계
+                            {s.strategy_count ?? 0}단계
                           </span>
                           {/* 변동폭 — 금액이 아니라 비율이라 다른 가격대의 전략과도 견줄 수 있다. */}
                           {r && (
@@ -326,21 +333,24 @@ export default function StrategyPage() {
               <AsyncState loading={detail.loading} error={detail.error} onRetry={detail.reload}>
                 {detail.data && (
                   <Panel
-                    title={detail.data.policy_name || `전략#${detail.data.id}`}
+                    title={detail.data.policy_name || `방법#${detail.data.id}`}
                     meta={dateTime(detail.data.reference_at)}
                     note="분할표를 미리 채워 두는 것이 규율의 실체다. 수량 비중의 합이 100%가 아니면 그 자리에 표시된다."
                     actions={
                       <div className="panel-actions">
                         <button
                           className="btn is-sm"
-                          onClick={() => form.openEdit("STRATEGY", detail.data.id)}
+                          onClick={() => form.openEdit("METHOD", detail.data.id)}
                         >
-                          전략 수정
+                          방법 수정
                         </button>
                         <button
                           className="btn is-sm is-primary"
                           onClick={() =>
-                            form.openCreate("METHOD", { strategy: detail.data.id })
+                            form.openCreate("STEP", {
+                              method: detail.data.id,
+                              sector: detail.data.sector || "",
+                            })
                           }
                         >
                           + 분할 단계
@@ -357,9 +367,15 @@ export default function StrategyPage() {
                       }
                     />
 
+                    {/*
+                      분할표에 **변동폭을 같이 넘긴다.** 몇 %에 걸지는 그 종목이 실제로
+                      얼마나 움직였는지를 보고 정하는 숫자라, 밴드 밖으로 나간 계단이
+                      바로 눈에 걸려야 한다.
+                    */}
                     <SplitTable
-                      methods={detail.data.methods}
-                      onEditMethod={(m) => form.openEdit("METHOD", m.id)}
+                      strategies={detail.data.strategies}
+                      band={bandRatios(detail.data.price_data_detail)}
+                      onEditStep={(row) => form.openEdit("STEP", row.id)}
                     />
                   </Panel>
                 )}

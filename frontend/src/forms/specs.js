@@ -610,42 +610,67 @@ export const AFFECTED_SECURITY_FIELDS = [
 // ─────────────────────────────────────────────
 //  전략
 // ─────────────────────────────────────────────
-export const TRADING_STRATEGY_FIELDS = [
-  { name: "policy_name", label: "정책명", half: true },
-  { name: "sector", label: "업종", half: true },
+/**
+ * 매수매도방법 — **분할 계획 한 벌의 머리.** (상위)
+ *
+ * 2026-08-18 에 방법과 전략의 상하가 뒤집혔다. n차 한 줄은 '방법' 이 아니라 그 방법을
+ * 이루는 한 단계라서다. 그래서 가격데이터·정책명·기준시각이 이쪽으로 올라왔다.
+ *
+ * 가격데이터를 먼저 떠야 방법을 만들 수 있다 — 몇 %에 걸지는 그때 본 가격대에서 나오는
+ * 숫자라, 근거 없이 만든 분할표는 나중에 되짚을 수 없다.
+ */
+export const TRADING_STRATEGY_METHOD_FIELDS = [
   {
-    /**
-     * 기준 가격데이터 — 드롭다운이 아니라 **종목 → 거래일 목록**으로 고른다.
-     *
-     * 드롭다운이던 시절엔 전략을 세우기 전에 가격데이터 화면으로 가서 스냅샷을 먼저
-     * 만들고 돌아와야 했고, 목록에는 `#3 현대차 438,000원 08-13 10:04` 같은 줄만 보여
-     * 그게 어느 날의 무슨 가격인지 알기 어려웠다. 지금은 그날의 고가·저가·종가를 보면서
-     * 고르고, 고른 날의 스냅샷이 없으면 그 자리에서 만들어 담는다.
-     *
-     * 값은 여전히 가격데이터의 id 다 — 컬럼이 FK 라 바뀐 것은 고르는 방법뿐이다.
-     */
     name: "price_data",
     label: "기준 가격데이터",
     type: "priceDataPicker",
+    required: true,
     watch: (v, ctx) => ({
       securities: ctx?.securities || [],
       priceRows: ctx?.priceRows || [],
     }),
-    hint: "'지금 가격'이 아니라 '그때 그 가격' 기준으로 못박아 두는 자리. 나중에 왜 이 가격대에 분할을 걸었는지 되짚을 수 있다.",
+    hint: "'지금 가격'이 아니라 '그때 그 가격' 기준으로 못박아 두는 자리. 분할 비율의 근거다.",
   },
+  { name: "policy_name", label: "정책명", half: true, required: true },
+  { name: "sector", label: "업종", half: true },
   { name: "reference_at", label: "기준시각", type: "datetime", half: true },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },
 ];
 
-export const STRATEGY_METHOD_FIELDS = [
-  { name: "strategy", label: "전략", type: "ref", optionsKey: "strategies", required: true },
-  { name: "strategy_type", label: "전략종류", type: "choice", choiceKey: "strategy_type", half: true },
+/**
+ * 매수매도전략 — **n차 분할 한 줄.** (방법에 딸린다)
+ *
+ * `price_ratio` 의 부호가 방향을 말한다. 분할매수 `+3%` 는 "3% 오르면 산다" 가 되어
+ * 물타기 계획이 불타기 계획으로 뒤집힌다. 서버도 400 으로 막지만, 저장을 눌러 보기 전에
+ * 알려 주는 편이 낫다(`live`).
+ */
+export const TRADING_STRATEGY_FIELDS = [
+  { name: "method", label: "방법", type: "ref", optionsKey: "methods", required: true, hidden: true },
+  {
+    name: "strategy_type",
+    label: "전략종류",
+    type: "choice",
+    choiceKey: "strategy_type",
+    required: true,
+    half: true,
+    hint: "분할매수는 내릴 때 사는 계획, 분할매도는 오를 때 파는 계획이다.",
+  },
   { name: "step_no", label: "n차", type: "number", min: 1, half: true },
   {
     name: "price_ratio",
     label: "기준가 대비 (%)",
     type: "ratio",
     half: true,
+    live: (v) => {
+      const n = v.price_ratio === "" || v.price_ratio == null ? null : Number(v.price_ratio);
+      if (n == null || !Number.isFinite(n) || !v.strategy_type) return null;
+      // 부호가 방향과 어긋나면 저장 전에 잡는다. 서버 검증과 같은 규칙이다.
+      if (v.strategy_type === "BUY_SPLIT" && n > 0)
+        return { warn: "분할매수는 내릴 때 사는 계획이라 음수여야 합니다. -3 은 3% 하락 시 매수." };
+      if (v.strategy_type === "SELL_SPLIT" && n < 0)
+        return { warn: "분할매도는 오를 때 파는 계획이라 양수여야 합니다." };
+      return null;
+    },
     hint: "분할매수면 음수(-3 = 3% 하락 시), 분할매도면 양수.",
   },
   {
@@ -653,7 +678,7 @@ export const STRATEGY_METHOD_FIELDS = [
     label: "수량 비중 (%)",
     type: "ratio",
     half: true,
-    hint: "같은 전략종류 안에서 합이 100%가 되어야 한다. 화면이 합계를 표시한다.",
+    hint: "같은 전략종류 안에서 합이 100%가 되어야 한다. 분할표가 합계를 표시한다.",
   },
   { name: "sector", label: "업종", half: true },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },

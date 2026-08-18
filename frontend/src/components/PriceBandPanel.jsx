@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { dateWithWeekday, isoDate, price } from "../lib/format";
-import { applyBand, bandRatios, pct, splitLadder } from "../lib/priceBand";
+import { applyBand, bandRatios, ladderRows, pct } from "../lib/priceBand";
 import "./PriceBandPanel.css";
 
 /**
@@ -26,6 +26,8 @@ export default function PriceBandPanel({ snapshot, security }) {
   // 분할 계단. 30% 는 흔히 쓰는 기본값일 뿐이고 여기서 바꾼다.
   const [side, setSide] = useState("buy");
   const [splitPct, setSplitPct] = useState("30");
+  // 계단을 어느 기준으로 읽을 것인가. `side` 는 한쪽 구간, `even` 은 고저 전체 100%.
+  const [splitMode, setSplitMode] = useState("side");
 
   if (!snapshot) {
     return (
@@ -119,7 +121,17 @@ export default function PriceBandPanel({ snapshot, security }) {
         </div>
       )}
 
-      {projected && <SplitLadder projected={projected} side={side} onSide={setSide} pctValue={splitPct} onPct={setSplitPct} />}
+      {projected && (
+        <SplitLadder
+          projected={projected}
+          mode={splitMode}
+          onMode={setSplitMode}
+          side={side}
+          onSide={setSide}
+          pctValue={splitPct}
+          onPct={setSplitPct}
+        />
+      )}
     </div>
   );
 }
@@ -131,19 +143,41 @@ export default function PriceBandPanel({ snapshot, security }) {
  * 그건 구간을 몇 조각으로 자르느냐에 달렸다. 30% 로 잡으면 세 번에 90% 까지 가고
  * 나머지를 바닥에서 한 번 더 담는다.
  *
- * 구간의 한쪽 끝은 늘 **현재가**다. 계단이 걸리는 자리는 "지금 가격에서 얼마나 떨어진 곳"
- * 이라야 주문으로 옮길 수 있다. 반대편 끝은 매수면 하단, 매도면 상단이다.
+ * 기준이 둘이지만 **화면은 하나다.** 컨트롤도 컬럼도 같고, 바뀌는 것은 `배분`·`누적`을
+ * 무엇에 대고 재느냐뿐이다 — 한쪽 구간(상승·하락분)이냐 고저 전체(정비율)냐.
+ * 기준마다 다른 표를 두면 탭을 오갈 때 같은 값을 다른 자리에서 찾게 된다.
  */
-function SplitLadder({ projected, side, onSide, pctValue, onPct }) {
-  const buying = side === "buy";
-  const target = buying ? projected.low : projected.high;
-  const ratio = Number(pctValue);
-  const rows = splitLadder({ base: projected.base, target, ratioPct: ratio });
+function SplitLadder({ projected, mode, onMode, side, onSide, pctValue, onPct }) {
+  const data = ladderRows({
+    high: projected.high,
+    low: projected.low,
+    base: projected.base,
+    ratioPct: Number(pctValue),
+    side,
+    mode,
+  });
+  const buying = side !== "sell";
+  const tone = buying ? "is-down" : "is-up";
 
   return (
     <div className="pb-split">
       <div className="pb-split-head">
-        <span className="pb-label">분할 계단</span>
+        <span className="pb-split-modes" role="group" aria-label="계단 기준">
+          {[
+            { key: "side", label: "상승·하락분" },
+            { key: "even", label: "정비율" },
+          ].map((o) => (
+            <button
+              key={o.key}
+              type="button"
+              className={`pb-side ${mode === o.key ? "is-on" : ""}`}
+              aria-pressed={mode === o.key}
+              onClick={() => onMode(o.key)}
+            >
+              {o.label}
+            </button>
+          ))}
+        </span>
         <span className="pb-split-side" role="group" aria-label="분할 방향">
           {[
             { key: "buy", label: "매수" },
@@ -173,37 +207,46 @@ function SplitLadder({ projected, side, onSide, pctValue, onPct }) {
           />
           <span>%</span>
         </label>
-        {target != null && (
-          <span className="pb-split-span num">
-            {price(projected.base)} → {price(target)} ({price(target - projected.base)})
-          </span>
-        )}
+        <span className="pb-split-span num">
+          {data
+            ? `${price(projected.base)} → ${price(data.target)} (${price(data.span)})` +
+              // 정비율은 이쪽이 전체에서 몇 %인지가 곧 의미다. 반대편 몫도 같이 적어
+              // 두면 "합쳐서 100%" 가 표를 옮기지 않고도 확인된다.
+              (mode === "even" && data.share != null
+                ? ` · 전체의 ${data.share.toFixed(1)}% (반대편 ${data.otherShare.toFixed(1)}%)`
+                : "")
+            : ""}
+        </span>
       </div>
 
-      {rows.length === 0 ? (
+      {!data ? (
         <p className="pb-split-none">
-          {target == null
-            ? `${buying ? "하단" : "상단"} 비율이 없어 계단을 낼 수 없다.`
-            : "비중을 1~100 사이로 넣는다."}
+          {mode === "even"
+            ? "고가·저가·현재가가 모두 있어야 전체 대비로 잴 수 있다."
+            : "구간과 비중(1~100)이 있어야 계단을 낼 수 있다."}
         </p>
       ) : (
         <table className="pb-split-table">
           <thead>
             <tr>
               <th scope="col">단계</th>
-              <th scope="col">구간</th>
+              <th scope="col">배분</th>
+              <th scope="col">누적</th>
               <th scope="col">차이</th>
               <th scope="col">현재가 대비</th>
-              <th scope="col">{buying ? "매수가" : "매도가"}</th>
+              <th scope="col">가격</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.step} className={r.portion >= 100 ? "is-last" : ""}>
+            {data.rows.map((r) => (
+              <tr key={r.step} className={r.isEdge ? "is-edge" : ""}>
                 <td>{r.step}차</td>
-                <td className="num">{r.portion}%</td>
-                <td className={`num ${buying ? "is-down" : "is-up"}`}>{price(r.delta)}</td>
-                <td className={`num ${buying ? "is-down" : "is-up"}`}>{pct(r.pctOfBase)}</td>
+                <td className={`num ${tone}`}>
+                  {`${buying ? "-" : "+"}${r.incPct.toFixed(2)}%p`}
+                </td>
+                <td className="num pb-cum">{r.cumPct.toFixed(2)}%</td>
+                <td className={`num ${tone}`}>{price(r.delta)}</td>
+                <td className={`num ${tone}`}>{pct(r.pctOfBase)}</td>
                 <td className="num pb-split-price">{price(r.price)}</td>
               </tr>
             ))}

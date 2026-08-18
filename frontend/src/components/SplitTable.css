@@ -74,3 +74,25 @@
   border-radius: var(--radius);
   padding: 12px 14px;
 }
+
+/* 그날 실제 변동폭. 계단이 이 안인지 밖인지를 읽는 잣대다. */
+.st-band {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-right: auto;
+  margin-left: 10px;
+}
+
+/* 밴드를 벗어난 계단. 틀린 게 아니라 그날보다 큰 움직임을 가정한 것이라 위험색을 쓰지 않는다. */
+.st-outside {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 0 6px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}

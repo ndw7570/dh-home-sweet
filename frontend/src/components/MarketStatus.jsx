@@ -41,11 +41,11 @@ export const marketValueOf = (s) => toNum(s?.market_value) ?? 0;
  * `DAILY` 를 상대시간으로 쓰면 마감 후에 "18시간 전" 처럼 나와 고장난 것처럼 읽힌다.
  * 그건 낡은 값이 아니라 그날의 확정 종가라 날짜 + `종가` 로 적는다.
  */
-export function priceWhen(security) {
+export function priceWhen(security, now = new Date()) {
   const at = security?.price_at;
   if (!at) return "";
   if (security.price_source === "DAILY") return `${isoDate(at).slice(5).replace("-", "/")} 종가`;
-  return sinceLabel(at);
+  return sinceLabel(at, now);
 }
 
 /**
@@ -73,9 +73,13 @@ export function PriceCell({ security }) {
 
   const age = source == null ? null : minutesSince(security.price_at);
   /**
-   * 장중 값인데 30분 넘게 그대로면 수집이 멈춘 것이다.
-   * 장 시간표가 필요 없다 — 그 값이 '가장 최근 관측' 으로 뽑혔는데도 30분 낡았다는
-   * 사실 자체가 곧 수집이 멎었다는 뜻이다. 관리대상을 끈 종목은 멈춘 게 아니라 **끈 것**이다.
+   * 장중 값인데 30분 넘게 그대로면 수집이 멈춘 것으로 본다.
+   *
+   * 주의 — 이 판정은 장 마감을 구분하지 못한다. `resolve_live_price` 는 가장 최근 관측을
+   * 고르므로, 마지막 스냅샷이 일봉 마감시각(15:30) 보다 늦으면 장이 닫힌 뒤에도 `source` 가
+   * `SNAPSHOT` 으로 남고 시간만 계속 올라간다. 그래도 이쪽을 택했다 — 수집이 실제로 멎었을 때
+   * 화면이 조용한 것보다, 마감 후에 "멈춘 듯" 이 떠 있는 편이 낫다는 판단이다.
+   * 관리대상을 끈 종목은 멈춘 게 아니라 **끈 것**이라 뺀다.
    */
   const stale = !off && isIntraday(source) && age != null && age > STALE_MINUTES;
 
@@ -103,10 +107,6 @@ export function PriceCell({ security }) {
 
 /**
  * 수집이 멈춘 것 같을 때만 뜨는 배너.
- *
- * **장 시간을 판정하지 않는다.** 백엔드가 관측 시각을 비교해 출처를 고르므로, 마감 후·주말이면
- * `price_source` 가 저절로 `DAILY` 로 넘어간다. 그래서 "장중 값이 뽑혔는데 30분 낡았다" 만
- * 보면 되고, 휴장일 달력이 틀려서 거짓 경고가 뜨는 일이 없다.
  *
  * 수집된 적 없는 종목과 `관리대상` 이 꺼진 종목은 뺀다 — 멈춘 게 아니라 시작 전이거나
  * 사용자가 끈 것이고, 행마다 배지로 이미 보인다.
