@@ -35,12 +35,19 @@ KST = ZoneInfo("Asia/Seoul")
 DAILY_CHUNK_DAYS = 100
 # 당일분봉이 한 번에 주는 최대 건수.
 MINUTE_PAGE_SIZE = 30
-# 분봉 페이지 루프 상한. 정규장 390분 / 30건 = 13회면 충분하지만, 응답이 예상과 다를 때
-# 무한 루프로 KIS 를 두들기지 않도록 상한을 둔다.
-MINUTE_MAX_PAGES = 20
+# 분봉 페이지 루프 상한. 08:00~20:00 이면 720분이라 30건씩 24회가 필요하다.
+# 응답이 예상과 다를 때 무한 루프로 KIS 를 두들기지 않도록 여유를 두고 막는다.
+MINUTE_MAX_PAGES = 30
 
-KRX_OPEN = "090000"
-KRX_CLOSE = "153000"
+# 분봉을 거슬러 올라갈 하한. 정규장 09:00 이 아니라 **NXT 프리마켓 08:00** 이다.
+# 넥스트레이드가 열린 뒤로 거래 시간이 이렇게 갈린다:
+#
+#   08:00~08:50  NXT 프리마켓
+#   09:00~15:30  정규장 (KRX·NXT 동시)
+#   15:30~20:00  NXT 애프터마켓
+#
+# 09:00 을 하한으로 두면 프리마켓 체결이 통째로 빠진다.
+MARKET_OPEN = "080000"
 
 
 @dataclass
@@ -297,7 +304,7 @@ def collect_minute_candles(client: KisClient, sym: Symbol, until: str = "") -> C
         if earliest is None:
             break
         earliest_hhmmss = earliest.astimezone(KST).strftime("%H%M%S")
-        if earliest_hhmmss <= KRX_OPEN:
+        if earliest_hhmmss <= MARKET_OPEN:
             break
         # 가장 이른 봉의 1분 전으로 커서를 옮긴다. 같은 커서가 반복되면 무한 루프이므로 중단.
         next_cursor = (earliest.astimezone(KST) - timedelta(minutes=1)).strftime("%H%M%S")

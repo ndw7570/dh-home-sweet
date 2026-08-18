@@ -19,6 +19,7 @@
 """
 
 import logging
+import os
 from datetime import date, timedelta
 
 import httpx
@@ -43,8 +44,19 @@ TR_PRICE = "FHKST01010100"  # 주식현재가 시세
 TR_DAILY_CHART = "FHKST03010100"  # 국내주식 기간별시세(일/주/월/년)
 TR_MINUTE_CHART = "FHKST03010200"  # 주식당일분봉조회
 
-# FID_COND_MRKT_DIV_CODE — J: 주식/ETF/ETN
-MARKET_DIV_STOCK = "J"
+# FID_COND_MRKT_DIV_CODE — 어느 거래소의 시세를 볼 것인가.
+#
+#   J    KRX(한국거래소) 만
+#   NX   NXT(넥스트레이드) 만
+#   UN   둘을 합친 통합 시세
+#
+# **UN 을 기본으로 쓴다.** 2025년 넥스트레이드가 열린 뒤로 거래가 두 거래소에 갈려 있다.
+# 실제로 삼성전자 하루 거래량이 KRX 2,400만주 / NXT 1,742만주였다 — J 만 보면 40% 를
+# 못 보고, 최종 체결가도 통합 기준과 달라진다(268,500 vs 269,000).
+#
+# NXT 는 운영 시간도 다르다. 프리마켓 08:00~08:50, 애프터마켓 15:30~20:00 이 있어서
+# 정규장이 끝난 뒤에도 가격이 움직인다. J 로 보면 15:30 에 멈춘 것처럼 보인다.
+MARKET_DIV_STOCK = os.getenv("KIS_MARKET_DIV", "UN")
 
 # 재시도 대상 KIS 오류코드
 ERR_TOKEN_EXPIRED = {"EGW00121", "EGW00123"}  # 토큰 만료·유효하지 않음

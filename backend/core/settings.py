@@ -243,21 +243,25 @@ except ImportError:  # celery 미설치 환경(테스트·마이그레이션 전
 if _CELERY_CRONTAB is not None:
     # 종목 동기화 스케줄은 없다. 수집 대상(securities 중 관리대상 종목)을 매 실행마다
     # 다시 계산하므로, 화면에서 켜고 끈 결과가 다음 수집 주기에 그대로 반영된다.
+    # 거래 시간은 정규장 09:00~15:30 이 전부가 아니다. 넥스트레이드(NXT) 가 열린 뒤로
+    # 프리마켓 08:00~08:50, 애프터마켓 15:30~20:00 에도 체결이 난다. 09~15시로 잡아 두면
+    # 장 마감 후 화면이 15:30 에 멈춘 것처럼 보인다(실제로 그 상태였다).
     CELERY_BEAT_SCHEDULE = {
-        # 장중 — 현재가 5분마다
+        # 거래 시간 — 현재가 5분마다 (08~20시)
         "market-refresh-prices": {
             "task": "market_data.tasks.refresh_current_prices",
-            "schedule": _CELERY_CRONTAB(minute="*/5", hour="9-15", day_of_week="mon-fri"),
+            "schedule": _CELERY_CRONTAB(minute="*/5", hour="8-19", day_of_week="mon-fri"),
         },
-        # 장중 — 분봉 10분마다. 한 번에 최대 30분치를 거슬러 받으므로 10분 주기면 겹쳐서 안전하다.
+        # 거래 시간 — 분봉 10분마다. 한 번에 최대 30분치를 거슬러 받으므로 10분 주기면 겹쳐서 안전하다.
         "market-collect-minutes": {
             "task": "market_data.tasks.collect_today_minutes",
-            "schedule": _CELERY_CRONTAB(minute="*/10", hour="9-15", day_of_week="mon-fri"),
+            "schedule": _CELERY_CRONTAB(minute="*/10", hour="8-19", day_of_week="mon-fri"),
         },
-        # 장 마감 후 — 일봉 확정치. 최근 5일을 겹쳐 받아 이전 실패분의 구멍을 메운다.
+        # 거래 종료 후 — 일봉 확정치. 애프터마켓이 20:00 에 끝나므로 그 뒤에 받는다.
+        # 최근 5일을 겹쳐 받아 이전 실패분의 구멍을 메운다.
         "market-collect-daily": {
             "task": "market_data.tasks.collect_daily_candles",
-            "schedule": _CELERY_CRONTAB(hour=16, minute=10, day_of_week="mon-fri"),
+            "schedule": _CELERY_CRONTAB(hour=20, minute=30, day_of_week="mon-fri"),
         },
     }
 
