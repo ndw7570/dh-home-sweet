@@ -13,6 +13,7 @@ import {
   listPriceData,
   listSecurities,
   listStrategyMethods,
+  listTradingStrategies,
   priceData as priceDataApi,
   strategyMethod,
   tradingStrategy,
@@ -43,6 +44,7 @@ import "./StrategyPage.css";
  * '그때 그 가격 기준' 으로 못박혀 있어서, 나중에 왜 이 가격대에 분할을 걸었는지 되짚을 수 있다.
  */
 const VIEW_TABS = [
+  { key: "STRATEGY", label: "매수매도전략" },
   { key: "METHOD", label: "매수매도방법" },
   { key: "PRICE", label: "가격데이터" },
 ];
@@ -69,13 +71,19 @@ const PRICE_SOURCE_LABEL = {
 };
 
 export default function StrategyPage() {
-  const [view, setView] = useState("METHOD");
+  const [view, setView] = useState("STRATEGY");
   const [groupBy, setGroupBy] = useState("date");
   const [selectedId, setSelectedId] = useState(null);
 
   const list = useAsync(() => listStrategyMethods(), []);
   const refs = useAsyncAll(
-    { securities: () => listSecurities(), priceData: () => listPriceData() },
+    {
+      securities: () => listSecurities(),
+      priceData: () => listPriceData(),
+      // 매수매도전략 탭이 쓰는 n차 줄 전체. 방법 상세는 자기 것만 갖고 오므로,
+      // "내 1차 매수들을 한눈에" 같은 가로 보기는 이 목록이 있어야 된다.
+      steps: () => listTradingStrategies(),
+    },
     []
   );
 
@@ -246,6 +254,77 @@ export default function StrategyPage() {
                     align: "right",
                     width: 60,
                     render: (r) => <EditButton onClick={() => form.openEdit("PRICE", r.id)} />,
+                  },
+                ]}
+              />
+            </Panel>
+          )}
+        </AsyncState>
+      )}
+
+      {view === "STRATEGY" && (
+        <AsyncState loading={refs.loading} error={refs.error} onRetry={refs.reload}>
+          {refs.data && (
+            <Panel
+              title="매수매도전략"
+              meta={`${(refs.data.steps || []).length}줄`}
+              note="분할 한 줄이 전략이다. 어느 방법에 속한 줄인지가 같이 보여야, 같은 종목에 걸어 둔 계단이 서로 어긋나는 것을 잡을 수 있다."
+              actions={
+                <button
+                  className="btn is-sm"
+                  onClick={() => form.openCreate("STEP")}
+                  disabled={!(list.data || []).length}
+                  title={(list.data || []).length ? undefined : "매수매도방법을 먼저 만든다"}
+                >
+                  + 분할 단계
+                </button>
+              }
+            >
+              <DataTable
+                rows={refs.data.steps || []}
+                empty="분할 줄이 없다. 매수매도방법을 만들고 그 아래에 몇 %에 얼마를 살지 적어 둔다."
+                columns={[
+                  {
+                    key: "method",
+                    label: "방법",
+                    render: (r) => r.method_detail?.policy_name || `방법#${r.method}`,
+                  },
+                  {
+                    key: "strategy_type",
+                    label: "전략종류",
+                    render: (r) => r.strategy_type_label || r.strategy_type || "—",
+                  },
+                  {
+                    key: "step_no",
+                    label: "n차",
+                    align: "right",
+                    render: (r) => (r.step_no == null ? null : `${r.step_no}차`),
+                  },
+                  {
+                    key: "price_ratio",
+                    label: "기준가 대비",
+                    align: "right",
+                    render: (r) =>
+                      r.price_ratio == null ? null : (
+                        <span className={Number(r.price_ratio) < 0 ? "stp-down" : "stp-up"}>
+                          {pct(Number(r.price_ratio), 1)}
+                        </span>
+                      ),
+                  },
+                  {
+                    key: "quantity_ratio",
+                    label: "수량 비중",
+                    align: "right",
+                    render: (r) =>
+                      r.quantity_ratio == null ? null : `${Number(r.quantity_ratio).toFixed(0)}%`,
+                  },
+                  { key: "sector", label: "업종" },
+                  {
+                    key: "_edit",
+                    label: "",
+                    align: "right",
+                    width: 60,
+                    render: (r) => <EditButton onClick={() => form.openEdit("STEP", r.id)} />,
                   },
                 ]}
               />

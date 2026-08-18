@@ -645,7 +645,17 @@ export const TRADING_STRATEGY_METHOD_FIELDS = [
  * 알려 주는 편이 낫다(`live`).
  */
 export const TRADING_STRATEGY_FIELDS = [
-  { name: "method", label: "방법", type: "ref", optionsKey: "methods", required: true, hidden: true },
+  {
+    // 숨기지 않는다. 방법 상세에서 열면 값이 미리 채워져 어느 방법에 다는 줄인지 확인이 되고,
+    // 전략 탭에서 바로 열면 여기서 고를 수 있어야 한다. 숨긴 채 required 로 두면 고를 수도
+    // 고칠 수도 없는 칸 때문에 저장이 조용히 막힌다.
+    name: "method",
+    label: "매수매도방법",
+    type: "ref",
+    optionsKey: "methods",
+    required: true,
+    hint: "이 분할 줄이 어느 방법에 속하는지. 방법을 먼저 만들어야 고를 수 있다.",
+  },
   {
     name: "strategy_type",
     label: "전략종류",

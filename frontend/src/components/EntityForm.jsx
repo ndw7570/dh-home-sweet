@@ -127,6 +127,15 @@ export function toPayload(fields, values, optionsMap) {
 export function validateLocal(fields, values, optionsMap, isEdit) {
   const errors = {};
   for (const f of fields) {
+    /**
+     * 화면에 없는 칸은 검증하지 않는다.
+     *
+     * 숨은 칸에 에러를 달면 그 에러는 어디에도 안 그려지고, 사용자는 저장을 눌러도
+     * 아무 일이 안 일어나는 화면만 본다. 실제로 분할 줄의 `method` 가 그랬다 —
+     * 숨겨 놓고 required 라 고를 수도 고칠 수도 없는 채로 저장이 막혔다.
+     * 값이 정말 필요하면 서버가 400 을 내고, 그건 배너로 보인다.
+     */
+    if (f.hidden || (f.showIf && !f.showIf(values, isEdit))) continue;
     let raw = values[f.name];
     // 공백만 채워 두고 "적었다"고 넘어가는 경우를 여기서 잡는다.
     if (typeof raw === "string") raw = raw.trim();

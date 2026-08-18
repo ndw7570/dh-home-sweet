@@ -165,3 +165,14 @@
   color: var(--text-muted);
   font-weight: 400;
 }
+
+/* 분할 줄의 방향 — 차트·변동폭과 같은 규약(내림 파랑 / 오름 빨강). */
+.stp-down {
+  color: #1b57c4;
+  font-weight: 600;
+}
+
+.stp-up {
+  color: #b3261e;
+  font-weight: 600;
+}
