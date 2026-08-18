@@ -1,16 +1,28 @@
 from decimal import Decimal, InvalidOperation
 
+from django.db import transaction
 from rest_framework import serializers
 
-from trading_discipline.constants.choices import OrderType
+from trading_discipline.constants.choices import OrderType, PeriodType
 from trading_discipline.constants.validation import (
     MAX_PLAUSIBLE_QUANTITY,
     PRICE_OUTLIER_RATIO,
     QUANTITY_LOOKS_LIKE_PRICE_TOLERANCE,
 )
-from trading_discipline.models import Order
+from trading_discipline.models import MandatoryPrinciple, Order, OrderPrincipleCheck
 from trading_discipline.serializers._base import DomainPropertySerializer
 from trading_discipline.serializers.portfolio.security import SecurityParentSerializer
+from trading_discipline.serializers.principle import MandatoryPrincipleParentSerializer
+
+
+class OrderPrincipleCheckSerializer(serializers.ModelSerializer):
+    """이행 하나에 달린 원칙 점검 한 줄."""
+
+    principle_detail = MandatoryPrincipleParentSerializer(source="principle", read_only=True)
+
+    class Meta:
+        model = OrderPrincipleCheck
+        fields = ("id", "principle", "principle_detail", "is_done", "note")
 
 
 class OrderListSerializer(DomainPropertySerializer):
@@ -22,6 +34,10 @@ class OrderListSerializer(DomainPropertySerializer):
     # 저장 직전에 버린다. 이상값 검사를 통과시키는 유일한 열쇠다.
     confirm_outlier = serializers.BooleanField(write_only=True, required=False, default=False)
 
+    # DAY 로 지정된 필수원칙의 준수 여부. 이행을 **새로 만들 때는 빠짐없이** 보내야 한다.
+    #   "principle_checks": [{"principle": 3, "is_done": true, "note": "..."}]
+    principle_checks = OrderPrincipleCheckSerializer(many=True, required=False)
+
     class Meta:
         model = Order
         fields = "__all__"
@@ -29,6 +45,7 @@ class OrderListSerializer(DomainPropertySerializer):
     def validate(self, attrs):
         attrs = super().validate(attrs)
         confirmed = attrs.pop("confirm_outlier", False)
+        self._validate_principle_checks(attrs)
 
         order_type = attrs.get("order_type", getattr(self.instance, "order_type", None))
         limit_price = attrs.get("limit_price", getattr(self.instance, "limit_price", None))
@@ -44,6 +61,93 @@ class OrderListSerializer(DomainPropertySerializer):
         if not confirmed:
             self._check_outliers(attrs, quantity, limit_price)
         return attrs
+
+    # ── 원칙 점검 ────────────────────────────────────────
+    def _validate_principle_checks(self, attrs):
+        """DAY 로 지정된 필수원칙이 빠짐없이 들어왔는지 본다.
+
+        **새로 만들 때만 필수다.** 수정에는 강제하지 않는다 — 이 규칙이 생기기 전에 쌓인
+        이행이 이미 있고, 그것들을 고치려 할 때마다 지금 와서 원칙 체크를 요구하면
+        과거 기록을 손댈 수 없게 된다.
+
+        `is_done=False` 를 막지 않는다. "안 지켰다" 는 실패가 아니라 이 앱이 가장 알고 싶은
+        기록이다. 막는 것은 **답하지 않고 넘어가는 것** 하나뿐이다.
+        """
+        checks = attrs.get("principle_checks")
+
+        required = set(
+            MandatoryPrinciple.objects.filter(scopes__period_type=PeriodType.DAY).values_list(
+                "id", flat=True
+            )
+        )
+        given = {c["principle"].id for c in (checks or [])}
+
+        duplicated = len(checks or []) - len(given)
+        if duplicated:
+            raise serializers.ValidationError(
+                {"principle_checks": "같은 원칙이 두 번 들어왔다. 원칙당 한 줄만 보내라."}
+            )
+
+        unknown = given - required
+        if unknown:
+            raise serializers.ValidationError(
+                {
+                    "principle_checks": (
+                        f"이행 점검 대상이 아닌 원칙이 들어왔다: {sorted(unknown)}. "
+                        "필수원칙의 적용기간에 '일'(DAY) 을 켜야 이행에서 점검한다."
+                    )
+                }
+            )
+
+        if self.instance is not None:
+            return  # 수정은 강제하지 않는다
+
+        missing = required - given
+        if missing:
+            contents = {
+                p.id: (p.content or "").strip().splitlines()[0][:30] if p.content else f"#{p.id}"
+                for p in MandatoryPrinciple.objects.filter(id__in=missing)
+            }
+            raise serializers.ValidationError(
+                {
+                    "principle_checks": (
+                        "점검하지 않은 필수원칙이 있다: "
+                        + ", ".join(f"[{pid}] {contents.get(pid, '')}" for pid in sorted(missing))
+                        + ". 지켰는지 아닌지를 반드시 답해야 한다 (아니라고 답해도 저장된다)."
+                    )
+                }
+            )
+
+    @transaction.atomic
+    def create(self, validated_data):
+        checks = validated_data.pop("principle_checks", [])
+        instance = super().create(validated_data)
+        self._save_checks(instance, checks)
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        # 키가 안 왔으면 기존 점검을 그대로 둔다. 빈 배열([])은 "전부 지운다" 가 아니라
+        # 여기서도 그대로 둔다 — 이행의 점검 기록을 통째로 비우는 경로는 열지 않는다.
+        checks = validated_data.pop("principle_checks", None)
+        instance = super().update(instance, validated_data)
+        if checks:
+            self._save_checks(instance, checks)
+        return instance
+
+    @staticmethod
+    def _save_checks(instance, checks):
+        """원칙당 한 줄로 upsert. 같은 이행을 다시 저장해도 줄이 늘지 않는다."""
+        for check in checks:
+            OrderPrincipleCheck.all_objects.update_or_create(
+                order=instance,
+                principle=check["principle"],
+                defaults={
+                    "is_done": check["is_done"],
+                    "note": check.get("note"),
+                    "is_deleted": False,
+                },
+            )
 
     # ── 이상값 검사 ──────────────────────────────────────
     def _check_outliers(self, attrs, quantity, limit_price):

@@ -13,7 +13,7 @@ investments-nam.sql 의 29개 테이블 중 커뮤니티(posts/comments/likes/at
 """
 
 from trading_discipline.models.ai import AiDecisionFeedback, AiModelRun
-from trading_discipline.models.execution import Order, PerformanceRecord
+from trading_discipline.models.execution import Order, OrderPrincipleCheck, PerformanceRecord
 from trading_discipline.models.market import AffectedSecurity, MarketDirection, News
 from trading_discipline.models.planning import (
     AnnualInvestmentPlan,
@@ -32,6 +32,7 @@ from trading_discipline.models.portfolio import (
 from trading_discipline.models.principle import (
     InvestmentPrinciple,
     MandatoryPrinciple,
+    MandatoryPrincipleScope,
     MonthlyInvestmentPrinciple,
     PrincipleSource,
     QuarterlyInvestmentPrinciple,
@@ -53,6 +54,7 @@ __all__ = [
     "DailyInvestmentPlan",
     # principle
     "MandatoryPrinciple",
+    "MandatoryPrincipleScope",
     "PrincipleSource",
     "InvestmentPrinciple",
     "QuarterlyInvestmentPrinciple",
@@ -66,6 +68,7 @@ __all__ = [
     "TradingStrategyMethod",
     # execution
     "Order",
+    "OrderPrincipleCheck",
     "PerformanceRecord",
     # ai
     "AiModelRun",

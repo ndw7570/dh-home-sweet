@@ -5,6 +5,7 @@ from trading_discipline.serializers.principle.investment_principle import (
 from trading_discipline.serializers.principle.mandatory_principle import (
     MandatoryPrincipleDetailSelectSerializer,
     MandatoryPrincipleListSerializer,
+    MandatoryPrincipleParentSerializer,
 )
 from trading_discipline.serializers.principle.monthly_principle import (
     MonthlyPrincipleDetailSelectSerializer,
@@ -22,6 +23,7 @@ from trading_discipline.serializers.principle.quarterly_principle import (
 
 __all__ = [
     "MandatoryPrincipleListSerializer",
+    "MandatoryPrincipleParentSerializer",
     "MandatoryPrincipleDetailSelectSerializer",
     "PrincipleSourceListSerializer",
     "PrincipleSourceParentSerializer",

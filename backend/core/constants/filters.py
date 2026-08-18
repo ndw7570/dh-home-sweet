@@ -119,6 +119,12 @@ DAILY_PLAN_FILTER_FIELDS = {
 MANDATORY_PRINCIPLE_FILTER_FIELDS = {
     "priority_max": "priority__lte",
     "content": "content__icontains",
+    # 계획·이행 화면이 "이 계층에 걸린 원칙" 을 뽑을 때 쓴다.
+    #   ?period_type=DAY    → 이행 화면 체크리스트에 띄울 원칙
+    #   ?period_type=MONTH  → 월계획 작성 화면에 보여 줄 원칙
+    # scopes 에는 소프트딜리트가 없어서 조인 필터가 그대로 안전하다.
+    "period_type": "scopes__period_type__exact",
+    "period_type_in": "scopes__period_type__in",
 }
 
 PRINCIPLE_SOURCE_FILTER_FIELDS = {

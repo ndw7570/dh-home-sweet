@@ -2702,3 +2702,101 @@ ALTER TABLE "trading_discipline_management"."ai_decision_feedback"
 
 -- AI모델 -> AI피드백의견
 COMMENT ON CONSTRAINT "FK_ai_model_runs_TO_ai_decision_feedback" ON "trading_discipline_management"."ai_decision_feedback" IS 'AI모델 -> AI피드백의견';
+
+-- =========================================================
+-- 필수원칙 적용기간 · 이행 원칙점검 (2026-08-18 추가)
+-- 필수원칙을 어느 계층에서 꺼내 볼지 정하고, 일(DAY) 로 지정된 원칙은
+-- 이행마다 지켰는지 Y/N 을 남긴다.
+-- =========================================================
+
+-- 필수원칙적용기간
+CREATE TABLE "trading_discipline_management"."mandatory_principle_scopes"
+(
+	"id"           SERIAL      NOT NULL, -- ID
+	"principle_id" INTEGER     NOT NULL, -- 필수원칙ID
+	"period_type"  VARCHAR(20) NOT NULL  -- 적용기간
+);
+
+-- 필수원칙적용기간
+COMMENT ON TABLE "trading_discipline_management"."mandatory_principle_scopes" IS '필수원칙적용기간';
+
+-- ID
+COMMENT ON COLUMN "trading_discipline_management"."mandatory_principle_scopes"."id" IS 'ID';
+
+-- 필수원칙ID
+COMMENT ON COLUMN "trading_discipline_management"."mandatory_principle_scopes"."principle_id" IS '필수원칙ID';
+
+-- 적용기간
+COMMENT ON COLUMN "trading_discipline_management"."mandatory_principle_scopes"."period_type" IS '적용기간';
+
+-- 필수원칙적용기간
+ALTER TABLE "trading_discipline_management"."mandatory_principle_scopes"
+	ADD CONSTRAINT "PK_mandatory_principle_scopes" PRIMARY KEY ("id");
+
+-- 원칙당 기간 하나씩만
+ALTER TABLE "trading_discipline_management"."mandatory_principle_scopes"
+	ADD CONSTRAINT "mandatory_scope_uniq" UNIQUE ("principle_id", "period_type");
+
+-- 필수원칙 참조
+ALTER TABLE "trading_discipline_management"."mandatory_principle_scopes"
+	ADD CONSTRAINT "FK_mandatory_principles_TO_mandatory_principle_scopes"
+	FOREIGN KEY ("principle_id")
+	REFERENCES "trading_discipline_management"."mandatory_principles" ("id")
+	ON DELETE CASCADE;
+
+-- 이 테이블에는 is_deleted 가 없다. 체크박스의 on/off 라 삭제 이력이 의미가 없고,
+-- 남겨 두면 조인 조회(?period_type=DAY)가 해제한 기간까지 잡는다.
+
+-- 이행원칙점검
+CREATE TABLE "trading_discipline_management"."order_principle_checks"
+(
+	"id"           SERIAL  NOT NULL, -- ID
+	"order_id"     INTEGER NOT NULL, -- 이행ID
+	"principle_id" INTEGER NOT NULL, -- 필수원칙ID
+	"is_done"      BOOLEAN NOT NULL, -- 준수여부
+	"note"         TEXT    NULL,     -- 점검메모
+	"remarks"      TEXT    NULL,     -- 비고
+	"created_at"   DATE    NULL,     -- 생성일
+	"updated_at"   DATE    NULL,     -- 수정일
+	"is_deleted"   BOOLEAN NOT NULL  -- 삭제여부
+);
+
+-- 이행원칙점검
+COMMENT ON TABLE "trading_discipline_management"."order_principle_checks" IS '이행원칙점검';
+
+-- ID
+COMMENT ON COLUMN "trading_discipline_management"."order_principle_checks"."id" IS 'ID';
+
+-- 이행ID
+COMMENT ON COLUMN "trading_discipline_management"."order_principle_checks"."order_id" IS '이행ID';
+
+-- 필수원칙ID
+COMMENT ON COLUMN "trading_discipline_management"."order_principle_checks"."principle_id" IS '필수원칙ID';
+
+-- 준수여부
+COMMENT ON COLUMN "trading_discipline_management"."order_principle_checks"."is_done" IS '준수여부';
+
+-- 점검메모
+COMMENT ON COLUMN "trading_discipline_management"."order_principle_checks"."note" IS '점검메모';
+
+-- 이행원칙점검
+ALTER TABLE "trading_discipline_management"."order_principle_checks"
+	ADD CONSTRAINT "PK_order_principle_checks" PRIMARY KEY ("id");
+
+-- 이행당 원칙 하나씩만
+ALTER TABLE "trading_discipline_management"."order_principle_checks"
+	ADD CONSTRAINT "order_principle_check_uniq" UNIQUE ("order_id", "principle_id");
+
+-- 이행 참조
+ALTER TABLE "trading_discipline_management"."order_principle_checks"
+	ADD CONSTRAINT "FK_orders_TO_order_principle_checks"
+	FOREIGN KEY ("order_id")
+	REFERENCES "trading_discipline_management"."orders" ("id")
+	ON DELETE CASCADE;
+
+-- 필수원칙 참조 (점검 기록이 남아 있으면 원칙을 지울 수 없다)
+ALTER TABLE "trading_discipline_management"."order_principle_checks"
+	ADD CONSTRAINT "FK_mandatory_principles_TO_order_principle_checks"
+	FOREIGN KEY ("principle_id")
+	REFERENCES "trading_discipline_management"."mandatory_principles" ("id")
+	ON DELETE RESTRICT;

@@ -201,6 +201,14 @@ class BaseCommonViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+
+        # prefetch_related 로 미리 읽어 둔 관계는 저장 후에도 옛 값을 들고 있다.
+        # 중첩 관계를 함께 저장하는 시리얼라이저(필수원칙의 적용기간, 이행의 원칙점검)에서
+        # 이걸 안 비우면 "저장은 됐는데 응답에는 반영이 안 된" 것처럼 보인다.
+        # DRF 의 UpdateModelMixin 이 하는 처리와 같다.
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
         return success_response(serializer.data, message="updated")
 
     def destroy(self, request, *args, **kwargs):
