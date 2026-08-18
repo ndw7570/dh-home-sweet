@@ -34,7 +34,8 @@ from datetime import datetime, time
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from django.db.models import OuterRef, Subquery
+from django.db.models import Max, Min, OuterRef, Subquery
+from django.utils import timezone
 
 from market_data.models import DailyCandle, MinuteCandle, Symbol
 
@@ -122,6 +123,45 @@ def resolve_live_price(instance) -> dict:
 def _daily_close_at(day) -> datetime:
     """일봉 날짜를 그날 장 마감 시각(KST) 으로. 다른 후보와 시각으로 비교하기 위해서다."""
     return datetime.combine(day, KRX_CLOSE_TIME, tzinfo=KST)
+
+
+def price_snapshot(security, at=None) -> dict:
+    """`at` 시점까지의 고가·저가를 수집분에서 읽어 온다. **읽기만 하고 저장하지 않는다.**
+
+    전략을 세울 때 "그때 그 가격" 을 한 번 뜨기 위한 함수다. 뜬 값은 `daily_security_price_data`
+    행으로 굳고, 그 뒤로는 수집이 무엇을 갱신하든 따라 움직이지 않는다.
+
+    상시로 미러링하지 않는 이유가 여기 있다. 봉은 upsert 라 장중 미확정치가 마감 후
+    확정치로 덮인다. 근거 가격이 계속 따라 바뀌면 오전에 세운 전략을 오후에 열었을 때
+    "왜 이 가격대에 걸었지" 를 되짚을 수 없다. 판단의 근거는 못박혀 있어야 한다.
+
+    어느 봉을 읽는지는 기준일이 정한다:
+
+        과거 날짜   그날 일봉 (확정된 고가·저가). 없으면 분봉으로 물러난다.
+        당일        `at` 까지의 분봉을 집계 — 고가는 최댓값, 저가는 최솟값.
+
+    당일에 분봉을 쓰는 이유는 일봉이 아직 없거나 미확정이라서다. `at` 이후의 분봉은
+    빼고 센다. 13시에 세운 전략의 근거에 15시 고가가 섞이면 그건 그때 본 값이 아니다.
+    """
+    at = at or timezone.now()
+    day = timezone.localtime(at).date()
+    symbol = Symbol.objects.filter(symbol=security.symbol, market=security.market).first()
+    empty = {"high": None, "low": None, "source": None, "at": at}
+    if symbol is None:
+        return empty
+
+    if day < timezone.localdate():
+        candle = DailyCandle.objects.filter(symbol=symbol, date=day).first()
+        if candle is not None:
+            return {"high": candle.high, "low": candle.low, "source": SOURCE_DAILY, "at": at}
+        # 일봉이 아직 안 들어온 과거 날짜. 그날 분봉이 있으면 그것으로 낸다.
+
+    agg = MinuteCandle.objects.filter(symbol=symbol, ts__date=day, ts__lte=at).aggregate(
+        high=Max("high"), low=Min("low")
+    )
+    if agg["high"] is None:
+        return empty
+    return {"high": agg["high"], "low": agg["low"], "source": SOURCE_MINUTE, "at": at}
 
 
 def sync_security_prices(codes: list[str] | None = None) -> int:
