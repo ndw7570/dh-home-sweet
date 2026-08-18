@@ -79,6 +79,19 @@ export const listPriceData = (params = {}) =>
   wrap(() => api.get("/security-price-data/", { no_page: 1, ...params }), () => mock.priceData);
 export const priceData = crud("security-price-data");
 
+/**
+ * 저장 전에 스냅샷 값을 미리 본다. **아무것도 저장하지 않는다.**
+ *
+ * 받는 값은 `security_id` 와 `price_at` 둘뿐이고 다른 걸 붙이면 400 이다.
+ * `price_at` 은 **오프셋이 붙은 ISO** 여야 한다 — `datetime-local` 원문("2026-08-18T14:00")을
+ * 그대로 보내면 서버가 naive datetime 으로 파싱해 500 이 난다(`localInputToISO` 를 거칠 것).
+ */
+export const previewPriceData = (params = {}) =>
+  wrap(
+    () => api.get("/security-price-data/preview/", params),
+    () => ({ high_price: null, low_price: null, price_source: null })
+  );
+
 // ── 계획 5계층 ────────────────────────────────────
 export const listAnnualPlans = (params = {}) =>
   wrap(() => api.get("/annual-plan/", { no_page: 1, ...params }), () => mock.annualPlans);
@@ -108,8 +121,18 @@ export const listDailyPlans = (params = {}) =>
 export const dailyPlan = crud("daily-plan");
 
 // ── 원칙 ──────────────────────────────────────────
-export const listMandatoryPrinciples = () =>
-  wrap(() => api.get("/mandatory-principle/", { no_page: 1 }), () => mock.mandatoryPrinciples);
+/**
+ * 필수원칙. `period_type` 으로 좁히면 그 계층에서 꺼내 볼 원칙만 온다
+ * (`?period_type=DAY` → 이행 체크리스트, `MONTH` → 월계획 화면 등).
+ * 적용기간을 하나도 안 켠 원칙은 어느 쪽으로 좁혀도 안 나온다.
+ */
+export const listMandatoryPrinciples = (params = {}) =>
+  wrap(
+    () => api.get("/mandatory-principle/", { no_page: 1, ...params }),
+    // 목 모드에서 계층별로 좁힐 방법이 없다. 좁힌 조회는 빈 목록으로 둔다 —
+    // 가짜 원칙을 체크리스트에 띄우면 있지도 않은 점검을 하게 된다.
+    () => (params.period_type ? [] : mock.mandatoryPrinciples)
+  );
 export const mandatoryPrinciple = crud("mandatory-principle");
 
 export const listPrincipleSources = () =>

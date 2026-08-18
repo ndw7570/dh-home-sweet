@@ -175,6 +175,43 @@
   flex: 1;
 }
 
+/* 적용기간 — 이 원칙이 어느 화면에서 튀어나오는지. */
+.pr-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pr-scope-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+/**
+ * `일` 만 동작이 다르다 — 이행마다 입력을 요구하는 유일한 기간이다.
+ * 나머지는 읽기만 하므로 같은 무게로 두면 그 차이가 안 보인다.
+ */
+.pr-scope-tag.is-day {
+  background: var(--accent-bg);
+  border-color: #bcd9fb;
+  color: var(--accent);
+}
+
+/* 어디에도 안 나온다는 사실은 경고가 아니라 상태다. 회색으로 조용히 둔다. */
+.pr-scope-none {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .pr-spacer {
   flex: 1;
 }

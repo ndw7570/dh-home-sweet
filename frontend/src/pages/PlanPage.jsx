@@ -8,6 +8,7 @@ import Modal from "../components/Modal";
 import Panel from "../components/Panel";
 import PlanPerformanceChart from "../components/PlanPerformanceChart";
 import PlanTimetable from "../components/PlanTimetable";
+import PrincipleNotice from "../components/PrincipleNotice";
 import {
   annualPlan,
   dailyPlan,
@@ -58,6 +59,20 @@ const KIND_LABEL = {
   DAY: "일투자계획",
   MONTHLY_PRINCIPLE: "월투자원칙",
   QUARTERLY_PRINCIPLE: "분기투자원칙",
+};
+
+/**
+ * 계획 종류 → 필수원칙의 적용기간.
+ *
+ * 여기 없는 종류(종목별 주계획·일계획·월/분기 투자원칙)에는 대응하는 기간이 없다.
+ * `일`(DAY) 은 일부러 뺐다 — 그건 이행 화면의 체크리스트가 맡는 기간이고, 계획 폼에
+ * 띄우면 "계획을 세우면서 오늘 지켰는지" 를 묻는 꼴이 된다.
+ */
+const PLAN_PERIOD_TYPE = {
+  YEAR: "YEAR",
+  QUARTER: "QUARTER",
+  MONTH: "MONTH",
+  WEEK: "WEEK",
 };
 
 /** 트리 노드의 level → 새로 만들 때 채워 줄 부모 FK */
@@ -407,6 +422,15 @@ export default function PlanPage() {
           onClose={form.close}
           wide={form.spec.wide}
         >
+          {/*
+            이 계층에서 꺼내 보기로 한 필수원칙. 읽기만 한다 — 아직 하지 않은 일에
+            "지켰나" 를 물을 수 없어서다. 적용기간을 안 켠 계층에서는 아무것도 안 뜬다.
+            종목별 주계획·일계획은 대응하는 기간이 없다(`일` 은 이행이 맡는다).
+          */}
+          <PrincipleNotice
+            periodType={PLAN_PERIOD_TYPE[form.kind]}
+            label={KIND_LABEL[form.kind]}
+          />
           <EntityForm
             fields={form.spec.fields}
             instance={form.instance}

@@ -29,7 +29,7 @@ import {
   PRINCIPLE_SOURCE_FIELDS,
   QUARTERLY_PRINCIPLE_FIELDS,
 } from "../forms/specs";
-import { percent, price } from "../lib/format";
+import { percent, price, LEVEL_LABEL } from "../lib/format";
 import { useAsyncAll } from "../lib/useAsync";
 import { useMultiForm } from "../lib/useMultiForm";
 import "./PrinciplePage.css";
@@ -164,6 +164,32 @@ export default function PrinciplePage() {
                   <li key={p.id}>
                     <span className="pr-pri num">{p.priority ?? "-"}</span>
                     <span className="pr-mandatory-text">{p.content}</span>
+                    {/*
+                      적용기간. 어느 화면에서 이 원칙이 튀어나오는지가 목록에서 보여야
+                      한다 — 비어 있으면 어디에도 안 나온다는 뜻이라 그것도 적어 준다.
+                      `일` 은 입력을 요구하는 유일한 기간이라 따로 강조한다.
+                    */}
+                    <span className="pr-scope">
+                      {(p.period_types || []).length === 0 ? (
+                        <span className="pr-scope-none" title="적용기간을 안 골라 어느 화면에도 나오지 않는다">
+                          미설정
+                        </span>
+                      ) : (
+                        p.period_types.map((t) => (
+                          <span
+                            key={t}
+                            className={`pr-scope-tag ${t === "DAY" ? "is-day" : ""}`}
+                            title={
+                              t === "DAY"
+                                ? "이행을 기록할 때마다 지켰는지 묻는다"
+                                : "해당 계획 작성 화면에 표시된다"
+                            }
+                          >
+                            {LEVEL_LABEL[t] || t}
+                          </span>
+                        ))
+                      )}
+                    </span>
                     <EditButton onClick={() => form.openEdit("MANDATORY", p.id)} />
                   </li>
                 ))}

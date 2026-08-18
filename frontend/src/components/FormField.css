@@ -129,6 +129,129 @@
   padding: 6px 0;
 }
 
+/* ── 여러 값 켜고 끄기 ─────────────────────────────── */
+.ff-multicheck {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ff-mc-item {
+  display: grid;
+  grid-template-columns: 18px auto 1fr;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 5px 6px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.ff-mc-item:hover {
+  background: var(--surface-sunken);
+}
+
+.ff-mc-item input {
+  width: 16px;
+  height: 16px;
+  justify-self: center;
+}
+
+.ff-mc-label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 켜면 어느 화면이 달라지는지. 고르기 전에 읽혀야 해서 같은 줄에 둔다. */
+.ff-mc-hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── 필수원칙 점검 ─────────────────────────────────── */
+.ff-pc {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ff-pc-item {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
+  border-radius: var(--radius);
+}
+
+/**
+ * 아직 답하지 않은 항목. 경고색(빨강)을 쓰지 않는다 — 이 표시는 "잘못했다" 가 아니라
+ * "아직 안 골랐다" 이고, 겁주는 색을 쓰면 사람이 사실대로 답하는 대신 넘기려 든다.
+ */
+.ff-pc-item.is-unanswered {
+  border-left-color: var(--warning);
+  background: var(--surface-sunken);
+}
+
+.ff-pc-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.ff-pc-pri {
+  display: inline-block;
+  min-width: 18px;
+  margin-right: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 4px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.ff-pc-answer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/**
+ * `지킴` 과 `못 지킴` 은 **같은 무게**로 둔다. 한쪽을 크게·진하게 하면 그쪽이 정답처럼
+ * 읽히고, 이 화면이 알고 싶은 것은 정답이 아니라 실제로 무슨 일이 있었나다.
+ */
+.ff-pc-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-card);
+  white-space: nowrap;
+}
+
+.ff-pc-radio:hover {
+  background: var(--surface-sunken);
+}
+
+.ff-pc-radio:has(input:checked) {
+  border-color: var(--text-secondary);
+  background: var(--surface-sunken);
+  font-weight: 600;
+}
+
+.ff-pc-note {
+  flex: 1;
+  min-width: 140px;
+  font-size: 13px;
+  padding: 5px 8px;
+}
+
 .ff-checkbox input {
   width: 16px;
   height: 16px;

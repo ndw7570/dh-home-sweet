@@ -287,6 +287,67 @@
   line-height: 1.5;
 }
 
+/**
+ * 스스로 "못 지켰다" 고 적어 둔 원칙.
+ *
+ * 겁주는 빨강을 쓰지 않는다. 이 기록은 사용자가 정직하게 남긴 것이고, 남길 때마다
+ * 벌을 주는 화면이면 다음부터는 `지킴` 을 누르게 된다. 눈에는 걸리되 나무라지 않는
+ * 무게 — 경고색(주황) 계열에 기호 하나다.
+ */
+.ep-broken {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  border: 1px solid #e7cd9b;
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+.ep-broken-list {
+  list-style: none;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ep-broken-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.ep-broken-mark {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.ep-broken-text {
+  white-space: pre-wrap;
+}
+
+.ep-broken-note {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .ep-empty {
   padding: 24px 4px;
   color: var(--text-muted);

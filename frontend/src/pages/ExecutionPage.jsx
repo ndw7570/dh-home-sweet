@@ -12,7 +12,13 @@ import SoftDeleteToggle, {
   DeletedRowActions,
   SoftDeleteBanner,
 } from "../components/SoftDeleteToggle";
-import { fetchExecutionCompare, listOrders, listSecurities, order } from "../api/trading";
+import {
+  fetchExecutionCompare,
+  listMandatoryPrinciples,
+  listOrders,
+  listSecurities,
+  order,
+} from "../api/trading";
 import { ORDER_FIELDS } from "../forms/specs";
 import {
   dateTime,
@@ -85,6 +91,15 @@ export default function ExecutionPage() {
   const [mode, setMode] = useState("alive");
 
   const securities = useAsync(() => listSecurities(), []);
+  /**
+   * 이행에서 점검할 필수원칙 — 적용기간에 `일`(DAY) 을 켠 것만.
+   * 0건이면 폼의 체크리스트 칸이 통째로 사라진다(지금 등록된 원칙은 전부 미설정 상태다).
+   * 사용자가 원칙의 `일` 을 켜고 끄면 그다음 이행부터 목록이 바뀌므로 폼과 같은 주기로 읽는다.
+   */
+  const dayPrinciples = useAsync(
+    () => listMandatoryPrinciples({ period_type: "DAY" }),
+    []
+  );
   const { data, error, loading, reload } = useAsyncAll(
     {
       // 계획 대비 대조는 살아 있는 이행만 본다. `/execution/compare/` 는 뷰셋이 아니라
@@ -105,6 +120,11 @@ export default function ExecutionPage() {
               soft_delete_mode: "deleted",
               security_id: securityId || undefined,
             }),
+      // `/execution/compare/` 응답에는 `principle_checks` 가 없다(대조 전용 조회라
+      // 이행 컬럼을 직접 골라 담는다). 어긴 건에 표시를 남기려면 이행 목록에서 따로 받아
+      // id 로 잇는 수밖에 없다. 날짜로 좁히지 않는 이유는 대조가 쓰는 '이행일' 판정을
+      // 화면에서 똑같이 재현할 수 없어서다 — 여기서는 id 로 찾기만 한다.
+      checks: () => listOrders({ no_page: 1, security_id: securityId || undefined }),
     },
     [securityId, dateFrom, dateTo, mode]
   );
@@ -122,12 +142,25 @@ export default function ExecutionPage() {
         value: s.id,
         label: `${s.name} (${s.symbol})`,
       })),
+      // 체크리스트가 그대로 쓰는 목록. priority 순으로 와서 그 순서로 뜬다.
+      dayPrinciples: (dayPrinciples.data || []).map((p) => ({
+        value: p.id,
+        label: p.content,
+        priority: p.priority,
+      })),
     }),
-    [securities.data]
+    [securities.data, dayPrinciples.data]
   );
 
   const compare = data?.compare;
   const summary = compare?.summary;
+
+  /** 이행 id → 원칙 점검. 대조 행에 어긴 표시를 붙이는 데만 쓴다. */
+  const checksByOrder = useMemo(() => {
+    const map = new Map();
+    for (const o of data?.checks || []) map.set(o.id, o.principle_checks || []);
+    return map;
+  }, [data]);
   // 서버가 이미 걸러서 주지만 한 번 더 본다. 목 모드(`VITE_USE_MOCK=1`)의 조회는
   // `soft_delete_mode` 를 무시하고 같은 목 배열을 돌려주는데, 그걸 그대로 그리면
   // 살아 있는 이행에 `영구 삭제` 버튼이 붙는다.
@@ -266,6 +299,7 @@ export default function ExecutionPage() {
                           <OrderRow
                             key={row.order.id}
                             row={row}
+                            checks={checksByOrder.get(row.order.id)}
                             onEdit={() => form.openEdit("ORDER", row.order.id)}
                           />
                         ))}
@@ -397,8 +431,10 @@ export default function ExecutionPage() {
  * 같은 "대조한 계획" 이어도 그날을 콕 집어 세운 계획과 그 주 전체를 덮는 계획은
  * 근거의 무게가 다르다. 그걸 뭉뚱그리면 준수율이 어디에 기대고 있는지 알 수 없다.
  */
-function OrderRow({ row, onEdit }) {
+function OrderRow({ row, checks, onEdit }) {
   const { order, security, flags, matched_plans: plans } = row;
+  // 지키지 못했다고 스스로 적어 둔 원칙. 회고할 때 눈에 걸려야 하는 것이 이 표시다.
+  const broken = (checks || []).filter((c) => c.is_done === false);
 
   return (
     <li className={`ep-row ${flags.length ? "is-flagged" : "is-clean"}`}>
@@ -421,11 +457,39 @@ function OrderRow({ row, onEdit }) {
           {qty(order.quantity)}주 × {price(order.limit_price)}
           {order.notional != null && ` = ${won(order.notional)}`}
         </span>
+        {broken.length > 0 && (
+          <span
+            className="ep-broken"
+            title={broken
+              .map((c) => c.principle_detail?.content || `원칙 #${c.principle}`)
+              .join("\n")}
+          >
+            <span aria-hidden="true">!</span> 원칙 {broken.length}건 못 지킴
+          </span>
+        )}
         <span className="num ep-when">{dateTime(order.executed_at)}</span>
         <button type="button" className="row-edit" onClick={onEdit}>
           수정
         </button>
       </div>
+
+      {/*
+        어떤 원칙을 어겼는지 접지 않고 그대로 편다. 배지 숫자만 두면 회고할 때
+        다시 열어 봐야 하고, 그러면 대개 안 연다.
+      */}
+      {broken.length > 0 && (
+        <ul className="ep-broken-list">
+          {broken.map((c) => (
+            <li key={c.id ?? c.principle}>
+              <span className="ep-broken-mark" aria-hidden="true">!</span>
+              <span className="ep-broken-text">
+                {c.principle_detail?.content || `원칙 #${c.principle}`}
+              </span>
+              {c.note && <span className="ep-broken-note">{c.note}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {flags.length > 0 && (
         <ul className="ep-flags">

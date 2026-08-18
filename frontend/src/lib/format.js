@@ -94,6 +94,25 @@ export const localISODateTimeInput = (d) => {
 };
 
 /**
+ * `<input type="datetime-local">` 값을 **시간대가 붙은** ISO 문자열로.
+ *
+ *   "2026-08-18T14:00"  →  "2026-08-18T05:00:00.000Z"
+ *
+ * 쿼리 파라미터로 시각을 보낼 때는 이걸 반드시 거친다. `datetime-local` 이 내는 값에는
+ * 오프셋이 없어서, 받는 쪽이 그대로 파싱하면 naive datetime 이 된다 — 지금 실제로
+ * `security-price-data/preview/` 가 그 값에 `localtime()` 을 걸다 500 을 낸다.
+ * 본문(body)으로 보낼 때는 DRF 가 서버 TIME_ZONE 으로 붙여 주므로 그대로 둔다.
+ *
+ * `new Date("2026-08-18T14:00")` 은 오프셋이 없는 date-time 을 **로컬 시각**으로 읽는다
+ * (날짜만 있는 "2026-08-18" 은 UTC 로 읽는 것과 다르다). 그래서 KST 14:00 이 그대로 잡힌다.
+ */
+export const localInputToISO = (v) => {
+  if (!v) return undefined;
+  const t = new Date(v);
+  return Number.isNaN(t.getTime()) ? undefined : t.toISOString();
+};
+
+/**
  * 로컬(KST) 기준 YYYY-MM-DD.
  * 순수 날짜 문자열("2026-08-15") 은 그대로 잘라 반환한다 — Date 로 파싱하면 UTC 자정으로 취급되어
  * 음수 시차 지역에서 하루가 밀린다.

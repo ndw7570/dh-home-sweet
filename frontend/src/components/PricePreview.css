@@ -1,0 +1,98 @@
+/**
+ * 저장 전 미리보기. 입력 칸이 아니라 **결과를 보여 주는 자리**라
+ * 입력 필드와 다른 표면(sunken)을 쓴다 — 같은 흰 카드면 여기도 적어야 하는 줄 안다.
+ */
+.pp {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.pp-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+}
+
+.pp-rows > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pp-rows dt {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* 값이 이 상자의 본문이다. 라벨보다 크고 진하게. */
+.pp-rows dd {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pp-foot {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.pp-manual-link {
+  margin-left: 6px;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* 아직 고를 것이 남았을 때. 경고가 아니라 안내다. */
+.pp.is-idle {
+  border-style: dashed;
+  background: transparent;
+}
+
+.pp-idle-msg {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/**
+ * 시세가 없을 때. 저장하면 400 이 나는 상태라 눈에 걸려야 하지만, 사용자가 잘못한 것이
+ * 아니라 아직 수집이 안 된 것뿐이라 경고색(주황)까지만 쓴다.
+ */
+.pp.is-none {
+  border-color: #e7cd9b;
+  background: var(--warning-bg);
+}
+
+.pp-none-msg {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.pp-none-hint {
+  margin: 5px 0 10px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--warning);
+}
+
+.pp.is-manual {
+  border-style: dashed;
+  background: transparent;
+}
+
+.pp-manual-msg {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}

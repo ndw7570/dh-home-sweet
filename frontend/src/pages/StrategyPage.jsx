@@ -38,6 +38,16 @@ const VIEW_TABS = [
   { key: "PRICE", label: "가격데이터" },
 ];
 
+/**
+ * 가격데이터의 고가·저가가 어디서 온 값인가.
+ * 서버가 라벨을 주지 않는 코드값이라 여기서만 최소로 맵을 둔다(`format.js` 의 LEVEL_LABEL 과 같은 성격).
+ * 비어 있으면 사람이 직접 적은 값이다.
+ */
+const PRICE_SOURCE_LABEL = {
+  MINUTE: "당일 분봉",
+  DAILY: "일봉 확정",
+};
+
 export default function StrategyPage() {
   const [view, setView] = useState("STRATEGY");
   const [selectedId, setSelectedId] = useState(null);
@@ -180,6 +190,18 @@ export default function StrategyPage() {
                     label: "호가",
                     align: "right",
                     render: (r) => price(r.quote_price),
+                  },
+                  {
+                    // 고가·저가가 어디서 온 값인지. 수집분을 뜬 것과 사람이 적은 것은
+                    // 근거의 무게가 다른데, 숫자만 두면 둘이 구분되지 않는다.
+                    key: "price_source",
+                    label: "출처",
+                    render: (r) =>
+                      r.price_source ? (
+                        <span className="pill">{PRICE_SOURCE_LABEL[r.price_source] || r.price_source}</span>
+                      ) : (
+                        <span className="pill">직접 입력</span>
+                      ),
                   },
                   { key: "remarks", label: "비고" },
                   {

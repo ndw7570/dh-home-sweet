@@ -71,12 +71,74 @@ export const SECURITIES_LOAN_FIELDS = [
   { name: "evaluated_at", label: "평가시각", type: "datetime", half: true },
 ];
 
+/**
+ * 가격데이터 — **시세 저장소가 아니라 "전략을 세운 순간 무엇을 보고 있었나" 의 기록**이다.
+ * 시세 자체를 보고 싶으면 종목 화면의 봉 차트를 쓴다.
+ *
+ * 그래서 고가·저가를 손으로 적지 않는다. 종목과 기준일시만 고르면 백엔드가 수집한 캔들에서
+ * 읽어 채운다(당일은 분봉 집계, 과거는 그날 일봉). 한 번 만들어진 행은 수집이 아무리 돌아도
+ * 다시 바뀌지 않는다 — 근거 가격이 나중에 따라 움직이면 "왜 이 가격대에 걸었지" 를
+ * 되짚을 수 없다.
+ */
 export const PRICE_DATA_FIELDS = [
-  { name: "security", label: "종목", type: "ref", optionsKey: "securities", half: true },
-  { name: "price_at", label: "시각", type: "datetime", half: true },
-  { name: "high_price", label: "고가", type: "price", half: true },
-  { name: "low_price", label: "저가", type: "price", half: true },
-  { name: "quote_price", label: "호가", type: "price", half: true },
+  {
+    name: "security",
+    label: "종목",
+    type: "ref",
+    optionsKey: "securities",
+    required: true,
+    half: true,
+  },
+  {
+    name: "price_at",
+    label: "기준일시",
+    type: "datetime",
+    half: true,
+    hint: "비우면 지금 시각. 이 시점에서 본 고가·저가가 기록된다.",
+  },
+  {
+    /**
+     * 저장 전 미리보기. 값을 담는 칸이 아니라(readOnly 라 본문에 안 실린다) 상태 하나만
+     * 든다 — `true` 면 "직접 입력하기" 로 넘어간 것이고, 그때 아래 고가·저가 칸이 열린다.
+     *
+     * 수정 화면에는 뜨지 않는다. `PATCH` 에는 자동 채움이 걸리지 않기 때문이다. 빈 칸을
+     * 나중에 채우려고 수정을 보내면 **그 시점 시세**가 들어와 스냅샷이 오염된다.
+     * 값을 다시 뜨고 싶으면 새 스냅샷을 만드는 것이 맞다.
+     */
+    name: "_price_preview",
+    label: "수집된 시세",
+    type: "pricePreview",
+    readOnly: true,
+    showIf: (v, isEdit) => !isEdit,
+    watch: (v) => ({ securityId: v.security, priceAt: v.price_at }),
+  },
+  {
+    name: "high_price",
+    label: "고가",
+    type: "price",
+    half: true,
+    // 만들 때는 수집분이 없거나 직접 적겠다고 한 경우에만 연다. 수정 화면에서는 늘 연다 —
+    // 그쪽은 자동 채움이 없어서 여기가 유일한 입력 경로다.
+    showIf: (v, isEdit) => isEdit || v._price_preview === true,
+    hint: "적어 보내면 이 값이 그대로 저장되고 자동 채움은 건너뛴다.",
+  },
+  {
+    name: "low_price",
+    label: "저가",
+    type: "price",
+    half: true,
+    showIf: (v, isEdit) => isEdit || v._price_preview === true,
+  },
+  {
+    name: "quote_price",
+    label: "호가",
+    type: "price",
+    half: true,
+    // 호가는 체결가가 아니라 주문 대기 가격이라 봉 어디에도 없다(KIS 도 과거 호가는 안 준다).
+    // 종가나 현재가로 대신 채우지 않는다 — 컬럼 이름이 '호가' 인데 다른 값이 들어가면
+    // 나중에 읽는 사람이 호가인 줄 알고 틀린 판단을 한다.
+    hint: "자동으로 채워지지 않는다. 봉에는 호가가 없어서 사람이 적어야 하는 값이다.",
+  },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },
 ];
 
@@ -307,6 +369,32 @@ export const MANDATORY_PRINCIPLE_FIELDS = [
     rows: 3,
     required: true,
     hint: "협상 대상이 아닌 것만 여기 넣는다. 지킬 수 없는 문장은 원칙이 아니라 희망이다.",
+  },
+  {
+    /**
+     * 적용기간 — 이 원칙을 **어느 화면에서 꺼내 볼지**. 고른 기간이 곧 쓰임새를 정한다.
+     *
+     * 계획 계층(주/월/분기/연)은 문장으로 **표시만** 한다. 아직 하지 않은 일에
+     * "했다/안 했다" 를 물을 수 없어서다. 지켰는지 답할 수 있는 자리는 실제로 행동한
+     * 기록, 즉 이행뿐이라 `일`(DAY) 만 동작이 다르다.
+     *
+     * 하나도 안 고르면 어느 화면에도 안 나온다. 그래서 비워 두는 것이 기본값이다.
+     */
+    name: "period_types",
+    label: "적용기간",
+    type: "multicheck",
+    choiceKey: "period_type",
+    default: [],
+    // 기간마다 무슨 일이 일어나는지 체크박스 옆에 적는다. `일` 만 입력을 요구하므로
+    // 그 차이를 고르기 전에 알려 준다 — 켠 뒤에 이행 폼이 달라져 놀라면 늦다.
+    optionHints: {
+      DAY: "이행을 기록할 때마다 이 원칙을 지켰는지 묻습니다",
+      WEEK: "주계획 작성 화면에 표시됩니다",
+      MONTH: "월계획 작성 화면에 표시됩니다",
+      QUARTER: "분기계획 작성 화면에 표시됩니다",
+      YEAR: "연투자계획 작성 화면에 표시됩니다",
+    },
+    hint: "하나도 안 고르면 어느 화면에도 나오지 않는다.",
   },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },
 ];
@@ -680,5 +768,27 @@ export const ORDER_FIELDS = [
     type: "textarea",
     rows: 3,
     hint: "계획 밖의 매매라면 왜 그랬는지 여기 적어 둔다. 나중에 그 결정이 좋았는지 갈라 볼 유일한 단서다.",
+  },
+  {
+    /**
+     * 필수원칙 점검 — 적용기간에 `일`(DAY) 을 켠 원칙마다 지켰는지 답한다.
+     *
+     * 폼의 맨 아래에 둔다. 매매 내용을 다 적은 뒤 저장 직전에 한 번 멈추는 자리라서다.
+     *
+     * **`못 지킴` 을 고르기 어렵게 만들지 않는다.** 경고 모달도, 빨간색도 없다.
+     * "안 지켰다" 는 실패 신고가 아니라 이 앱이 가장 알고 싶어 하는 기록이다 — 어떤 원칙을
+     * 언제 어겼고 그 매매가 어떻게 됐는지가 규율의 성과 그 자체다. 막는 것은 **답하지 않고
+     * 넘어가는 것** 하나뿐이고, 그래서 기본 선택값도 없다(`지킴` 을 기본으로 두면 사람이
+     * 그냥 넘긴다).
+     *
+     * DAY 원칙이 0건이면 이 칸은 통째로 사라진다. 목록은 화면이 `dayPrinciples` 로 준다.
+     */
+    name: "principle_checks",
+    label: "필수원칙 점검",
+    type: "principleChecks",
+    optionsKey: "dayPrinciples",
+    // 새로 기록할 때만 전부 답해야 한다. 수정에는 강제하지 않는다 — 이 규칙이 생기기 전에
+    // 쌓인 이행이 있고, 고칠 때마다 점검을 요구하면 과거 기록에 손을 댈 수 없다.
+    requiredOnCreate: true,
   },
 ];
