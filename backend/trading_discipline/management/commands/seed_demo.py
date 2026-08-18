@@ -314,18 +314,19 @@ class Command(BaseCommand):
             high_price=Decimal("72400.00"), low_price=Decimal("70800.00"),
             current_price=Decimal("71500.00"),
         )
-        strategy = TradingStrategy.objects.create(
+        # 방법이 머리(가격데이터·정책명), 전략이 n차 줄이다.
+        method = TradingStrategyMethod.objects.create(
             price_data=price, policy_name="삼성전자 3분할 매수", sector="반도체",
             reference_at=_at(today, 9, 30),
         )
         for step, (p, q) in enumerate([("-3.00", "30.00"), ("-7.00", "30.00"), ("-12.00", "40.00")], 1):
-            TradingStrategyMethod.objects.create(
-                strategy=strategy, strategy_type=StrategyType.BUY_SPLIT, step_no=step,
+            TradingStrategy.objects.create(
+                method=method, strategy_type=StrategyType.BUY_SPLIT, step_no=step,
                 price_ratio=Decimal(p), quantity_ratio=Decimal(q), sector="반도체",
             )
         for step, (p, q) in enumerate([("8.00", "50.00"), ("15.00", "50.00")], 1):
-            TradingStrategyMethod.objects.create(
-                strategy=strategy, strategy_type=StrategyType.SELL_SPLIT, step_no=step,
+            TradingStrategy.objects.create(
+                method=method, strategy_type=StrategyType.SELL_SPLIT, step_no=step,
                 price_ratio=Decimal(p), quantity_ratio=Decimal(q), sector="반도체",
             )
 

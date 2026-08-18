@@ -8,14 +8,16 @@ from trading_discipline.serializers.strategy import (
 
 
 class TradingStrategyViewSet(BaseCommonViewSet):
-    """매수매도전략 CRUD. 상세를 부르면 n차 분할표가 전략종류별로 묶여서 온다."""
+    """매수매도전략 CRUD. n차 분할 한 줄씩.
+
+    `?method_id=` 로 한 방법의 분할표를 뽑는다. 머리(가격데이터·정책명)는
+    `trading_strategy_methods` 가 갖는다.
+    """
 
     queryset = TradingStrategy.objects.all()
     FILTER_FIELDS = TRADING_STRATEGY_FILTER_FIELDS
     list_serializer_class = TradingStrategyListSerializer
     detail_serializer_class = TradingStrategyDetailSelectSerializer
-    select_list = ("price_data",)
-    select_detail = ("price_data__security",)
-    prefetch_list = ("methods",)
-    prefetch_detail = ("methods",)
-    default_ordering = ("-reference_at", "-id")
+    select_list = ("method",)
+    select_detail = ("method",)
+    default_ordering = ("method_id", "strategy_type", "step_no")

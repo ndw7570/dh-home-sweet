@@ -1191,17 +1191,15 @@ COMMENT ON CONSTRAINT "PK_securities_loans" ON "trading_discipline_management"."
 -- 매수매도방법
 CREATE TABLE "trading_discipline_management"."trading_strategy_methods"
 (
-	"id"             SERIAL       NOT NULL, -- ID
-	"strategy_id"    INTEGER      NULL,     -- 전략ID
-	"strategy_type"  VARCHAR(20)  NULL,     -- 전략종류
-	"step_no"        INTEGER      NULL,     -- n차
-	"price_ratio"    NUMERIC(5,2) NULL,     -- 전략가격비율
-	"quantity_ratio" NUMERIC(5,2) NULL,     -- 전략수량비율
-	"sector"         VARCHAR(100) NULL,     -- 업종
-	"created_at"     DATE         NULL,     -- 생성일
-	"updated_at"     DATE         NULL,     -- 수정일
-	"remarks"        TEXT         NULL,     -- 비고
-	"is_deleted"     BOOLEAN      NOT NULL  -- 삭제여부
+	"id"            SERIAL       NOT NULL, -- ID
+	"price_data_id" INTEGER      NULL,     -- 가격데이터ID
+	"policy_name"   VARCHAR(200) NULL,     -- 정책명
+	"sector"        VARCHAR(100) NULL,     -- 업종
+	"reference_at"  TIMESTAMP    NULL,     -- 기준시각
+	"created_at"    DATE         NULL,     -- 생성일
+	"updated_at"    DATE         NULL,     -- 수정일
+	"remarks"       TEXT         NULL,     -- 비고
+	"is_deleted"    BOOLEAN      NOT NULL  -- 삭제여부
 );
 
 -- 매수매도방법
@@ -2089,15 +2087,17 @@ COMMENT ON CONSTRAINT "PK_market_directions" ON "trading_discipline_management".
 -- 매수매도전략
 CREATE TABLE "trading_discipline_management"."trading_strategies"
 (
-	"id"            SERIAL       NOT NULL, -- ID
-	"price_data_id" INTEGER      NULL,     -- 가격데이터ID
-	"policy_name"   VARCHAR(200) NULL,     -- 정책명
-	"sector"        VARCHAR(100) NULL,     -- 업종
-	"created_at"    DATE         NULL,     -- 생성일
-	"updated_at"    DATE         NULL,     -- 수정일
-	"remarks"       TEXT         NULL,     -- 비고
-	"is_deleted"    BOOLEAN      NOT NULL, -- 삭제여부
-	"reference_at"  TIMESTAMP    NULL      -- 기준시각
+	"id"             SERIAL       NOT NULL, -- ID
+	"method_id"      INTEGER      NULL,     -- 매수매도방법ID
+	"strategy_type"  VARCHAR(20)  NULL,     -- 전략종류
+	"step_no"        INTEGER      NULL,     -- n차
+	"price_ratio"    NUMERIC(5,2) NULL,     -- 전략가격비율
+	"quantity_ratio" NUMERIC(5,2) NULL,     -- 전략수량비율
+	"sector"         VARCHAR(100) NULL,     -- 업종
+	"created_at"     DATE         NULL,     -- 생성일
+	"updated_at"     DATE         NULL,     -- 수정일
+	"remarks"        TEXT         NULL,     -- 비고
+	"is_deleted"     BOOLEAN      NOT NULL  -- 삭제여부
 );
 
 -- 매수매도전략
@@ -2536,18 +2536,19 @@ ALTER TABLE "trading_discipline_management"."investment_principles"
 COMMENT ON CONSTRAINT "FK_principle_sources_TO_investment_principles" ON "trading_discipline_management"."investment_principles" IS '투자원칙소스 -> 투자원칙';
 
 -- 매수매도방법
-ALTER TABLE "trading_discipline_management"."trading_strategy_methods"
-	ADD CONSTRAINT "FK_trading_strategies_TO_trading_strategy_methods"
-	 -- 매수매도전략 -> 매수매도방법
+-- 2026-08-18 계층을 뒤집었다. 방법이 상위(가격데이터·정책명), 전략이 n차 줄이다.
+ALTER TABLE "trading_discipline_management"."trading_strategies"
+	ADD CONSTRAINT "FK_trading_strategy_methods_TO_trading_strategies"
+	 -- 매수매도방법 -> 매수매도전략
 		FOREIGN KEY (
-			"strategy_id" -- 전략ID
+			"method_id" -- 매수매도방법ID
 		)
-		REFERENCES "trading_discipline_management"."trading_strategies" ( -- 매수매도전략
+		REFERENCES "trading_discipline_management"."trading_strategy_methods" ( -- 매수매도방법
 			"id" -- ID
 		);
 
--- 매수매도전략 -> 매수매도방법
-COMMENT ON CONSTRAINT "FK_trading_strategies_TO_trading_strategy_methods" ON "trading_discipline_management"."trading_strategy_methods" IS '매수매도전략 -> 매수매도방법';
+-- 매수매도방법 -> 매수매도전략
+COMMENT ON CONSTRAINT "FK_trading_strategy_methods_TO_trading_strategies" ON "trading_discipline_management"."trading_strategies" IS '매수매도방법 -> 매수매도전략';
 
 -- 분기투자계획
 ALTER TABLE "trading_discipline_management"."quarterly_investment_plan"
@@ -2648,9 +2649,9 @@ ALTER TABLE "trading_discipline_management"."quarterly_investment_principles"
 COMMENT ON CONSTRAINT "FK_quarterly_investment_plan_TO_quarterly_investment_principles" ON "trading_discipline_management"."quarterly_investment_principles" IS '분기투자계획 -> 분기투자원칙';
 
 -- 매수매도전략
-ALTER TABLE "trading_discipline_management"."trading_strategies"
-	ADD CONSTRAINT "FK_daily_security_price_data_TO_trading_strategies"
-	 -- 가격데이터 -> 매수매도전략
+ALTER TABLE "trading_discipline_management"."trading_strategy_methods"
+	ADD CONSTRAINT "FK_daily_security_price_data_TO_trading_strategy_methods"
+	 -- 가격데이터 -> 매수매도방법
 		FOREIGN KEY (
 			"price_data_id" -- 가격데이터ID
 		)
@@ -2659,7 +2660,7 @@ ALTER TABLE "trading_discipline_management"."trading_strategies"
 		);
 
 -- 가격데이터 -> 매수매도전략
-COMMENT ON CONSTRAINT "FK_daily_security_price_data_TO_trading_strategies" ON "trading_discipline_management"."trading_strategies" IS '가격데이터 -> 매수매도전략';
+COMMENT ON CONSTRAINT "FK_daily_security_price_data_TO_trading_strategy_methods" ON "trading_discipline_management"."trading_strategy_methods" IS '가격데이터 -> 매수매도방법';
 
 -- 가격데이터
 ALTER TABLE "trading_discipline_management"."daily_security_price_data"

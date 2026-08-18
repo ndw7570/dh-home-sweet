@@ -6,6 +6,7 @@ from trading_discipline.serializers.strategy.trading_strategy import (
 from trading_discipline.serializers.strategy.trading_strategy_method import (
     TradingStrategyMethodDetailSelectSerializer,
     TradingStrategyMethodListSerializer,
+    TradingStrategyMethodParentSerializer,
 )
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "TradingStrategyParentSerializer",
     "TradingStrategyDetailSelectSerializer",
     "TradingStrategyMethodListSerializer",
+    "TradingStrategyMethodParentSerializer",
     "TradingStrategyMethodDetailSelectSerializer",
 ]

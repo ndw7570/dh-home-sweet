@@ -191,7 +191,8 @@ AFFECTED_SECURITY_FILTER_FIELDS = {
 # ─────────────────────────────────────────────
 #  strategy
 # ─────────────────────────────────────────────
-TRADING_STRATEGY_FILTER_FIELDS = {
+# 2026-08-18 계층을 뒤집었다. 방법이 상위(가격데이터·정책명), 전략이 n차 줄이다.
+TRADING_STRATEGY_METHOD_FILTER_FIELDS = {
     "price_data_id": "price_data_id__exact",
     "policy_name": "policy_name__icontains",
     "sector": "sector__icontains",
@@ -199,8 +200,8 @@ TRADING_STRATEGY_FILTER_FIELDS = {
     "reference_to": "reference_at__lte",
 }
 
-TRADING_STRATEGY_METHOD_FILTER_FIELDS = {
-    "strategy_id": "strategy_id__exact",
+TRADING_STRATEGY_FILTER_FIELDS = {
+    "method_id": "method_id__exact",
     "strategy_type": "strategy_type__exact",
     "sector": "sector__icontains",
 }
