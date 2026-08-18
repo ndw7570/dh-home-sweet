@@ -1,0 +1,134 @@
+.sdm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sdm-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.sdm-seg {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sdm-opt {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 12px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.sdm-opt:first-child {
+  border-left: 0;
+}
+
+.sdm-opt:hover {
+  background: var(--surface-sunken);
+}
+
+/* 켠 칸은 채워서 표시한다. 테두리만으로는 어느 쪽이 켜졌는지 한눈에 안 들어온다. */
+.sdm-opt.is-on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── 켜져 있다는 사실을 목록 바로 위에 한 번 더 ───────────── */
+.sdm-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--warning);
+  background: var(--warning-bg);
+  border: 1px solid #e7cd9b;
+  border-radius: var(--radius);
+}
+
+.sdm-banner-mark {
+  font-size: 14px;
+}
+
+.sdm-banner strong {
+  font-weight: 700;
+}
+
+.sdm-banner-reset {
+  margin-left: auto;
+  border: 1px solid #e7cd9b;
+  background: var(--surface-card);
+  color: var(--warning);
+  border-radius: var(--radius);
+  padding: 3px 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ── 삭제된 행 표시 ───────────────────────────────────── */
+.sdm-mark {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius);
+  background: #ede0e0;
+  color: #8a4b45;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.sdm-actions {
+  display: inline-flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* 되돌릴 수 없는 버튼은 되돌릴 수 있는 버튼과 같은 회색으로 두지 않는다. */
+.row-edit.is-purge {
+  color: #b3261e;
+  border-color: #f3d0cd;
+}
+
+.row-edit.is-purge:hover {
+  color: #8f1d17;
+  background: #fdecec;
+  border-color: #e0a9a5;
+}
+
+.row-edit:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/**
+ * 삭제된 행 — 살아 있는 행과 섞여 보이면 판단이 오염된다.
+ * 색만으로 구분하지 않는다(취소선 + `삭제됨` 배지). 버튼 글자에는 취소선을 걸지 않는다 —
+ * 눌러야 하는 것까지 지워진 것처럼 보이면 복구 경로가 안 읽힌다.
+ */
+.is-deleted-row {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.is-deleted-row td {
+  text-decoration: line-through;
+  text-decoration-color: var(--text-muted);
+}
+
+.is-deleted-row button,
+.is-deleted-row .sdm-mark {
+  text-decoration: none;
+}

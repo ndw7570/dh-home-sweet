@@ -19,6 +19,9 @@ const crud = (path) => ({
   update: (id, body) => api.patch(`/${path}/${id}/`, body),
   remove: (id) => api.del(`/${path}/${id}/`), // 소프트삭제
   restore: (id) => api.patch(`/${path}/${id}/restore/`, {}),
+  // 물리 삭제 — 되돌릴 수 없다. 서버는 **이미 소프트딜리트된 행만** 받는다
+  // (살아 있는 행이면 400). 화면에서도 is_deleted === true 인 행에만 버튼을 노출한다.
+  purge: (id) => api.del(`/${path}/${id}/purge/`),
 });
 
 // ── 화면 전용 조회 ────────────────────────────────
@@ -60,8 +63,8 @@ export const fetchAiFeedbackFor = (tableName, objectIds = []) =>
 export const fetchChoices = () => wrap(() => api.get("/meta/choices/"), () => mock.choices);
 
 // ── 계좌 · 종목 ───────────────────────────────────
-export const listBrokerAccounts = () =>
-  wrap(() => api.get("/broker-account/", { no_page: 1 }), () => mock.brokerAccounts);
+export const listBrokerAccounts = (params = {}) =>
+  wrap(() => api.get("/broker-account/", { no_page: 1, ...params }), () => mock.brokerAccounts);
 export const brokerAccount = crud("broker-account");
 
 export const listSecurities = (params = {}) =>
@@ -162,6 +165,28 @@ export const order = crud("order");
 export const listPerformanceRecords = (params = {}) =>
   wrap(() => api.get("/performance-record/", params), () => mock.performanceRecords);
 export const performanceRecord = crud("performance-record");
+
+// ── 시세 (market_data) ────────────────────────────
+// 전부 읽기 전용이다. 봉과 종목은 수집기가 KIS 에서 받아 쌓는 사실 기록이라 화면이
+// 만들거나 고칠 수 없다(POST/PUT/PATCH/DELETE 는 405). 수집 대상을 바꾸는 스위치는
+// 종목 화면의 `관리대상`(securities.is_active) 하나뿐이다.
+//
+// 목 데이터는 빈 배열로 둔다. 백엔드 인계 문서 기준 지금 봉 테이블이 0건이라
+// **0건이 기본 상태**고, 목에 가짜 봉을 넣으면 화면이 있지도 않은 시세를 그린다.
+
+export const listMarketSymbols = (params = {}) =>
+  wrap(() => api.get("/market-symbol/", { no_page: 1, ...params }), () => []);
+
+/**
+ * 일봉. **종목 지정이 필수다** — `symbol`(종목코드) 또는 `symbol_id` 없이 부르면 400 이다.
+ * 종목 없이 전체 봉을 긁는 질의는 수백만 행까지 가서 DB 와 화면이 함께 멈춘다.
+ */
+export const listDailyCandles = (params = {}) =>
+  wrap(() => api.get("/market-daily-candle/", { no_page: 1, ...params }), () => []);
+
+/** 분봉. 일봉과 같이 종목 지정이 필수다. `date` 는 KST 기준(`ts` 는 UTC 로 내려온다). */
+export const listMinuteCandles = (params = {}) =>
+  wrap(() => api.get("/market-minute-candle/", { no_page: 1, ...params }), () => []);
 
 // ── AI ────────────────────────────────────────────
 export const listAiModelRuns = (params = {}) =>

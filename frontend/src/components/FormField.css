@@ -68,6 +68,30 @@
   font-weight: 500;
 }
 
+/**
+ * 지금 적은 값에서 바로 따라 나오는 수 (수량 × 지정가격 = 체결금액).
+ * 이번 사고는 464,000 × 20 = 9,280,000 이 한 번만 눈에 보였어도 그 자리에서 걸렸다.
+ * 힌트보다 진하게 둔다 — 설명이 아니라 값이다.
+ */
+.ff-live {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* 저장하기 전의 경고. 막지는 않고 눈에만 걸리게 한다. */
+.ff-warn {
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--warning);
+  background: var(--warning-bg);
+  border: 1px solid #e7cd9b;
+  border-radius: var(--radius);
+  padding: 5px 8px;
+}
+
 .ff-confidence {
   display: flex;
   align-items: center;

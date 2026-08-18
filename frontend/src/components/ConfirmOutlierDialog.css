@@ -1,0 +1,83 @@
+/* 폼 모달(z-index 100) 위에 겹친다. */
+.cod-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(25, 31, 40, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+
+.cod {
+  background: var(--surface-card);
+  border-radius: var(--radius-card);
+  border-top: 4px solid var(--warning);
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 22px 18px;
+  box-shadow: 0 16px 48px rgba(25, 31, 40, 0.3);
+}
+
+.cod-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--warning);
+}
+
+.cod-field {
+  margin-top: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* 서버가 계산해 준 문장이 이 창의 본문이다 — 수량과 현재가를 나란히 보여 준다. */
+.cod-message {
+  margin-top: 4px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  word-break: keep-all;
+}
+
+.cod-note {
+  margin-top: 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.cod-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* 검사를 통과시키는 쪽은 눈에 덜 띄게 둔다. 기본 버튼은 `수정하기` 다. */
+.cod-keep {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.cod .btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 520px) {
+  .cod-actions {
+    flex-direction: column-reverse;
+  }
+  .cod-actions .btn {
+    width: 100%;
+  }
+}

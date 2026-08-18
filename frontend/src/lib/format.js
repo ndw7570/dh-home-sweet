@@ -137,6 +137,58 @@ export const dateTime = (d) => {
   )} ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
 };
 
+/**
+ * "5분 전". 수집 시세가 **얼마나 낡았는지**를 읽는 자리에 쓴다.
+ *
+ * 절대시각만 띄우면 사용자가 지금 시각과 머릿속에서 빼야 한다. 시세는 그 뺄셈의
+ * 결과가 값 자체만큼 중요하다 — 30분 낡은 73,800 은 현재가가 아니라 흔적이다.
+ * 절대시각은 title 속성으로 같이 달아 둘 것.
+ */
+export const sinceLabel = (d, now = new Date()) => {
+  if (!d) return "";
+  const t = new Date(d);
+  if (Number.isNaN(t.getTime())) return "";
+  const sec = Math.round((now.getTime() - t.getTime()) / 1000);
+  if (sec < 0) return "곧";
+  if (sec < 60) return "방금";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}분 전`;
+  const hour = Math.floor(min / 60);
+  if (hour < 24) return `${hour}시간 전`;
+  return `${Math.floor(hour / 24)}일 전`;
+};
+
+/** 몇 분 지났는가. 수집이 멈췄는지 판단하는 자리에서 쓴다. null 이면 판단 불가. */
+export const minutesSince = (d, now = new Date()) => {
+  if (!d) return null;
+  const t = new Date(d);
+  if (Number.isNaN(t.getTime())) return null;
+  return (now.getTime() - t.getTime()) / 60000;
+};
+
+/**
+ * UTC 로 내려온 시각을 로컬(KST) `HH:MM` 으로. 분봉 축에 쓴다.
+ * 분봉의 `ts` 는 봉이 **시작**하는 시각이고 UTC 로 저장된다 —
+ * 09:00 KST 봉은 `2026-08-18T00:00:00Z` 라, 그대로 찍으면 하루 장이 00:00 에 열린 것처럼 보인다.
+ */
+export const clockTime = (d) => {
+  if (!d) return "";
+  const t = new Date(d);
+  if (Number.isNaN(t.getTime())) return "";
+  return `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
+};
+
+/** 거래량·거래대금처럼 자릿수가 큰 정수를 짧게. 축과 표에서 쓴다. */
+export const compactNum = (v) => {
+  if (v == null) return "—";
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  if (abs >= 1e8) return `${(n / 1e8).toFixed(abs >= 1e9 ? 0 : 1).replace(/\.0$/, "")}억`;
+  if (abs >= 1e4) return `${(n / 1e4).toFixed(abs >= 1e5 ? 0 : 1).replace(/\.0$/, "")}만`;
+  return n.toLocaleString("ko-KR");
+};
+
 /** 확신도 1~5 를 막대로. 숫자보다 눈에 먼저 들어와야 한다. */
 export const confidenceBar = (score) =>
   score == null ? "—" : "●".repeat(score) + "○".repeat(Math.max(0, 5 - score));

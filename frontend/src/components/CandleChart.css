@@ -1,0 +1,271 @@
+/**
+ * 봉 차트.
+ *
+ * 색 규약은 KRX 관례 — 상승 빨강 / 하락 파랑. 근거는 CandleChart.jsx 머리말에 적어 뒀다.
+ * 두 색은 여기 한 곳에만 있으니 규약을 바꾸려면 이 두 변수만 고치면 된다.
+ */
+.cc {
+  --cc-up: #b3261e;
+  --cc-down: #1b57c4;
+  --cc-flat: #8b95a1;
+}
+
+.cc-plot {
+  position: relative;
+  border-radius: var(--radius);
+}
+
+.cc-plot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cc-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+
+/* 격자·축은 실선 헤어라인이고 표면에서 한 단계만 떨어진다. 점선은 '임계선' 으로 오독된다. */
+.cc-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.cc-tick {
+  font-size: 10px;
+  fill: var(--text-muted);
+}
+
+.cc-axis-name {
+  font-size: 9.5px;
+  fill: var(--text-muted);
+}
+
+/* ── 봉 ─────────────────────────────────────────── */
+.cc-wick {
+  stroke-width: 1;
+}
+
+.cc-candle.is-up .cc-wick,
+.cc-candle.is-up .cc-body,
+.cc-candle.is-up .cc-vol {
+  stroke: var(--cc-up);
+  fill: var(--cc-up);
+}
+
+.cc-candle.is-down .cc-wick,
+.cc-candle.is-down .cc-body,
+.cc-candle.is-down .cc-vol {
+  stroke: var(--cc-down);
+  fill: var(--cc-down);
+}
+
+.cc-candle.is-flat .cc-wick,
+.cc-candle.is-flat .cc-body,
+.cc-candle.is-flat .cc-vol {
+  stroke: var(--cc-flat);
+  fill: var(--cc-flat);
+}
+
+/* 거래량은 가격을 읽는 것을 방해하면 안 된다. 같은 색을 옅게 깐다. */
+.cc-vol {
+  opacity: 0.45;
+}
+
+/* 커서가 짚은 봉은 반응한다 — 십자선만으로는 어느 봉인지 확신이 안 선다. */
+.cc-candle.is-active .cc-body,
+.cc-candle.is-active .cc-wick {
+  stroke-width: 2;
+}
+
+.cc-candle.is-active .cc-vol {
+  opacity: 0.8;
+}
+
+/* 마지막 종가 — 구간 전체가 오른 것인지 내린 것인지 한 줄로 말한다. */
+.cc-lastline {
+  stroke-width: 1;
+  stroke-dasharray: none;
+  opacity: 0.5;
+}
+
+.cc-lastmark.is-up .cc-lastline {
+  stroke: var(--cc-up);
+}
+.cc-lastmark.is-down .cc-lastline {
+  stroke: var(--cc-down);
+}
+
+/* 글자는 데이터 색을 입지 않는다. 색은 옆의 선이 지고 숫자는 본문색으로 읽는다. */
+.cc-lastlabel {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--text-primary);
+}
+
+.cc-cross {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+/* ── 툴팁 ───────────────────────────────────────── */
+.cc-tip {
+  position: absolute;
+  top: 6px;
+  transform: translateX(8px);
+  min-width: 132px;
+  padding: 8px 10px;
+  background: var(--surface-card);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(25, 31, 40, 0.14);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 오른쪽 끝에서는 툴팁이 밖으로 새므로 반대편으로 넘긴다. */
+.cc-tip.is-left {
+  transform: translateX(calc(-100% - 8px));
+}
+
+.cc-tip-when {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.cc-tip-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cc-tip-rows > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cc-tip-rows dt {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+/* 값이 앞서고 이름이 따른다 — 여기서 사용자는 이미 어느 봉인지 알고 숫자를 원한다. */
+.cc-tip-rows dd {
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.cc-tip-strong {
+  font-weight: 700;
+}
+
+/* ── 범례 · 표 ──────────────────────────────────── */
+.cc-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.cc-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.cc-key {
+  display: inline-block;
+  width: 9px;
+  height: 12px;
+  border-radius: 1px;
+}
+
+.cc-key + .cc-key,
+.cc-legend .cc-key:not(:first-child) {
+  margin-left: 8px;
+}
+
+.cc-key.is-up {
+  background: var(--cc-up);
+}
+.cc-key.is-down {
+  background: var(--cc-down);
+}
+.cc-key.is-flat {
+  background: var(--cc-flat);
+}
+
+.cc-foot-hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.cc-foot .row-edit {
+  margin-left: auto;
+}
+
+.cc-table-scroll {
+  margin-top: 10px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.cc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.cc-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-card);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: right;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.cc-table th:first-child,
+.cc-table td:first-child {
+  text-align: left;
+}
+
+.cc-table td {
+  padding: 6px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+/* ── 빈 상태 ────────────────────────────────────── */
+.cc-empty {
+  padding: 28px 4px;
+}
+
+.cc-empty-msg {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.cc-empty-hint {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}

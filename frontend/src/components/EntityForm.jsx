@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 
+import ConfirmOutlierDialog from "./ConfirmOutlierDialog";
 import FormField from "./FormField";
+import { fieldErrors, isOutlierMessage, stripConfirmHint } from "../lib/apiError";
 import { useChoices } from "../lib/useChoices";
 import "./FormField.css";
 import "./EntityForm.css";
@@ -102,18 +104,22 @@ function validateLocal(fields, values) {
   return errors;
 }
 
-/** `{field: ["msg"]}` / `{field: "msg"}` / 문자열 어느 쪽으로 와도 필드 맵으로 만든다. */
+/**
+ * 서버 에러를 필드 맵으로 만들되, 사람에게 안 보여야 할 안내는 걷어 낸다.
+ *
+ * 이상값 검증 메시지는 `… 맞다면 confirm_outlier=true 로 다시 보내라.` 로 끝난다.
+ * 그건 API 를 부르는 쪽에게 하는 말이라, 화면은 그 문장 대신 버튼 두 개를 놓는다
+ * (`ConfirmOutlierDialog`). 어느 필드가 그 종류였는지는 `outlier` 로 따로 돌려준다.
+ */
 function serverErrors(err) {
-  const payload = err?.payload;
-  const results = payload?.results;
-  if (results && typeof results === "object" && !Array.isArray(results)) {
-    const out = {};
-    for (const [k, v] of Object.entries(results)) {
-      out[k] = Array.isArray(v) ? v.join(" ") : String(v);
-    }
-    return out;
+  const raw = fieldErrors(err);
+  const out = {};
+  let outlier = null;
+  for (const [k, v] of Object.entries(raw)) {
+    if (!outlier && isOutlierMessage(v)) outlier = { field: k, message: stripConfirmHint(v) };
+    out[k] = stripConfirmHint(v);
   }
-  return { __all__: payload?.message || err?.message || "저장하지 못했다." };
+  return { errors: out, outlier };
 }
 
 /**
@@ -153,11 +159,14 @@ export default function EntityForm({
   onCancel,
   onDelete,
   submitLabel,
+  ctx,
 }) {
   const { choices } = useChoices();
   const [values, setValues] = useState(() => initialValues(fields, instance));
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
+  // 서버가 "이 값 맞나" 로 세운 저장. 사람이 확인해 주면 그때 confirm_outlier 를 붙여 다시 보낸다.
+  const [outlier, setOutlier] = useState(null);
 
   const isEdit = Boolean(instance?.id ?? instance?.person_id);
   const grouped = useMemo(() => fields.filter((f) => !f.hidden), [fields]);
@@ -165,6 +174,26 @@ export default function EntityForm({
   const change = (name, value) => {
     setValues((v) => ({ ...v, [name]: value }));
     setErrors((e) => (e[name] || e.__all__ ? { ...e, [name]: undefined, __all__: undefined } : e));
+  };
+
+  /**
+   * 실제 전송. `confirmed` 일 때만 `confirm_outlier` 를 얹는다.
+   * 평상시에 늘 붙여 보내면 이상값 검증이 통째로 죽는다 — 그래서 사람이 누른 경로에서만 붙인다.
+   */
+  const send = async (payload, confirmed = false) => {
+    setBusy(true);
+    setErrors({});
+    try {
+      await onSubmit(confirmed ? { ...payload, confirm_outlier: true } : payload);
+    } catch (err) {
+      const { errors: mapped, outlier: found } = serverErrors(err);
+      setErrors(mapped);
+      // 확인만 하면 통과하는 종류라면 되묻는다. 아니면 필드 밑 메시지로 끝난다.
+      setOutlier(found ? { ...found, payload } : null);
+      setBusy(false);
+      return;
+    }
+    setBusy(false);
   };
 
   const submit = async (e) => {
@@ -176,31 +205,27 @@ export default function EntityForm({
       setErrors(local);
       return;
     }
-
-    setBusy(true);
-    setErrors({});
-    try {
-      await onSubmit(toPayload(fields, values));
-    } catch (err) {
-      setErrors(serverErrors(err));
-      setBusy(false);
-      return;
-    }
-    setBusy(false);
+    await send(toPayload(fields, values));
   };
 
   const remove = async () => {
     if (busy || !onDelete) return;
-    // 소프트삭제라 되살릴 수는 있지만, 화면에서 되살리는 경로가 아직 없다. 그래서 묻는다.
-    if (!window.confirm("삭제한다. (물리 삭제가 아니라 is_deleted 만 켠다)")) return;
+    if (
+      !window.confirm(
+        "삭제 표시만 한다(is_deleted=true). 행은 남아 있고, 목록의 `삭제분 포함 보기` 에서 복구하거나 영구 삭제할 수 있다."
+      )
+    )
+      return;
     setBusy(true);
     try {
       await onDelete();
     } catch (err) {
-      setErrors(serverErrors(err));
+      setErrors(serverErrors(err).errors);
       setBusy(false);
     }
   };
+
+  const outlierLabel = outlier && fields.find((f) => f.name === outlier.field)?.label;
 
   return (
     <form className="ef" onSubmit={submit} noValidate>
@@ -214,6 +239,9 @@ export default function EntityForm({
             field={f.type === "ref" ? { ...f, options: optionsMap?.[f.optionsKey || f.name] || [] } : f}
             value={values[f.name]}
             error={errors[f.name]}
+            // 저장을 눌러 보기 전에 알려 줄 수 있는 것 — 체결금액, 수량/가격 뒤바뀜 의심.
+            // 서버 왕복을 기다렸다가 알려 주면 이미 한 번 틀린 값을 확정한 뒤다.
+            live={f.live?.(values, ctx)}
             choices={choices}
             onChange={change}
           />
@@ -236,6 +264,20 @@ export default function EntityForm({
           {busy ? "저장 중…" : submitLabel || (isEdit ? "수정" : "추가")}
         </button>
       </div>
+
+      {outlier && (
+        <ConfirmOutlierDialog
+          message={outlier.message}
+          fieldLabel={outlierLabel}
+          busy={busy}
+          onEdit={() => setOutlier(null)}
+          onConfirm={async () => {
+            const pending = outlier.payload;
+            setOutlier(null);
+            await send(pending, true);
+          }}
+        />
+      )}
     </form>
   );
 }

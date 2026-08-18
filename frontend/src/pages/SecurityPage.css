@@ -2,10 +2,23 @@
   margin-bottom: 16px;
 }
 
+.sp-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+
 .sp-name {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  flex-wrap: wrap;
 }
 
 .sp-symbol {

@@ -1,0 +1,61 @@
+.smp {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.smp-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.smp-h-meta {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.smp-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 구간 선택 — 차트 위 한 줄. 마크가 아니라 평범한 폼 컨트롤로 둔다. */
+.smp-ranges {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.smp-range {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 5px 11px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.smp-range:first-child {
+  border-left: 0;
+}
+
+.smp-range:hover {
+  background: var(--surface-sunken);
+}
+
+.smp-range.is-on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}

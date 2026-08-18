@@ -584,6 +584,39 @@ export const PERFORMANCE_RECORD_FIELDS = [
 // ─────────────────────────────────────────────
 //  이행
 // ─────────────────────────────────────────────
+
+/**
+ * 이행 입력의 1차 방어 — 저장을 누르기 전에 화면에서 먼저 말한다.
+ *
+ * 실제로 난 사고: 현대자동차(현재가 450,500) 20주 매수를 적으면서 수량 칸에 464,000 을,
+ * 지정가격 칸에 20 을 넣었다. 아무것도 막지 않아 그대로 저장됐고 보유수량이 464,026 이
+ * 됐다. 서버에도 같은 검증이 들어갔지만(`constants/validation.py`), 서버 왕복을 기다려
+ * 알려 주면 이미 한 번 틀린 값을 확정한 뒤다. 여기서 먼저 눈에 걸리게 한다.
+ *
+ * 임계값은 백엔드 상수를 그대로 옮긴 것이다. 두 쪽이 어긋나면 "화면은 조용한데 서버가
+ * 막는" 구간이 생겨 사용자가 이유를 못 찾는다. 백엔드 값을 고치면 여기도 같이 고친다.
+ */
+const PRICE_OUTLIER_RATIO = 10; // 지정가격이 현재가의 1/10 ~ 10배 밖이면 자릿수 의심
+const QUANTITY_LOOKS_LIKE_PRICE_TOLERANCE = 0.3; // 수량이 현재가와 ±30% 안이면 뒤바뀜 의심
+const MAX_PLAUSIBLE_QUANTITY = 1_000_000; // 한 건의 이행이 넘을 일 없는 수량
+
+const numOf = (v) => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(String(v).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : null;
+};
+
+const ko = (n) => Math.round(n).toLocaleString("ko-KR");
+
+/** 지금 고른 종목의 현재가. 화면이 `ctx.securities` 로 넘겨 준 목록에서 찾는다. */
+const currentPriceOf = (values, ctx) => {
+  const id = Number(values?.security);
+  if (!Number.isFinite(id) || id === 0) return null;
+  const found = (ctx?.securities || []).find((s) => Number(s.id) === id);
+  const price = numOf(found?.current_price);
+  return price != null && price > 0 ? price : null;
+};
+
 export const ORDER_FIELDS = [
   { name: "security", label: "종목", type: "ref", optionsKey: "securities", required: true },
   {
@@ -596,13 +629,49 @@ export const ORDER_FIELDS = [
   },
   { name: "side", label: "매수매도", type: "choice", choiceKey: "order_side", half: true },
   { name: "order_type", label: "주문유형", type: "choice", choiceKey: "order_type", half: true },
-  { name: "quantity", label: "수량", type: "number", min: 1, half: true },
+  {
+    name: "quantity",
+    label: "수량",
+    type: "number",
+    min: 1,
+    half: true,
+    live: (v, ctx) => {
+      const q = numOf(v.quantity);
+      if (q == null) return null;
+      const current = currentPriceOf(v, ctx);
+      // 뒤바뀜을 먼저 본다. 수량이 현재가와 거의 같으면 그 칸에 가격을 적은 것이다.
+      if (current != null && Math.abs(q - current) <= current * QUANTITY_LOOKS_LIKE_PRICE_TOLERANCE)
+        return {
+          warn: `수량 자리에 가격을 적지 않았는지 확인하세요. 적은 수량 ${ko(q)} · 이 종목 현재가 ${ko(current)} — 거의 같은 값입니다.`,
+        };
+      if (q > MAX_PLAUSIBLE_QUANTITY)
+        return {
+          warn: `수량 ${ko(q)} — 한 건의 이행으로는 너무 큽니다. 자릿수를 확인하세요.`,
+        };
+      return null;
+    },
+  },
   {
     name: "limit_price",
     label: "지정가격",
     type: "price",
     half: true,
     hint: "지정가/역지정지정가 주문에는 필수다. 계획 대비 대조가 이 값을 쓴다.",
+    live: (v, ctx) => {
+      const price = numOf(v.limit_price);
+      const q = numOf(v.quantity);
+      const current = currentPriceOf(v, ctx);
+      const out = {};
+      // 체결금액. 이번 사고는 464,000 × 20 = 9,280,000 이 한 번만 보였어도 그 자리에서 걸렸다.
+      if (price != null && q != null) out.note = `체결금액 ${ko(q * price)}원 (${ko(q)}주 × ${ko(price)})`;
+      if (
+        price != null &&
+        current != null &&
+        (price < current / PRICE_OUTLIER_RATIO || price > current * PRICE_OUTLIER_RATIO)
+      )
+        out.warn = `지정가격 ${ko(price)} · 이 종목 현재가 ${ko(current)} — ${PRICE_OUTLIER_RATIO}배 범위를 벗어납니다. 자릿수를 확인하세요.`;
+      return out.note || out.warn ? out : null;
+    },
   },
   { name: "executed_at", label: "이행시각", type: "datetime", half: true },
   {

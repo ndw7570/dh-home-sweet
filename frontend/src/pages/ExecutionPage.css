@@ -291,3 +291,36 @@
   padding: 24px 4px;
   color: var(--text-muted);
 }
+
+.ep-loaderr {
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  background: #fdecec;
+  border: 1px solid #f3d0cd;
+  color: #b3261e;
+  font-size: 13px;
+}
+
+/**
+ * 삭제분 목록은 기간 필터 밖에 둔다 — 지우려던 행은 대개 이행시각이 이상하거나
+ * 비어 있어서, 기간으로 좁히면 정작 찾던 행이 조회에서 샌다. 그 사실을 목록 위에 적어 둔다.
+ */
+.ep-deleted-note {
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.ep-deleted-note strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.ep-del-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}

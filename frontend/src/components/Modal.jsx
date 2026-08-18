@@ -17,6 +17,10 @@ import "./Modal.css";
  *   2. 이 창 안에서 뭔가 입력·선택한 뒤라면 묻고 닫는다. 적어 둔 것이 말 없이
  *      사라지는 것이 이 화면에서 가장 나쁜 일이다.
  * 명시적으로 누른 X·취소는 묻지 않는다 — 그건 실수가 아니라 의사표시다.
+ *
+ * 이 창 위에 또 다른 확인 창이 떠 있으면(`[data-nested-dialog]`) ESC 를 흘려보낸다.
+ * "이 값이 맞습니까" 를 ESC 로 물리려던 순간 뒤에 있던 폼까지 같이 닫히면,
+ * 사용자는 확인을 취소했을 뿐인데 적어 둔 것이 통째로 사라진다.
  */
 export default function Modal({ title, subtitle, onClose, busy, children, wide }) {
   const panelRef = useRef(null);
@@ -33,7 +37,9 @@ export default function Modal({ title, subtitle, onClose, busy, children, wide }
 
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === "Escape") requestClose();
+      if (e.key !== "Escape") return;
+      if (document.querySelector("[data-nested-dialog]")) return;
+      requestClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);

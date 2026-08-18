@@ -1,16 +1,27 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import AsyncState from "../components/AsyncState";
 import Badge from "../components/Badge";
 import DataTable from "../components/DataTable";
 import EntityForm from "../components/EntityForm";
 import { EditButton } from "../components/EntityModal";
+import { MarketPriceCell, MarketStatusBanner } from "../components/MarketStatus";
 import MetricCard, { MetricRow } from "../components/MetricCard";
 import Modal from "../components/Modal";
 import Panel from "../components/Panel";
+import PurgeDialog from "../components/PurgeDialog";
+import SecurityMarketPanel from "../components/SecurityMarketPanel";
+import SoftDeleteToggle, {
+  aliveOnly,
+  DeletedMark,
+  DeletedRowActions,
+  isDeleted,
+  SoftDeleteBanner,
+} from "../components/SoftDeleteToggle";
 import {
   brokerAccount,
   listBrokerAccounts,
+  listMarketSymbols,
   listSecurities,
   listSecuritiesLoans,
   securitiesLoan,
@@ -24,6 +35,7 @@ import {
 import { isoDate, price, qty, won } from "../lib/format";
 import { useAsyncAll } from "../lib/useAsync";
 import { useMultiForm } from "../lib/useMultiForm";
+import { useSoftDelete } from "../lib/useSoftDelete";
 import "./SecurityPage.css";
 
 /**
@@ -36,14 +48,34 @@ import "./SecurityPage.css";
 
 const WARN_RATIO = 140;
 
+/** 물리 삭제 확인 창의 요약 한 줄. 무엇을 지우는지 값으로 보여 준다. */
+const SUMMARY = {
+  SECURITY: (r) => `${r.name || "이름 없음"} (${r.symbol || "코드 없음"})`,
+  ACCOUNT: (r) => `${r.broker_name || "증권사"} ${r.masked_account_number || ""}`.trim(),
+  LOAN: (r) =>
+    [
+      r.security_detail ? `${r.security_detail.name} (${r.security_detail.symbol})` : "종목 없음",
+      `대출원금 ${won(r.principal_amount)}`,
+    ].join(" · "),
+};
+
 export default function SecurityPage() {
+  const [mode, setMode] = useState("alive");
+  // 차트를 열어 둔 종목. 행 객체가 아니라 **id 만** 들고 아래에서 다시 찾는다 —
+  // 객체를 쥐고 있으면 저장·복구로 목록이 갱신된 뒤에도 옛 행을 그리게 되고,
+  // 필터가 바뀌어 그 행이 목록에서 사라져도 차트만 남는다.
+  const [chartForId, setChartForId] = useState(null);
+
   const { data, error, loading, reload } = useAsyncAll(
     {
-      accounts: () => listBrokerAccounts(),
-      securities: () => listSecurities(),
-      loans: () => listSecuritiesLoans(),
+      accounts: () => listBrokerAccounts({ soft_delete_mode: mode }),
+      securities: () => listSecurities({ soft_delete_mode: mode }),
+      loans: () => listSecuritiesLoans({ soft_delete_mode: mode }),
+      // 수집 시세. 종목코드로 잇는다 — securities 는 계좌별로 행이 갈리지만
+      // market_symbols 는 종목코드당 하나라 FK 가 아니라 코드가 접점이다.
+      marketSymbols: () => listMarketSymbols(),
     },
-    []
+    [mode]
   );
 
   const kinds = useMemo(
@@ -55,27 +87,70 @@ export default function SecurityPage() {
     []
   );
   const form = useMultiForm(kinds, reload);
+  const life = useSoftDelete(reload);
 
   const securities = data?.securities || [];
   const loans = data?.loans || [];
   const accounts = data?.accounts || [];
+  const marketSymbols = data?.marketSymbols || [];
+
+  /** 종목코드 → 수집 종목 행. 목록을 그릴 때마다 훑지 않도록 한 번만 만든다. */
+  const marketBySymbol = useMemo(() => {
+    const map = new Map();
+    for (const s of marketSymbols) map.set(String(s.symbol), s);
+    return map;
+  }, [marketSymbols]);
+
+  // 삭제된 행에는 차트를 열지 않는다 — 지운 종목의 시세를 그리면 살아 있는 것처럼 읽힌다.
+  const chartFor = securities.find((s) => s.id === chartForId && !isDeleted(s)) || null;
 
   const optionsMap = useMemo(
     () => ({
-      accounts: accounts.map((a) => ({
+      // FK 셀렉트에는 살아 있는 것만 올린다. 삭제 표시된 계좌·종목을 고를 수 있게 두면
+      // 지운 것에 새 데이터를 매다는 길이 열린다.
+      accounts: aliveOnly(accounts).map((a) => ({
         value: a.id,
         label: `${a.broker_name || "증권사"} ${a.masked_account_number || ""}`.trim(),
       })),
-      securities: securities.map((s) => ({ value: s.id, label: `${s.name} (${s.symbol})` })),
+      securities: aliveOnly(securities).map((s) => ({
+        value: s.id,
+        label: `${s.name} (${s.symbol})`,
+      })),
     }),
     [accounts, securities]
   );
 
-  const totalValue = securities.reduce((sum, s) => sum + (s.market_value || 0), 0);
-  const totalLoan = loans.reduce((sum, l) => sum + Number(l.principal_amount || 0), 0);
-  const riskyLoans = loans.filter(
+  /**
+   * 합계·지표는 **반드시 살아 있는 행만** 센다.
+   * 삭제분을 켜 둔 채 평가금액 합계를 읽으면 지운 종목이 자산에 다시 끼어드는데,
+   * 그건 이번에 보유수량 464,026 을 만든 것과 같은 종류의 오해다.
+   */
+  const aliveSecurities = aliveOnly(securities);
+  const aliveLoans = aliveOnly(loans);
+  const aliveAccounts = aliveOnly(accounts);
+
+  const totalValue = aliveSecurities.reduce((sum, s) => sum + (s.market_value || 0), 0);
+  const totalLoan = aliveLoans.reduce((sum, l) => sum + Number(l.principal_amount || 0), 0);
+  const riskyLoans = aliveLoans.filter(
     (l) => l.collateral_ratio != null && Number(l.collateral_ratio) <= WARN_RATIO
   );
+
+  // 배너는 이 화면 전체(계좌·종목·대출)를 두고 말한다 — 한 표만 세면 다른 표의 삭제분을 놓친다.
+  const totalRows = securities.length + loans.length + accounts.length;
+  const aliveRows = aliveSecurities.length + aliveLoans.length + aliveAccounts.length;
+  const deletedCount = totalRows - aliveRows;
+
+  /** 삭제된 행이면 복구·영구삭제, 아니면 기존 수정 버튼. */
+  const rowActions = (kind, api) => (r) =>
+    isDeleted(r) ? (
+      <DeletedRowActions
+        busy={life.busyId === r.id}
+        onRestore={() => life.restore(api, r)}
+        onPurge={() => life.askPurge(api, r, SUMMARY[kind](r), `${kind.toLowerCase()}.id=${r.id}`)}
+      />
+    ) : (
+      <EditButton onClick={() => form.openEdit(kind, r.id)} />
+    );
 
   return (
     <AsyncState loading={loading} error={error} onRetry={reload}>
@@ -84,12 +159,32 @@ export default function SecurityPage() {
           {form.loadError && (
             <p className="sp-loaderr">원본을 불러오지 못했다 — {String(form.loadError.message)}</p>
           )}
+          {life.error && (
+            <p className="sp-loaderr" role="alert">
+              {life.error}
+            </p>
+          )}
+
+          <div className="sp-controls">
+            <SoftDeleteToggle value={mode} onChange={setMode} id="sp-sdm" />
+          </div>
+
+          <MarketStatusBanner symbols={marketSymbols} />
+
+          <SoftDeleteBanner
+            mode={mode}
+            deletedCount={deletedCount}
+            aliveCount={aliveRows}
+            onReset={() => setMode("alive")}
+          />
 
           <MetricRow>
             <MetricCard
               label="평가금액 합계"
               value={won(totalValue)}
-              hint={`관리대상 ${securities.filter((s) => s.is_active).length}종목`}
+              hint={`관리대상 ${aliveSecurities.filter((s) => s.is_active).length}종목${
+                mode === "alive" ? "" : " · 삭제분은 안 센다"
+              }`}
             />
             <MetricCard
               label="담보대출 원금"
@@ -114,8 +209,8 @@ export default function SecurityPage() {
               <button
                 className="btn is-sm"
                 onClick={() => form.openCreate("LOAN")}
-                disabled={!securities.length}
-                title={securities.length ? undefined : "종목을 먼저 등록한다"}
+                disabled={!aliveSecurities.length}
+                title={aliveSecurities.length ? undefined : "종목을 먼저 등록한다"}
               >
                 + 대출
               </button>
@@ -124,16 +219,26 @@ export default function SecurityPage() {
             <DataTable
               rows={loans}
               empty="담보대출이 없다."
+              rowClass={(r) => (isDeleted(r) ? "is-deleted-row" : "")}
               columns={[
                 {
                   key: "security",
                   label: "종목",
-                  render: (r) =>
-                    r.security_detail ? (
+                  render: (r) => {
+                    // 값이 없으면 null 을 돌려 DataTable 이 `—` 를 찍게 둔다.
+                    const name = r.security_detail ? (
                       <span className="num">
                         {r.security_detail.name} {r.security_detail.symbol}
                       </span>
-                    ) : null,
+                    ) : null;
+                    if (!isDeleted(r)) return name;
+                    return (
+                      <span className="sp-name">
+                        <DeletedMark />
+                        {name}
+                      </span>
+                    );
+                  },
                 },
                 {
                   key: "principal_amount",
@@ -179,8 +284,8 @@ export default function SecurityPage() {
                   key: "_edit",
                   label: "",
                   align: "right",
-                  width: 60,
-                  render: (r) => <EditButton onClick={() => form.openEdit("LOAN", r.id)} />,
+                  width: 140,
+                  render: rowActions("LOAN", securitiesLoan),
                 },
               ]}
             />
@@ -188,13 +293,17 @@ export default function SecurityPage() {
 
           <Panel
             title="보유 종목"
-            meta={`${securities.length}종목`}
+            meta={
+              mode === "alive"
+                ? `${securities.length}종목`
+                : `${aliveSecurities.length}종목 + 삭제분 ${securities.length - aliveSecurities.length}건`
+            }
             actions={
               <button
                 className="btn is-sm"
                 onClick={() => form.openCreate("SECURITY")}
-                disabled={!accounts.length}
-                title={accounts.length ? undefined : "증권사계좌를 먼저 등록한다"}
+                disabled={!aliveAccounts.length}
+                title={aliveAccounts.length ? undefined : "증권사계좌를 먼저 등록한다"}
               >
                 + 종목
               </button>
@@ -203,12 +312,14 @@ export default function SecurityPage() {
             <DataTable
               rows={securities}
               empty="등록된 종목이 없다. 계획 계층의 허리라서, 이게 없으면 주계획도 이행도 만들 수 없다."
+              rowClass={(r) => (isDeleted(r) ? "is-deleted-row" : "")}
               columns={[
                 {
                   key: "name",
                   label: "종목",
                   render: (r) => (
                     <span className="sp-name">
+                      {isDeleted(r) && <DeletedMark />}
                       <strong>{r.name}</strong>
                       <span className="num sp-symbol">{r.symbol}</span>
                       {!r.is_active && <Badge tone="muted">관리 제외</Badge>}
@@ -230,9 +341,17 @@ export default function SecurityPage() {
                 },
                 {
                   key: "current_price",
-                  label: "현재가",
+                  label: "현재가 (입력)",
                   align: "right",
                   render: (r) => price(r.current_price),
+                },
+                {
+                  // 사람이 적은 현재가 바로 옆에 둔다. 둘이 벌어져 있다는 사실 자체가
+                  // 이 칸의 정보다 — 떨어뜨려 놓으면 비교가 안 된다.
+                  key: "_market",
+                  label: "수집시세",
+                  align: "right",
+                  render: (r) => <MarketPriceCell entry={marketBySymbol.get(String(r.symbol))} />,
                 },
                 {
                   key: "market_value",
@@ -241,19 +360,50 @@ export default function SecurityPage() {
                   render: (r) => won(r.market_value),
                 },
                 {
+                  key: "_chart",
+                  label: "",
+                  align: "right",
+                  width: 64,
+                  render: (r) =>
+                    isDeleted(r) ? null : (
+                      <button
+                        type="button"
+                        className="row-edit"
+                        onClick={() => setChartForId((id) => (id === r.id ? null : r.id))}
+                        aria-expanded={chartForId === r.id}
+                      >
+                        {chartForId === r.id ? "차트 닫기" : "차트"}
+                      </button>
+                    ),
+                },
+                {
                   key: "_edit",
                   label: "",
                   align: "right",
-                  width: 60,
-                  render: (r) => <EditButton onClick={() => form.openEdit("SECURITY", r.id)} />,
+                  width: 140,
+                  render: rowActions("SECURITY", security),
                 },
               ]}
             />
           </Panel>
 
+          {/* 고른 종목이 있을 때만 마운트한다 — 봉 API 는 종목 없는 조회를 400 으로 막는다. */}
+          {chartFor && (
+            <SecurityMarketPanel
+              key={chartFor.id}
+              security={chartFor}
+              entry={marketBySymbol.get(String(chartFor.symbol))}
+              onClose={() => setChartForId(null)}
+            />
+          )}
+
           <Panel
             title="증권사계좌"
-            meta={`${accounts.length}개`}
+            meta={
+              mode === "alive"
+                ? `${accounts.length}개`
+                : `${aliveAccounts.length}개 + 삭제분 ${accounts.length - aliveAccounts.length}건`
+            }
             actions={
               <button className="btn is-sm" onClick={() => form.openCreate("ACCOUNT")}>
                 + 계좌
@@ -263,8 +413,21 @@ export default function SecurityPage() {
             <DataTable
               rows={accounts}
               empty="등록된 계좌가 없다. 연투자계획과 종목이 둘 다 계좌에 매달리므로 여기서 시작한다."
+              rowClass={(r) => (isDeleted(r) ? "is-deleted-row" : "")}
               columns={[
-                { key: "broker_name", label: "증권사" },
+                {
+                  key: "broker_name",
+                  label: "증권사",
+                  render: (r) =>
+                    isDeleted(r) ? (
+                      <span className="sp-name">
+                        <DeletedMark />
+                        {r.broker_name}
+                      </span>
+                    ) : (
+                      r.broker_name
+                    ),
+                },
                 {
                   key: "masked_account_number",
                   label: "계좌번호",
@@ -280,8 +443,8 @@ export default function SecurityPage() {
                   key: "_edit",
                   label: "",
                   align: "right",
-                  width: 60,
-                  render: (r) => <EditButton onClick={() => form.openEdit("ACCOUNT", r.id)} />,
+                  width: 140,
+                  render: rowActions("ACCOUNT", brokerAccount),
                 },
               ]}
             />
@@ -290,6 +453,8 @@ export default function SecurityPage() {
               그때 단건 조회로 원문을 받아 폼을 채운다.
             </p>
           </Panel>
+
+          {life.purgeTarget && <PurgeDialog {...life.purgeProps} />}
 
           {form.isOpen && (
             <Modal

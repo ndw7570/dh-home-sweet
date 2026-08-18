@@ -48,8 +48,14 @@ function sanitizePriceInput(v) {
  *   라벨(+필수 표시) · 입력 · 그 아래 힌트 또는 **서버가 돌려준 에러**
  * 에러 자리를 힌트와 같은 자리에 둔 이유: 검증에 걸린 이유가 입력 바로 밑에
  * 안 붙으면, 사용자는 어느 칸이 문제인지 모른 채 저장 버튼만 다시 누른다.
+ *
+ * `live` 는 **저장을 누르기 전**에 나오는 것이다 — `{ note, warn }`.
+ *   note  지금 적은 값에서 바로 따라 나오는 수 (수량 × 지정가격 = 체결금액)
+ *   warn  값 자체는 유효하지만 사람이 다시 볼 만한 것 (수량 칸에 가격을 적은 것 같다)
+ * 서버 에러(`error`)와 자리를 나눠 쓴다. 에러는 이미 벌어진 일이고 live 는 벌어지기 전이라,
+ * 둘이 같은 칸을 다투면 "고칠 기회"가 "고쳐야 할 이유"에 밀려 사라진다.
  */
-export default function FormField({ field, value, error, choices, onChange }) {
+export default function FormField({ field, value, error, live, choices, onChange }) {
   const {
     name,
     label,
@@ -211,6 +217,13 @@ export default function FormField({ field, value, error, choices, onChange }) {
         {required && <span className="ff-req" title="필수">*</span>}
       </label>
       {control}
+      {live?.note && <p className="ff-live num">{live.note}</p>}
+      {live?.warn && (
+        <p className="ff-warn" role="status">
+          <span aria-hidden="true">⚠ </span>
+          {live.warn}
+        </p>
+      )}
       {error ? (
         <p className="ff-error">{error}</p>
       ) : (

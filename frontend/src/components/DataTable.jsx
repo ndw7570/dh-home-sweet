@@ -6,8 +6,12 @@ import "./DataTable.css";
  * columns: [{ key, label, align, width, render(row) }]
  * 값이 없을 때 빈칸 대신 `—` 를 찍는다. 빈칸은 '값이 0' 인지 '아직 안 넣었는지'
  * 구분이 안 돼서, 반쯤 채운 데이터로 판단해 버리는 사고가 난다.
+ *
+ * `rowClass(row)` 는 행 자체의 상태를 표에 드러내기 위한 것이다 — 지금은 소프트딜리트된
+ * 행(`is-deleted-row`)에 쓴다. 삭제분이 살아 있는 행과 같은 모양으로 섞여 있으면
+ * 합계를 잘못 읽는다.
  */
-export default function DataTable({ columns, rows, rowKey = "id", empty, onRowClick }) {
+export default function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, rowClass }) {
   if (!rows?.length) {
     return <p className="dt-empty">{empty || "아직 데이터가 없다."}</p>;
   }
@@ -31,7 +35,9 @@ export default function DataTable({ columns, rows, rowKey = "id", empty, onRowCl
           {rows.map((row, i) => (
             <tr
               key={row[rowKey] ?? i}
-              className={onRowClick ? "is-clickable" : ""}
+              className={[onRowClick ? "is-clickable" : "", rowClass?.(row) || ""]
+                .filter(Boolean)
+                .join(" ")}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
             >
               {columns.map((c) => {
