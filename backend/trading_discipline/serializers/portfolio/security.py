@@ -6,35 +6,35 @@ from trading_discipline.serializers._base import DomainPropertySerializer, Domai
 from trading_discipline.serializers.portfolio.broker_account import BrokerAccountParentSerializer
 
 
-class LivePriceMixin(serializers.ModelSerializer):
-    """수집한 시세를 `live` 로 얹는다.
+class PriceOriginMixin(serializers.ModelSerializer):
+    """`current_price` 가 **언제·어디서 온 값인지**를 덧붙인다.
 
-    `current_price`(사람이 입력한 값) 는 그대로 둔다. 지우지 않는 이유는 둘을 나란히
-    보여 주는 것이 이 화면의 쓸모이기 때문이다 — 수기 입력값이 얼마나 낡았는지가
-    그 자리에서 드러난다(현대차가 수기 450,500 / 실제 437,000 이던 적이 있다).
+    값 자체는 `current_price` 에 이미 들어 있다 — 수집기가 그 컬럼을 직접 갱신하므로
+    시세를 따로 실어 보낼 이유가 없다. 여기서 주는 것은 그 숫자를 읽는 데 필요한 맥락뿐이다:
 
-    묶어서 한 덩어리로 내보내는 이유는 계산을 한 번만 하기 위해서다. 필드를 넷으로
-    쪼개면 `resolve_live_price` 가 행마다 네 번 돈다.
+        price_at      그 가격이 관측된 시각 (UTC)
+        price_source  SNAPSHOT(장중 현재가) | MINUTE(분봉) | DAILY(종가) | null(수집 안 됨)
+
+    시각이 필요한 이유는 장중과 마감 후에 같은 숫자가 다른 뜻을 갖기 때문이다.
+    장중 273,000 은 "지금 이 값" 이고 마감 후 273,000 은 "오늘 종가" 다.
+    `price_source` 가 null 이면 수집되지 않는 종목이라 사람이 입력한 값이 그대로 있는 것이다.
+
+    `updated_at` 으로 대신할 수 없다. 그 컬럼은 날짜만 갖고, 시세가 아니라 사람이 이 행을
+    마지막으로 손본 때를 뜻한다.
     """
 
-    live = serializers.SerializerMethodField()
+    price_at = serializers.SerializerMethodField()
+    price_source = serializers.SerializerMethodField()
 
-    def get_live(self, obj) -> dict:
-        resolved = resolve_live_price(obj)
-        price = resolved["price"]
-        quantity = obj.computed_holding_quantity
-        market_value = price * quantity if (price is not None and quantity is not None) else None
-        return {
-            # Decimal 은 문자열로 내보낸다. 다른 금액 필드(DecimalField)와 형식을 맞춰야
-            # 프론트가 한 가지 방법으로만 파싱한다.
-            "price": str(price) if price is not None else None,
-            "at": resolved["at"].isoformat() if resolved["at"] else None,
-            "source": resolved["source"],  # SNAPSHOT | MINUTE | DAILY | null
-            "market_value": str(market_value) if market_value is not None else None,
-        }
+    def get_price_at(self, obj) -> str | None:
+        at = resolve_live_price(obj)["at"]
+        return at.isoformat() if at else None
+
+    def get_price_source(self, obj) -> str | None:
+        return resolve_live_price(obj)["source"]
 
 
-class SecurityListSerializer(LivePriceMixin, DomainPropertySerializer):
+class SecurityListSerializer(PriceOriginMixin, DomainPropertySerializer):
     PROPERTY_FIELDS = ("computed_holding_quantity", "market_value")
 
     class Meta:
@@ -50,7 +50,7 @@ class SecurityParentSerializer(DomainSerializer):
         fields = ("id", "symbol", "name", "market", "currency", "sector", "current_price")
 
 
-class SecurityDetailSelectSerializer(LivePriceMixin, DomainPropertySerializer):
+class SecurityDetailSelectSerializer(PriceOriginMixin, DomainPropertySerializer):
     PROPERTY_FIELDS = ("computed_holding_quantity", "market_value")
     account_detail = BrokerAccountParentSerializer(source="account", read_only=True)
 

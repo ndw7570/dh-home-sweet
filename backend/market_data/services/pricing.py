@@ -1,9 +1,12 @@
 """실효 시세 — "이 종목 지금 얼마인가" 에 답하는 한 곳.
 
-규율 앱의 `securities.current_price` 는 사람이 손으로 넣는 값이라 금방 낡는다.
-실제로 현대차가 수기 450,500 / 실제 437,000 인 상태가 있었다. 그래서 수집한 시세로
-그 자리를 채우되, **원본 컬럼은 건드리지 않는다** — 사람이 무엇을 입력했는지는
-그대로 남아야 하고, 둘을 나란히 보여 주는 것이 화면의 쓸모다.
+`securities.current_price` 는 컬럼 이름 그대로 **현재주가**다. 사람이 손으로 넣던 것은
+시세 연동이 없어서였지, 그 값이 사람의 판단이라서가 아니다. 연동이 생긴 이상 이 컬럼은
+수집한 시세로 채운다(`sync_security_prices`). 계속 변하는 값이라 과거 입력값을 남겨 둘
+이유도 없다 — 어제 사람이 적어 둔 주가는 오늘 아무 의미가 없다.
+
+수집되지 않는 종목(KIS 가 주지 않는 해외 종목 등) 은 손대지 않는다. 그런 종목은 수기
+입력이 유일한 방법이라 덮으면 값을 잃는다.
 
 ## 어느 값을 고르나 — "가장 최근에 관측된 것"
 
@@ -121,10 +124,32 @@ def _daily_close_at(day) -> datetime:
     return datetime.combine(day, KRX_CLOSE_TIME, tzinfo=KST)
 
 
-def live_market_value(instance, quantity) -> Decimal | None:
-    """실효 시세 × 보유수량. 시세나 수량이 없으면 None."""
-    resolved = resolve_live_price(instance)
-    price = resolved["price"]
-    if price is None or quantity is None:
-        return None
-    return price * quantity
+def sync_security_prices(codes: list[str] | None = None) -> int:
+    """실효 시세를 `securities.current_price` 에 반영한다. 갱신된 행 수를 돌려준다.
+
+    수집이 끝날 때마다 호출한다 — 현재가를 받았을 때도, 장 마감 후 일봉을 받았을 때도.
+    그래서 장중에는 5분 전 시세가, 마감 후에는 그날 종가가 컬럼에 들어간다.
+
+    **`updated_at` 은 일부러 건드리지 않는다.** `bulk_update` 가 `auto_now` 를 무시하는
+    성질을 그대로 쓴다. 시세는 5분마다 바뀌는데 그때마다 수정일이 갱신되면 "사람이 이
+    종목을 마지막으로 손본 날" 이라는 정보가 사라진다. 시세가 언제 것인지는 응답의
+    `price_at` 이 알려 준다.
+    """
+    from trading_discipline.models import Security
+
+    qs = annotate_live_price(Security.objects.all())
+    if codes:
+        qs = qs.filter(symbol__in=codes)
+
+    changed = []
+    for security in qs:
+        price = resolve_live_price(security)["price"]
+        # 수집된 시세가 없으면 손대지 않는다. 수기 입력이 유일한 값일 수 있다.
+        if price is None or security.current_price == price:
+            continue
+        security.current_price = price
+        changed.append(security)
+
+    if changed:
+        Security.objects.bulk_update(changed, ["current_price"])
+    return len(changed)

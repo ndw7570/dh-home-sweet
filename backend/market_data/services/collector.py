@@ -25,6 +25,7 @@ from django.utils import timezone
 
 from market_data.models import DailyCandle, MinuteCandle, Symbol
 from market_data.services.kis_client import KisApiError, KisClient
+from market_data.services.pricing import sync_security_prices
 
 logger = logging.getLogger(__name__)
 
@@ -139,14 +140,12 @@ def collection_targets(codes: list[str] | None = None) -> list[Symbol]:
 
 
 # ── 현재가 ───────────────────────────────────────────
-def update_current_prices(
-    client: KisClient, symbols: list[Symbol], update_securities: bool = False
-) -> CollectResult:
-    """현재가를 조회해 `Symbol.last_price` 를 갱신한다.
+def update_current_prices(client: KisClient, symbols: list[Symbol]) -> CollectResult:
+    """현재가를 조회해 `Symbol.last_price` 와 `securities.current_price` 를 갱신한다.
 
-    `update_securities=True` 면 규율 앱의 `securities.current_price` 까지 같은 값으로 덮는다.
-    기본을 False 로 둔 이유: 그 컬럼은 지금까지 **사람이 입력**해 온 값이고, 자동 갱신은
-    사람의 입력을 지우는 동작이다. 켜는 것은 명시적 선택이어야 한다.
+    규율 앱의 현재주가까지 함께 채우는 것이 기본 동작이다. `current_price` 는 이름 그대로
+    현재주가이고, 사람이 손으로 넣던 것은 시세 연동이 없어서였다. 스위치를 두지 않는
+    이유도 같다 — 끄고 켤 수 있게 하면 화면에 뜬 주가가 실제인지 수기인지 알 수 없어진다.
     """
     result = CollectResult()
     now = timezone.now()
@@ -176,21 +175,11 @@ def update_current_prices(
             sym.save(update_fields=["last_price", "last_price_at", "updated_at"])
         result.updated += 1
 
-        if update_securities:
-            _apply_price_to_securities(sym, price)
-
-    logger.info("현재가 갱신: %s", result)
+    # 받은 시세를 규율 앱의 현재주가에 반영한다. 같은 종목을 여러 계좌가 보유하면
+    # 행이 여럿인데, 시세는 계좌와 무관하므로 전부 같은 값이 된다.
+    synced = sync_security_prices()
+    logger.info("현재가 갱신: %s / securities 반영 %d행", result, synced)
     return result
-
-
-def _apply_price_to_securities(sym: Symbol, price: Decimal) -> int:
-    """같은 종목코드를 가진 보유 종목의 현재가를 갱신한다.
-
-    계좌가 여럿이면 같은 종목이 여러 행으로 있다. 시세는 계좌와 무관하므로 전부 갱신한다.
-    """
-    from trading_discipline.models import Security
-
-    return Security.objects.filter(symbol=sym.symbol).update(current_price=price)
 
 
 # ── 일봉 ─────────────────────────────────────────────

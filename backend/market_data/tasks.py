@@ -26,6 +26,7 @@ from market_data.services.collector import (
     update_current_prices,
 )
 from market_data.services.kis_client import KisClient, KisConfigError, KisError
+from market_data.services.pricing import sync_security_prices
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +49,11 @@ def _client() -> KisClient | None:
 
 
 @shared_task(bind=True, autoretry_for=RETRY_FOR, retry_kwargs=RETRY_KWARGS)
-def refresh_current_prices(self, update_securities: bool = False) -> dict:
-    """수집 대상 전체의 현재가를 갱신한다. 장중 주기 실행용."""
+def refresh_current_prices(self) -> dict:
+    """수집 대상 전체의 현재가를 갱신한다. 장중 주기 실행용.
+
+    `securities.current_price` 까지 함께 갱신된다(`update_current_prices` 안에서).
+    """
     client = _client()
     if client is None:
         return {"skipped": "no_credentials"}
@@ -58,7 +62,7 @@ def refresh_current_prices(self, update_securities: bool = False) -> dict:
         symbols = collection_targets()
         if not symbols:
             return {"skipped": "no_symbols"}
-        result = update_current_prices(client, symbols, update_securities=update_securities)
+        result = update_current_prices(client, symbols)
 
     return {"updated": result.updated, "skipped": result.skipped, "errors": result.errors}
 
@@ -113,7 +117,10 @@ def collect_daily_candles(self, days: int = 5) -> dict:
             updated += result.updated
             errors.extend(result.errors)
 
-    return {"created": created, "updated": updated, "errors": errors}
+    # 장 마감 후에는 그날 일봉(15:30 종가) 이 가장 최근 관측이 된다. 현재주가를 여기서
+    # 한 번 더 맞춰야 마감 후 화면이 종가를 보여 준다.
+    synced = sync_security_prices()
+    return {"created": created, "updated": updated, "synced": synced, "errors": errors}
 
 
 # 종목 동기화 태스크는 없다. 수집 대상을 매 실행마다 `securities` 에서 다시 계산하므로
