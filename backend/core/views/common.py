@@ -9,6 +9,7 @@
   4. 소프트딜리트 모드 (`?soft_delete_mode=alive|deleted|all`)
   5. 모든 응답을 success_response 봉투에 담기
   6. `PATCH /{id}/restore/` 복구 액션
+  7. `DELETE /{id}/purge/` 물리 삭제 액션 (이미 소프트딜리트된 행만)
 
 1번이 이 클래스의 존재 이유다. `?symbol=005930` 을 `?smybol=005930` 으로 오타 내면
 필터가 조용히 무시되고 전체 목록이 나온다. 그 상태로 화면을 믿으면 판단이 오염된다.
@@ -18,6 +19,7 @@
 from django.conf import settings
 from django.core.exceptions import FieldError
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import ProtectedError, RestrictedError
 from rest_framework import status as http_status
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -214,3 +216,46 @@ class BaseCommonViewSet(viewsets.ModelViewSet):
             raise ValidationError({"detail": "대상을 찾지 못했다."})
         instance.restore()
         return success_response(self.get_serializer(instance).data, message="restored")
+
+    @action(detail=True, methods=["delete"], url_path="purge")
+    def purge(self, request, *args, **kwargs):
+        """물리 삭제. 행이 DB 에서 사라지고 되돌릴 수 없다.
+
+        **이미 소프트딜리트된 행만** 받는다. 살아 있는 행을 한 방에 지우는 경로는 열지 않는다.
+        이 스키마는 물리 삭제를 안 하는 것이 전제(core/models/common.py)라, 그 전제를 깨는
+        동작은 "삭제 표시 → 목록에서 확인 → 물리 삭제" 2단계를 거치게 한다. 오타 하나로
+        감사 기록이 사라지는 것과, 한 번 더 누르는 것 사이의 교환이다.
+
+        지우려는 행이 다른 행에 PROTECT/RESTRICT 로 물려 있으면 400 으로 세운다.
+        (예: 종목을 참조하는 이행이 남아 있는 채로 종목을 지우려는 경우)
+        """
+        model = self.queryset.model
+        instance = model.all_objects.filter(pk=kwargs[self.lookup_field]).first()
+        if instance is None:
+            raise ValidationError({"detail": "대상을 찾지 못했다."})
+        if not instance.is_deleted:
+            raise ValidationError(
+                {
+                    "detail": (
+                        "살아 있는 행은 물리 삭제할 수 없다. "
+                        "먼저 DELETE 로 삭제 표시한 뒤 다시 요청하라."
+                    )
+                }
+            )
+        try:
+            instance.hard_delete()
+        except (ProtectedError, RestrictedError) as exc:
+            # ProtectedError 는 protected_objects, RestrictedError 는 restricted_objects 를 단다.
+            blockers = getattr(exc, "protected_objects", None) or getattr(
+                exc, "restricted_objects", ()
+            )
+            raise ValidationError(
+                {
+                    "detail": (
+                        "다른 데이터가 이 행을 참조하고 있어 물리 삭제할 수 없다. "
+                        "참조하는 쪽을 먼저 정리하라."
+                    ),
+                    "blocked_by": [str(obj) for obj in blockers][:20],
+                }
+            ) from exc
+        return success_response(None, message="purged")
