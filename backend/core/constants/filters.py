@@ -243,3 +243,33 @@ AI_DECISION_FEEDBACK_FILTER_FIELDS = {
 
 # existence(존재유무) 전용 필터 — 아직 쓰는 화면이 없다.
 EXISTENCE_FILTER_FIELDS: dict = {}
+
+
+# ─────────────────────────────────────────────
+#  market_data — 시세 (KIS 수집분)
+# ─────────────────────────────────────────────
+# 봉 조회는 거의 항상 "이 종목의 이 구간" 이다. 종목 지정 없이 전체 봉을 긁는 질의는
+# 화면에서 쓸 일이 없고 양만 크므로, 뷰셋이 종목 미지정 목록 조회를 막는다.
+MARKET_SYMBOL_FILTER_FIELDS = {
+    "symbol": "symbol__exact",
+    "symbol_in": "symbol__in",
+    "market": "market__exact",
+    "name": "name__icontains",
+}
+
+DAILY_CANDLE_FILTER_FIELDS = {
+    "symbol_id": "symbol_id__exact",
+    "symbol": "symbol__symbol__exact",
+    "date_from": "date__gte",
+    "date_to": "date__lte",
+}
+
+MINUTE_CANDLE_FILTER_FIELDS = {
+    "symbol_id": "symbol_id__exact",
+    "symbol": "symbol__symbol__exact",
+    # ts 는 UTC 로 저장되지만 이 lookup 은 TIME_ZONE(Asia/Seoul) 기준으로 날짜를 뽑는다.
+    # 화면이 "8월 18일 분봉" 을 물으면 KST 기준 그날이 맞다.
+    "date": "ts__date",
+    "ts_from": "ts__gte",
+    "ts_to": "ts__lte",
+}

@@ -15,3 +15,6 @@ channels-redis==4.2.0
 daphne==4.1.2
 django-celery-beat==2.7.0
 websockets==13.0.1
+# KIS REST 호출용. 타임아웃을 연결/읽기로 나눠 줄 수 있어 requests 대신 httpx 를 쓴다 —
+# 장 시작 직후 KIS 응답이 느려질 때 연결은 살아 있는데 읽기만 지연되는 경우를 구분해야 한다.
+httpx==0.28.1

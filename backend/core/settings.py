@@ -228,6 +228,39 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # 실시간 시세는 즉시성이 중요하므로 워커 prefetch 를 낮춰 rebalance 지연을 줄인다.
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
+# 시세 수집 스케줄. DatabaseScheduler 가 기동 시 이 항목을 DB 로 동기화하므로,
+# 주기를 바꾸고 싶으면 여기를 고치고 beat 를 재시작하거나 관리자 화면에서 직접 조정한다.
+#
+# 시각은 CELERY_TIMEZONE(Asia/Seoul) 기준이다. 국내 정규장은 09:00~15:30.
+# 공휴일 휴장은 스케줄로 거르지 않는다 — 휴장일에는 KIS 가 빈 응답을 주고 수집은 0건으로
+# 끝난다. 공휴일 달력을 코드에 넣으면 매년 관리 대상이 하나 더 느는 쪽이 손해다.
+_CELERY_CRONTAB = None
+try:
+    from celery.schedules import crontab as _CELERY_CRONTAB
+except ImportError:  # celery 미설치 환경(테스트·마이그레이션 전용)에서도 settings 는 로드돼야 한다
+    pass
+
+if _CELERY_CRONTAB is not None:
+    # 종목 동기화 스케줄은 없다. 수집 대상(securities 중 관리대상 종목)을 매 실행마다
+    # 다시 계산하므로, 화면에서 켜고 끈 결과가 다음 수집 주기에 그대로 반영된다.
+    CELERY_BEAT_SCHEDULE = {
+        # 장중 — 현재가 5분마다
+        "market-refresh-prices": {
+            "task": "market_data.tasks.refresh_current_prices",
+            "schedule": _CELERY_CRONTAB(minute="*/5", hour="9-15", day_of_week="mon-fri"),
+        },
+        # 장중 — 분봉 10분마다. 한 번에 최대 30분치를 거슬러 받으므로 10분 주기면 겹쳐서 안전하다.
+        "market-collect-minutes": {
+            "task": "market_data.tasks.collect_today_minutes",
+            "schedule": _CELERY_CRONTAB(minute="*/10", hour="9-15", day_of_week="mon-fri"),
+        },
+        # 장 마감 후 — 일봉 확정치. 최근 5일을 겹쳐 받아 이전 실패분의 구멍을 메운다.
+        "market-collect-daily": {
+            "task": "market_data.tasks.collect_daily_candles",
+            "schedule": _CELERY_CRONTAB(hour=16, minute=10, day_of_week="mon-fri"),
+        },
+    }
+
 # ─────────────────────────────────────────────
 #  Channels — 실시간 프론트 전송 (phase 5)
 # ─────────────────────────────────────────────
@@ -239,10 +272,44 @@ CHANNEL_LAYERS = {
 }
 
 # ─────────────────────────────────────────────
-#  KIS 시세 수집기 (phase 3~)
+#  KIS 시세 수집기
 # ─────────────────────────────────────────────
-# paper | live — 실전 키·계좌 활성화는 phase 6 에서 kill switch 와 함께.
+# paper | live — 실전 키·계좌 활성화는 주문 발행 단계에서 kill switch 와 함께.
+# 모의(paper)와 실전(live)은 도메인도 앱키도 별개다. 같은 키를 양쪽에 쓸 수 없다.
 KIS_ENV = os.getenv("KIS_ENV", "paper")
+
+# 키는 .env 에서만 온다. 코드·저장소에 값이 들어가면 안 된다.
+KIS_APP_KEY = os.getenv("KIS_APP_KEY", "")
+KIS_APP_SECRET = os.getenv("KIS_APP_SECRET", "")
+KIS_ACCOUNT_NO = os.getenv("KIS_ACCOUNT_NO", "")  # 8자리-2자리. 시세 조회에는 안 쓰고 주문에만 쓴다.
+
+_KIS_HOSTS = {
+    "paper": {
+        "rest": "https://openapivts.koreainvestment.com:29443",
+        "ws": "ws://ops.koreainvestment.com:31000",
+    },
+    "live": {
+        "rest": "https://openapi.koreainvestment.com:9443",
+        "ws": "ws://ops.koreainvestment.com:21000",
+    },
+}
+if KIS_ENV not in _KIS_HOSTS:
+    raise ValueError(f"KIS_ENV 는 paper 또는 live 여야 한다 (현재: {KIS_ENV!r})")
+
+KIS_REST_BASE = os.getenv("KIS_REST_BASE", _KIS_HOSTS[KIS_ENV]["rest"])
+KIS_WS_BASE = os.getenv("KIS_WS_BASE", _KIS_HOSTS[KIS_ENV]["ws"])
+
+# 초당 허용 호출 수. KIS 는 실전과 모의의 유량 제한이 다르고 모의가 훨씬 빡빡하다.
+# 넘기면 EGW00201(초당 거래건수 초과) 이 떨어진다. 여유를 두고 잡는다.
+KIS_RATE_LIMIT_PER_SEC = int(os.getenv("KIS_RATE_LIMIT_PER_SEC", "2" if KIS_ENV == "paper" else "15"))
+
+# 접근토큰 유효기간은 24시간이지만, 만료 직전에 물리면 수집이 끊긴다.
+# 이 시간(초) 만큼 미리 만료된 것으로 보고 재발급한다.
+KIS_TOKEN_REFRESH_MARGIN_SEC = int(os.getenv("KIS_TOKEN_REFRESH_MARGIN_SEC", "3600"))
+
+# HTTP 타임아웃(초) · 재시도 횟수. KIS 는 장 시작 직후 응답이 느려질 때가 있다.
+KIS_HTTP_TIMEOUT = float(os.getenv("KIS_HTTP_TIMEOUT", "10"))
+KIS_HTTP_RETRIES = int(os.getenv("KIS_HTTP_RETRIES", "2"))
 
 LOGGING = {
     "version": 1,

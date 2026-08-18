@@ -4,8 +4,10 @@
 재시작·오토스케일 시 중복 구독이 나서 데이터가 이중 저장되거나 KIS 세션이 끊긴다
 (`docker-compose.yml` 의 collector 서비스, docs/kis-stack-plan.md phase 3).
 
-phase 1 시점에는 자리만 잡아 둔다 — 실제 KIS 연결·재접속·구독 관리는 phase 3 에서
-`market_data/services/kis_client.py` 에 채워 넣는다.
+**아직 placeholder 다.** REST 수집은 이 프로세스를 거치지 않는다 — `kis_fetch_price` ·
+`kis_backfill_daily` · `kis_fetch_minutes` 커맨드와 Celery Beat 가 담당한다.
+여기는 WebSocket 실시간(체결·호가) 전용 자리로 남겨 둔다. 붙일 때 필요한 접속키는
+`KisClient.approval_key()` 로 이미 받을 수 있다.
 """
 
 import time
@@ -14,14 +16,14 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "KIS WebSocket 시세 수집기 (phase 3 에서 실제 구현)."
+    help = "KIS WebSocket 시세 수집기 (실시간 단계에서 구현). REST 수집은 kis_* 커맨드를 쓴다."
 
     def handle(self, *args, **options):
         self.stdout.write(
             self.style.WARNING(
-                "run_kis_collector: phase 1 placeholder. "
-                "실제 KIS 연동은 phase 3 에서 구현. "
-                "지금은 5초 간격 heartbeat 로그만 남긴다 — 컨테이너가 죽지 않도록."
+                "run_kis_collector: 아직 placeholder 다. "
+                "REST 수집은 kis_fetch_price / kis_backfill_daily / kis_fetch_minutes 를 쓴다. "
+                "여기는 WebSocket 실시간 전용 자리이며, 지금은 컨테이너가 죽지 않도록 heartbeat 만 남긴다."
             )
         )
         # 컨테이너가 즉시 exit 되지 않도록 heartbeat 만 남긴다.
