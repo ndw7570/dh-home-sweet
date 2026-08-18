@@ -10,9 +10,20 @@
   --cc-flat: #8b95a1;
 }
 
+/**
+ * 격자 영역만 글자 선택을 끈다.
+ *
+ * 끌어서 좌우로 옮길 때 축 눈금·라벨이 파랗게 긁히면서 봉이 그 아래로 묻힌다.
+ * 여기서 긁어 갈 만한 글자도 없다 — 값은 아래 `표로 보기` 에 전부 있고, 그쪽(`.cc-table`)과
+ * 푸터는 이 규칙 밖이라 그대로 복사된다.
+ */
 .cc-plot {
   position: relative;
   border-radius: var(--radius);
+  -webkit-user-select: none;
+  user-select: none;
+  /* 끌 때 브라우저가 이미지·글자를 잡아 끄는 기본 동작(고스트)도 막는다. */
+  -webkit-user-drag: none;
 }
 
 .cc-plot:focus-visible {
@@ -105,6 +116,52 @@
   fill: var(--text-primary);
 }
 
+/**
+ * 기준 봉의 고가~저가 구간을 가로로 깐 띠.
+ * "이 날과 비슷한 폭의 날" 을 눈으로 찾는 것이 목적이라, 띠 자체는 아주 옅게 두고
+ * 위아래 경계선만 보이게 한다 — 띠가 진하면 그 위에 얹힌 캔들이 안 읽힌다.
+ */
+.cc-band rect {
+  fill: var(--accent);
+  opacity: 0.07;
+}
+
+.cc-band-edge {
+  stroke: var(--accent);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+/* 고른 봉 — 80개 중에서 찾아야 하므로 세로 띠로 세운다. */
+.cc-picked-band {
+  fill: var(--accent);
+  opacity: 0.14;
+}
+
+.cc-candle.is-picked .cc-body,
+.cc-candle.is-picked .cc-wick {
+  stroke-width: 2;
+}
+
+/* 이미 스냅샷을 떠 둔 날. 축 아래 작은 점 하나로만 — 캔들 자체를 건드리면 값이 흐려진다. */
+.cc-marked {
+  fill: var(--text-muted);
+}
+
+/* 고를 수 있는 차트에서는 커서가 그렇다고 말해 준다. */
+.cc-plot.is-pickable {
+  cursor: pointer;
+}
+
+/* 확대한 상태에서는 끌어서 옮길 수 있다. 커서가 그 사실을 먼저 알려 준다. */
+.cc-plot.is-zoomed {
+  cursor: grab;
+}
+
+.cc-plot.is-zoomed:active {
+  cursor: grabbing;
+}
+
 .cc-cross {
   stroke: var(--text-muted);
   stroke-width: 1;
@@ -164,6 +221,28 @@
 
 .cc-tip-strong {
   font-weight: 700;
+}
+
+/* 고저폭은 이 차트에서 날짜를 고르는 기준이라 한 줄 띄워 구분한다. */
+.cc-tip-range {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.cc-tip-pct {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+
+.cc-tip-pick {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
 }
 
 /* ── 범례 · 표 ──────────────────────────────────── */

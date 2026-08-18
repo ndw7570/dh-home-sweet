@@ -132,3 +132,37 @@ export function indexAtRatio(ratio, scale, count) {
 
 /** x축 글자는 다 찍으면 겹친다. 폭에 맞춰 몇 개씩 건너뛸지 정한다. */
 export const tickStride = (count) => Math.max(1, Math.ceil(count / 7));
+
+/** 봉 `count` 개를 그릴 때의 한 칸 폭. 창을 바꿔 가며 좌표를 물을 때 쓴다. */
+export const bandFor = (count) => PLOT_W / Math.max(1, count);
+
+/** 이 개수 밑으로는 더 확대하지 않는다. 봉 몇 개만 남으면 추세가 안 읽힌다. */
+export const MIN_BARS = 8;
+
+/**
+ * 확대/축소 — 보이는 구간 `{start, end}` 를 좁히거나 넓힌다.
+ *
+ * **커서가 짚고 있던 봉을 제자리에 둔다.** 그냥 가운데를 기준으로 줄이면, 보려던 구간이
+ * 확대할 때마다 화면 밖으로 밀려나 다시 찾아가야 한다. 커서 아래의 봉이 화면에서 차지하던
+ * 가로 위치(`frac`)를 그대로 유지하도록 새 시작점을 역산한다.
+ *
+ * `anchorLocal` 은 지금 보이는 구간 안에서의 인덱스(0..count-1)다.
+ */
+export function zoomWindow(win, total, anchorLocal, factor, minBars = MIN_BARS) {
+  const count = win.end - win.start;
+  const floor = Math.min(minBars, total);
+  const next = Math.max(floor, Math.min(Math.round(count * factor), total));
+  if (next === count) return win;
+
+  const frac = count > 1 ? anchorLocal / (count - 1) : 0;
+  const anchorGlobal = win.start + anchorLocal;
+  const start = Math.max(0, Math.min(Math.round(anchorGlobal - frac * (next - 1)), total - next));
+  return { start, end: start + next };
+}
+
+/** 좌우 이동 — 보이는 개수는 그대로 두고 구간만 민다. 양끝에서는 더 안 밀린다. */
+export function panWindow(win, total, bars) {
+  const count = win.end - win.start;
+  const start = Math.max(0, Math.min(win.start + Math.round(bars), total - count));
+  return { start, end: start + count };
+}

@@ -6,6 +6,10 @@ import {
   niceTicks,
   normalize,
   tickStride,
+  bandFor,
+  panWindow,
+  zoomWindow,
+  MIN_BARS,
   H,
   PAD_L,
   PAD_R,
@@ -49,16 +53,75 @@ export default function CandleChart({
   emptyText = "수집된 시세가 없습니다.",
   emptyHint,
   label,
+  // 캔들을 눌러 하루를 고르는 화면(전략의 기준 가격데이터)에서만 넘어온다.
+  onPick,
+  markedKeys,
+  selectedKey,
 }) {
   const points = useMemo(() => normalize(rows, kind), [rows, kind]);
   const [active, setActive] = useState(null);
   const [showTable, setShowTable] = useState(false);
+  /** 보이는 구간 `{start, end}`. `null` 이면 전체다. */
+  const [view, setView] = useState(null);
   const plotRef = useRef(null);
+  /** 드래그로 좌우 이동 중인 상태. 클릭과 구분하려고 움직인 거리도 같이 든다. */
+  const dragRef = useRef(null);
+  /** 드래그 직후의 click 한 번을 삼킨다. */
+  const suppressClickRef = useRef(false);
 
-  // 종목이나 구간이 바뀌면 이전 봉을 가리키던 커서를 버린다.
-  useEffect(() => setActive(null), [points]);
+  const total = points.length;
+  // 종목이나 구간이 바뀌면 커서도 확대도 처음으로 되돌린다.
+  useEffect(() => {
+    setActive(null);
+    setView(null);
+  }, [points]);
 
-  const scale = useMemo(() => buildScale(points), [points]);
+  const win = view ?? { start: 0, end: total };
+  const visible = useMemo(
+    () => points.slice(win.start, win.end),
+    [points, win.start, win.end]
+  );
+  const zoomed = visible.length < total;
+
+  /**
+   * Ctrl(⌘)+휠 로 확대/축소, Shift+휠 로 좌우 이동.
+   *
+   * 브라우저의 기본 동작(페이지 확대·스크롤)을 막아야 해서 `passive: false` 로 직접 건다 —
+   * React 의 onWheel 은 preventDefault 가 먹지 않는 경우가 있다.
+   * **수식키 없이 굴리면 가로채지 않는다.** 차트 위에서 페이지가 안 스크롤되면
+   * 긴 화면에서 갇힌 것처럼 느껴진다.
+   */
+  useEffect(() => {
+    const el = plotRef.current;
+    if (!el || total === 0) return undefined;
+    const onWheel = (e) => {
+      const wantsZoom = e.ctrlKey || e.metaKey;
+      const wantsPan = e.shiftKey && !wantsZoom;
+      if (!wantsZoom && !wantsPan) return;
+      e.preventDefault();
+      const box = el.getBoundingClientRect();
+      if (!box.width) return;
+      setView((prev) => {
+        const cur = prev ?? { start: 0, end: total };
+        const count = cur.end - cur.start;
+        if (wantsPan) {
+          const dir = Math.sign(e.deltaY || e.deltaX) || 1;
+          return panWindow(cur, total, dir * Math.max(1, Math.round(count * 0.1)));
+        }
+        const anchor = indexAtRatio(
+          (e.clientX - box.left) / box.width,
+          { band: bandFor(count) },
+          count
+        );
+        // 위로 굴리면 확대(구간을 좁힌다).
+        return zoomWindow(cur, total, anchor, e.deltaY < 0 ? 0.8 : 1.25, MIN_BARS);
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [total]);
+
+  const scale = useMemo(() => buildScale(visible), [visible]);
 
   if (!points.length) {
     return (
@@ -70,49 +133,137 @@ export default function CandleChart({
   }
 
   const priceTicks = niceTicks(scale.lo, scale.hi, 4);
-  const last = points[points.length - 1];
-  const first = points[0];
+  // 보이는 구간의 첫·끝이다. 확대하면 이 둘도 같이 바뀐다 — 화면에 없는 봉의 종가를
+  // 라벨로 달아 두면 그게 어디 것인지 알 수 없다.
+  const last = visible[visible.length - 1];
+  const first = visible[0];
   // 구간 전체의 방향. 마지막 종가에 붙는 직접 라벨 하나만 색을 갖는다.
   const trendUp = last.c >= first.o;
 
   // x축 글자는 다 찍으면 겹친다. 폭에 맞춰 솎아 낸다.
-  const tickEvery = tickStride(points.length);
+  const tickEvery = tickStride(visible.length);
 
-  const pickFromPointer = (e) => {
+  const marked = markedKeys instanceof Set ? markedKeys : new Set(markedKeys || []);
+  const selectedIndex = selectedKey == null ? -1 : visible.findIndex((p) => p.key === selectedKey);
+  /**
+   * 비교의 기준이 되는 봉 — 고른 것이 있으면 그것, 없으면 지금 커서가 짚은 것.
+   * 이 봉의 고가·저가를 가로 띠로 깔아 두면 다른 날이 그 구간에 드는지가 눈으로 잡힌다.
+   * "고저 폭이 비슷한 날" 을 찾는 것이 이 차트로 하려는 일이다.
+   */
+  const bandPoint =
+    selectedIndex >= 0 ? visible[selectedIndex] : active == null ? null : visible[active];
+
+  const indexAt = (clientX) => {
     const box = plotRef.current?.getBoundingClientRect();
-    if (!box || !box.width) return;
-    setActive(indexAtRatio((e.clientX - box.left) / box.width, scale, points.length));
+    if (!box || !box.width) return null;
+    return indexAtRatio((clientX - box.left) / box.width, scale, visible.length);
+  };
+
+  /**
+   * 커서를 옮기면 십자선, 확대된 상태에서 끌면 좌우 이동.
+   * 확대하지 않았을 때는 끌 것이 없으므로 드래그를 시작하지 않는다.
+   */
+  const onPointerMove = (e) => {
+    const drag = dragRef.current;
+    if (drag) {
+      const box = plotRef.current?.getBoundingClientRect();
+      if (!box || !box.width) return;
+      const dx = e.clientX - drag.x;
+      if (Math.abs(dx) > 3) drag.moved = true;
+      // 화면 픽셀 → 격자 단위 → 봉 개수. 끌어 온 방향과 반대로 구간이 움직인다.
+      const bars = -((dx / box.width) * W) / scale.band;
+      setView(panWindow(drag.win, total, bars));
+      return;
+    }
+    const i = indexAt(e.clientX);
+    if (i != null) setActive(i);
+  };
+
+  const onPointerDown = (e) => {
+    if (!zoomed || e.button !== 0) return;
+    dragRef.current = { x: e.clientX, win, moved: false };
+    plotRef.current?.setPointerCapture?.(e.pointerId);
+  };
+
+  const endDrag = (e) => {
+    if (!dragRef.current) return;
+    plotRef.current?.releasePointerCapture?.(e.pointerId);
+    // 끌어서 이동한 직후의 click 은 무시해야 한다 — 안 그러면 옮기기만 했는데 담긴다.
+    const moved = dragRef.current.moved;
+    dragRef.current = null;
+    if (moved) suppressClickRef.current = true;
   };
 
   const onKey = (e) => {
     const step = { ArrowLeft: -1, ArrowRight: 1 }[e.key];
     if (step) {
       e.preventDefault();
-      setActive((i) => {
-        const next = (i == null ? points.length - 1 : i) + step;
-        return Math.max(0, Math.min(points.length - 1, next));
-      });
+      const from = active == null ? visible.length - 1 : active;
+      const next = from + step;
+      // 보이는 끝에 닿으면 커서를 붙들고 구간을 민다 — 확대한 채로도 전체를 훑을 수 있다.
+      if (next < 0 || next > visible.length - 1) {
+        setView(panWindow(win, total, step));
+        return;
+      }
+      setActive(next);
       return;
     }
-    if (e.key === "Home") { e.preventDefault(); setActive(0); }
-    if (e.key === "End") { e.preventDefault(); setActive(points.length - 1); }
-    if (e.key === "Escape") setActive(null);
+    if (e.key === "Home") { e.preventDefault(); setView(null); setActive(0); }
+    if (e.key === "End") { e.preventDefault(); setView(null); setActive(total - 1); }
+    // 키보드로도 확대/축소한다. 커서가 짚은 봉을 제자리에 두는 것은 휠과 같다.
+    if (e.key === "+" || e.key === "=" || e.key === "-" || e.key === "_") {
+      e.preventDefault();
+      const anchor = active == null ? Math.floor(visible.length / 2) : active;
+      setView(zoomWindow(win, total, anchor, e.key === "-" || e.key === "_" ? 1.25 : 0.8, MIN_BARS));
+      return;
+    }
+    if (e.key === "Escape") {
+      if (zoomed) setView(null);
+      else setActive(null);
+    }
+    // 커서가 짚은 봉을 그대로 고른다. 마우스 없이도 같은 일을 할 수 있어야 한다.
+    if ((e.key === "Enter" || e.key === " ") && onPick && active != null) {
+      e.preventDefault();
+      onPick(visible[active]);
+    }
   };
 
-  const cur = active == null ? null : points[active];
+  const cur = active == null ? null : visible[active];
 
   return (
     <div className="cc">
       <div
-        className="cc-plot"
+        className={`cc-plot ${onPick ? "is-pickable" : ""} ${zoomed ? "is-zoomed" : ""}`}
         ref={plotRef}
         tabIndex={0}
-        role="img"
-        aria-label={`${label || "봉"} 차트 — ${points.length}개. 좌우 화살표로 값을 읽는다.`}
-        onPointerMove={pickFromPointer}
-        onPointerLeave={() => setActive(null)}
+        role={onPick ? "application" : "img"}
+        aria-label={
+          onPick
+            ? `${label || "봉"} 차트 — ${total}개 중 ${visible.length}개 표시. 좌우 화살표로 옮기고 Enter 로 고른다. +/- 로 확대·축소.`
+            : `${label || "봉"} 차트 — ${total}개 중 ${visible.length}개 표시. 좌우 화살표로 값을 읽고 +/- 로 확대·축소한다.`
+        }
+        onPointerMove={onPointerMove}
+        onPointerDown={onPointerDown}
+        // 끌기 시작할 때 브라우저가 기본 드래그(글자·SVG 고스트)를 걸지 않도록 막는다.
+        // CSS 의 user-select 만으로는 파이어폭스에서 고스트가 남는다.
+        onDragStart={(e) => e.preventDefault()}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClick={(e) => {
+          if (suppressClickRef.current) {
+            suppressClickRef.current = false;
+            return;
+          }
+          if (!onPick) return;
+          const i = indexAt(e.clientX);
+          if (i != null) onPick(visible[i]);
+        }}
+        onPointerLeave={() => {
+          if (!dragRef.current) setActive(null);
+        }}
         onKeyDown={onKey}
-        onFocus={() => setActive((i) => (i == null ? points.length - 1 : i))}
+        // 커서는 **보이는 구간** 안의 인덱스다. 전체 길이를 쓰면 확대했을 때 범위 밖을 짚는다.
+        onFocus={() => setActive((i) => (i == null ? visible.length - 1 : i))}
         onBlur={() => setActive(null)}
       >
         <svg viewBox={`0 0 ${W} ${H}`} className="cc-svg" aria-hidden="true">
@@ -139,8 +290,37 @@ export default function CandleChart({
             거래량
           </text>
 
+          {/*
+            기준 봉의 고가~저가 구간을 가로로 깔아 둔다. 데이터보다 뒤에 그려야
+            비교 대상(캔들)이 띠 위에 얹혀 보인다 — 순서를 바꾸면 띠가 봉을 덮는다.
+          */}
+          {bandPoint && (
+            <g className="cc-band">
+              <rect
+                x={PAD_L}
+                width={W - PAD_R - PAD_L}
+                y={scale.y(bandPoint.h)}
+                height={Math.max(1, scale.y(bandPoint.l) - scale.y(bandPoint.h))}
+              />
+              <line
+                className="cc-band-edge"
+                x1={PAD_L}
+                x2={W - PAD_R}
+                y1={scale.y(bandPoint.h)}
+                y2={scale.y(bandPoint.h)}
+              />
+              <line
+                className="cc-band-edge"
+                x1={PAD_L}
+                x2={W - PAD_R}
+                y1={scale.y(bandPoint.l)}
+                y2={scale.y(bandPoint.l)}
+              />
+            </g>
+          )}
+
           {/* 봉. 몸통은 시가~종가, 꼬리는 고가~저가. 이웃과는 2px 여백으로 갈린다. */}
-          {points.map((p, i) => {
+          {visible.map((p, i) => {
             const up = p.c > p.o;
             const flat = p.c === p.o;
             const tone = flat ? "is-flat" : up ? "is-up" : "is-down";
@@ -149,7 +329,26 @@ export default function CandleChart({
             const bottom = scale.y(Math.min(p.o, p.c));
             const volH = Math.max(VOL_Y1 - scale.vy(p.v), p.v > 0 ? 1 : 0);
             return (
-              <g key={p.key} className={`cc-candle ${tone} ${active === i ? "is-active" : ""}`}>
+              <g
+                key={p.key}
+                className={`cc-candle ${tone} ${active === i ? "is-active" : ""} ${
+                  p.key === selectedKey ? "is-picked" : ""
+                }`}
+              >
+                {/* 고른 봉은 세로 띠로 세워 둔다 — 캔들 하나만 굵게 해서는 80개 중에서 안 찾아진다. */}
+                {p.key === selectedKey && (
+                  <rect
+                    className="cc-picked-band"
+                    x={x - scale.band / 2}
+                    y={PAD_T}
+                    width={scale.band}
+                    height={VOL_Y1 - PAD_T}
+                  />
+                )}
+                {/* 이미 스냅샷을 떠 둔 날. 같은 날을 두 번 담지 않도록 표시만 남긴다. */}
+                {marked.has(p.key) && (
+                  <circle className="cc-marked" cx={x} cy={VOL_Y1 + 5} r={2.2} />
+                )}
                 <line className="cc-wick" x1={x} x2={x} y1={scale.y(p.h)} y2={scale.y(p.l)} />
                 <rect
                   className="cc-body"
@@ -186,8 +385,8 @@ export default function CandleChart({
           </g>
 
           {/* x축 — 겹치지 않을 만큼만 솎아서 찍는다. */}
-          {points.map((p, i) =>
-            i % tickEvery === 0 || i === points.length - 1 ? (
+          {visible.map((p, i) =>
+            i % tickEvery === 0 || i === visible.length - 1 ? (
               <text
                 key={`x${p.key}`}
                 className="cc-tick num"
@@ -240,7 +439,25 @@ export default function CandleChart({
                 <dt>거래량</dt>
                 <dd className="num">{compactNum(cur.v)}</dd>
               </div>
+              {/*
+                고저 폭 — 이 차트에서 날짜를 고르는 기준이 대개 이 값이다.
+                절대폭만으로는 가격대가 다른 날끼리 비교가 안 되므로 저가 대비 비율도 같이 낸다.
+              */}
+              <div className="cc-tip-range">
+                <dt>고저폭</dt>
+                <dd className="num">
+                  {price(cur.h - cur.l)}
+                  <span className="cc-tip-pct">
+                    {cur.l > 0 ? ` (${(((cur.h - cur.l) / cur.l) * 100).toFixed(1)}%)` : ""}
+                  </span>
+                </dd>
+              </div>
             </dl>
+            {onPick && (
+              <p className="cc-tip-pick">
+                {cur.key === selectedKey ? "고른 날" : "눌러서 이 날 담기"}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -255,7 +472,16 @@ export default function CandleChart({
           <span className="cc-key is-flat" aria-hidden="true" />
           보합
         </span>
-        <span className="cc-foot-hint">봉에 커서를 올리거나 ←/→ 로 값을 읽는다</span>
+        <span className="cc-foot-hint">
+          {zoomed
+            ? `${first.short} ~ ${last.short} · ${visible.length}/${total}봉`
+            : "Ctrl+휠 확대 · Shift+휠 이동"}
+        </span>
+        {zoomed && (
+          <button type="button" className="row-edit" onClick={() => setView(null)}>
+            전체 보기
+          </button>
+        )}
         <button
           type="button"
           className="row-edit"

@@ -1,0 +1,110 @@
+.cdp {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* 네 칸 격자를 머리·행이 함께 쓴다 — 숫자가 세로로 안 맞으면 비교가 안 된다. */
+.cdp-head,
+.cdp-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 12px;
+}
+
+.cdp-head {
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cdp-head span:not(:first-child),
+.cdp-row span:not(:first-child) {
+  text-align: right;
+}
+
+.cdp-list {
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.cdp-row {
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+
+.cdp-list li:last-child .cdp-row {
+  border-bottom: 0;
+}
+
+.cdp-row:hover {
+  background: var(--surface-sunken);
+}
+
+.cdp-row.is-on {
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+
+/* 라디오 자체는 숨기지 않는다 — 키보드 이동과 스크린리더가 이걸 탄다. 자리만 뺀다. */
+.cdp-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cdp-row:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.cdp-date {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+/* 오늘 것은 장이 끝나면 값이 달라진다. 확정처럼 읽히면 안 된다. */
+.cdp-today {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 0 6px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+.cdp-foot {
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-sunken);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.cdp-idle {
+  padding: 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.cdp-error {
+  padding: 10px 12px;
+  border: 1px solid #e7cd9b;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--warning);
+}

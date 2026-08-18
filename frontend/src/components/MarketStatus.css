@@ -13,23 +13,6 @@
   gap: 6px;
 }
 
-/* 수기 입력값은 수집값보다 작고 흐리게 — 비교 대상이지 주값이 아니다. */
-.ms-manual {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
-  font-size: 11.5px;
-  color: var(--text-muted);
-}
-
-/* 수기값 대비 방향. KRX 관례대로 오름 빨강 / 내림 파랑 (CandleChart 와 같은 규약). */
-.ms-gap.is-up {
-  color: #b3261e;
-}
-.ms-gap.is-down {
-  color: #1b57c4;
-}
-
 .ms-price {
   color: var(--text-primary);
 }

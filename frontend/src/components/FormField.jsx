@@ -1,3 +1,5 @@
+import CandleDatePicker from "./CandleDatePicker";
+import PriceDataPicker from "./PriceDataPicker";
 import PricePreview from "./PricePreview";
 import { optionsFor } from "../lib/useChoices";
 
@@ -307,6 +309,31 @@ export default function FormField({ field, value, error, live, watch, choices, o
      * 저장 전 미리보기. 값을 담는 칸이 아니라, 다른 칸(종목·기준일시)을 지켜보다가
      * 무슨 값이 저장될지 보여 준다. 스스로 조회하므로 여기서는 자리만 내준다.
      */
+    /**
+     * 기준 일자 — 수집된 일봉에서 뽑은 목록. 자유 날짜 입력이 아니라 목록인 이유는
+     * CandleDatePicker 머리말에 적어 뒀다.
+     */
+    case "candleDate":
+      control = (
+        <CandleDatePicker
+          {...(watch || {})}
+          value={value}
+          onChange={(next) => onChange(name, next)}
+        />
+      );
+      break;
+
+    /** 전략의 기준 가격데이터 — 종목·거래일을 보고 고른다(PriceDataPicker 머리말 참조). */
+    case "priceDataPicker":
+      control = (
+        <PriceDataPicker
+          {...(watch || {})}
+          value={value}
+          onChange={(next) => onChange(name, next)}
+        />
+      );
+      break;
+
     case "pricePreview":
       return (
         <div className="ff">

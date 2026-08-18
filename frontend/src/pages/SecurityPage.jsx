@@ -5,7 +5,7 @@ import Badge from "../components/Badge";
 import DataTable from "../components/DataTable";
 import EntityForm from "../components/EntityForm";
 import { EditButton } from "../components/EntityModal";
-import { LivePriceCell, liveMarketValue, MarketStatusBanner } from "../components/MarketStatus";
+import { marketValueOf, MarketStatusBanner, PriceCell } from "../components/MarketStatus";
 import MetricCard, { MetricRow } from "../components/MetricCard";
 import Modal from "../components/Modal";
 import Panel from "../components/Panel";
@@ -117,9 +117,9 @@ export default function SecurityPage() {
   const aliveLoans = aliveOnly(loans);
   const aliveAccounts = aliveOnly(accounts);
 
-  // 합계는 **수집 시세 기준**이다. 수기 입력값으로 더하면 실제 자산과 어긋난다
-  // (수기 446,000 / 실제 438,500 처럼 벌어져 있던 적이 있다).
-  const totalValue = aliveSecurities.reduce((sum, s) => sum + liveMarketValue(s), 0);
+  // 합계는 서버가 현재주가 × 보유수량으로 계산해 준 값을 쓴다. 수집기가 현재주가를
+  // 직접 갱신하므로 이 합계가 곧 실제 자산이다.
+  const totalValue = aliveSecurities.reduce((sum, s) => sum + marketValueOf(s), 0);
   const totalLoan = aliveLoans.reduce((sum, l) => sum + Number(l.principal_amount || 0), 0);
   const riskyLoans = aliveLoans.filter(
     (l) => l.collateral_ratio != null && Number(l.collateral_ratio) <= WARN_RATIO
@@ -330,18 +330,18 @@ export default function SecurityPage() {
                   render: (r) => qty(r.computed_holding_quantity),
                 },
                 {
-                  // 수집한 시세를 크게, 사람이 적어 둔 값을 그 아래 작게. 둘이 벌어져 있다는
-                  // 사실 자체가 이 칸의 정보라 한 칸에 같이 둔다 — 떼어 놓으면 비교가 안 된다.
+                  // 값 하나에 "언제·어디서 온 것인지" 를 붙여 둔다. 수집기가 이 컬럼을 직접
+                  // 갱신하므로 수기값과 수집값이 따로 있지 않다.
                   key: "current_price",
                   label: "현재가",
                   align: "right",
-                  render: (r) => <LivePriceCell security={r} />,
+                  render: (r) => <PriceCell security={r} />,
                 },
                 {
                   key: "market_value",
                   label: "평가금액",
                   align: "right",
-                  render: (r) => won(liveMarketValue(r)),
+                  render: (r) => won(marketValueOf(r)),
                 },
                 {
                   key: "_chart",

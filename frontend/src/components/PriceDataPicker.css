@@ -1,0 +1,209 @@
+.pdp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pdp-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* 네 칸 격자를 머리·행이 함께 쓴다 — 숫자가 세로로 안 맞으면 비교가 안 된다. */
+.pdp-head,
+.pdp-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr)) 96px;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 12px;
+}
+
+.pdp-head {
+  background: var(--surface-sunken);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.pdp-head span:not(:first-child),
+.pdp-row span:not(:first-child) {
+  text-align: right;
+}
+
+.pdp-list {
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.pdp-row {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  background: var(--surface-card);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-primary);
+}
+
+.pdp-list li:last-child .pdp-row {
+  border-bottom: 0;
+}
+
+.pdp-row:hover:not(:disabled) {
+  background: var(--accent-bg);
+}
+
+.pdp-row:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pdp-date {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+/* 오늘 것은 장이 끝나면 값이 달라진다. 확정처럼 읽히면 안 된다. */
+.pdp-today {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 0 6px;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning);
+  white-space: nowrap;
+}
+
+.pdp-state {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pdp-foot,
+.pdp-idle {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.pdp-idle {
+  padding: 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+
+.pdp-error {
+  padding: 10px 12px;
+  border: 1px solid #e7cd9b;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--warning);
+}
+
+/* ── 고른 뒤 ─────────────────────────────────────── */
+.pdp-picked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.pdp-picked-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pdp-picked-when {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.pdp-picked-sec {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pdp-picked-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-left: auto;
+}
+
+.pdp-picked-nums > div {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.pdp-picked-nums dt {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.pdp-picked-nums dd {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── 고르는 방법 전환 ─────────────────────────────── */
+.pdp-modes {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  align-self: flex-start;
+}
+
+.pdp-mode {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 5px 12px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.pdp-mode:first-child {
+  border-left: 0;
+}
+
+.pdp-mode:hover {
+  background: var(--surface-sunken);
+}
+
+.pdp-mode.is-on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.pdp-foot strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}

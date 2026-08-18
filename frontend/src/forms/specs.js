@@ -75,10 +75,13 @@ export const SECURITIES_LOAN_FIELDS = [
  * 가격데이터 — **시세 저장소가 아니라 "전략을 세운 순간 무엇을 보고 있었나" 의 기록**이다.
  * 시세 자체를 보고 싶으면 종목 화면의 봉 차트를 쓴다.
  *
- * 그래서 고가·저가를 손으로 적지 않는다. 종목과 기준일시만 고르면 백엔드가 수집한 캔들에서
- * 읽어 채운다(당일은 분봉 집계, 과거는 그날 일봉). 한 번 만들어진 행은 수집이 아무리 돌아도
- * 다시 바뀌지 않는다 — 근거 가격이 나중에 따라 움직이면 "왜 이 가격대에 걸었지" 를
- * 되짚을 수 없다.
+ * 그래서 고가·저가·현재가를 손으로 적지 않는다. **종목과 기준 일자만 고르면** 백엔드가
+ * 수집한 캔들에서 읽어 채운다 — 과거 일자면 그날 일봉의 고가·저가·종가, 오늘이면 장 시작부터
+ * 지금까지의 분봉 집계다. 고를 수 있는 날 자체를 수집된 일봉에서 뽑으므로 휴장일이 끼어들
+ * 여지도 없다.
+ *
+ * 한 번 만들어진 행은 수집이 아무리 돌아도 다시 바뀌지 않는다 — 근거 가격이 나중에 따라
+ * 움직이면 "왜 이 가격대에 걸었지" 를 되짚을 수 없다.
  */
 export const PRICE_DATA_FIELDS = [
   {
@@ -90,11 +93,19 @@ export const PRICE_DATA_FIELDS = [
     half: true,
   },
   {
+    /**
+     * 기준 일자. 값은 날짜가 아니라 `price_at`(datetime) 그대로다 — 실제 컬럼이 그것이라
+     * 중간 상태를 하나 더 두지 않는다. 목록에서 고른 날을 컨트롤이 변환한다
+     * (과거는 그날 15:30 KST, 오늘은 지금 시각).
+     */
     name: "price_at",
-    label: "기준일시",
-    type: "datetime",
-    half: true,
-    hint: "비우면 지금 시각. 이 시점에서 본 고가·저가가 기록된다.",
+    label: "기준 일자",
+    type: "candleDate",
+    required: true,
+    showIf: (v, isEdit) => !isEdit,
+    watch: (v, ctx) => ({
+      symbol: ctx?.securities?.find((s) => String(s.id) === String(v.security))?.symbol,
+    }),
   },
   {
     /**
@@ -106,7 +117,7 @@ export const PRICE_DATA_FIELDS = [
      * 값을 다시 뜨고 싶으면 새 스냅샷을 만드는 것이 맞다.
      */
     name: "_price_preview",
-    label: "수집된 시세",
+    label: "담길 값",
     type: "pricePreview",
     readOnly: true,
     showIf: (v, isEdit) => !isEdit,
@@ -130,14 +141,17 @@ export const PRICE_DATA_FIELDS = [
     showIf: (v, isEdit) => isEdit || v._price_preview === true,
   },
   {
-    name: "quote_price",
-    label: "호가",
+    /**
+     * 스냅샷을 뜬 그 시점의 가격. 과거 일자면 그날 **종가**, 오늘이면 최신 분봉 종가다.
+     *
+     * `securities.current_price` 와 이름이 같지만 뜻이 다르다 — 그쪽은 5분마다 갱신되는
+     * "지금 시세" 고, 이쪽은 **다시 안 바뀌는 그때의 값**이다.
+     */
+    name: "current_price",
+    label: "현재가",
     type: "price",
     half: true,
-    // 호가는 체결가가 아니라 주문 대기 가격이라 봉 어디에도 없다(KIS 도 과거 호가는 안 준다).
-    // 종가나 현재가로 대신 채우지 않는다 — 컬럼 이름이 '호가' 인데 다른 값이 들어가면
-    // 나중에 읽는 사람이 호가인 줄 알고 틀린 판단을 한다.
-    hint: "자동으로 채워지지 않는다. 봉에는 호가가 없어서 사람이 적어야 하는 값이다.",
+    showIf: (v, isEdit) => isEdit || v._price_preview === true,
   },
   { name: "remarks", label: "비고", type: "textarea", rows: 2 },
 ];
@@ -600,10 +614,23 @@ export const TRADING_STRATEGY_FIELDS = [
   { name: "policy_name", label: "정책명", half: true },
   { name: "sector", label: "업종", half: true },
   {
+    /**
+     * 기준 가격데이터 — 드롭다운이 아니라 **종목 → 거래일 목록**으로 고른다.
+     *
+     * 드롭다운이던 시절엔 전략을 세우기 전에 가격데이터 화면으로 가서 스냅샷을 먼저
+     * 만들고 돌아와야 했고, 목록에는 `#3 현대차 438,000원 08-13 10:04` 같은 줄만 보여
+     * 그게 어느 날의 무슨 가격인지 알기 어려웠다. 지금은 그날의 고가·저가·종가를 보면서
+     * 고르고, 고른 날의 스냅샷이 없으면 그 자리에서 만들어 담는다.
+     *
+     * 값은 여전히 가격데이터의 id 다 — 컬럼이 FK 라 바뀐 것은 고르는 방법뿐이다.
+     */
     name: "price_data",
     label: "기준 가격데이터",
-    type: "ref",
-    optionsKey: "priceData",
+    type: "priceDataPicker",
+    watch: (v, ctx) => ({
+      securities: ctx?.securities || [],
+      priceRows: ctx?.priceRows || [],
+    }),
     hint: "'지금 가격'이 아니라 '그때 그 가격' 기준으로 못박아 두는 자리. 나중에 왜 이 가격대에 분할을 걸었는지 되짚을 수 있다.",
   },
   { name: "reference_at", label: "기준시각", type: "datetime", half: true },

@@ -336,7 +336,7 @@ export default function EntityForm({
             live={f.live?.(values, ctx)}
             // 다른 칸의 값을 지켜보는 컨트롤(가격 미리보기)이 쓸 입력. 스펙이 무엇을
             // 지켜볼지 정하고, 계산은 컨트롤이 한다.
-            watch={f.watch?.(values)}
+            watch={f.watch?.(values, ctx)}
             choices={choices}
             onChange={change}
           />

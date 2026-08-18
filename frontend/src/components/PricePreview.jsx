@@ -15,8 +15,8 @@ import "./PricePreview.css";
  */
 
 const SOURCE_LABEL = {
-  MINUTE: "당일 분봉 집계",
-  DAILY: "그날 일봉의 확정 고가·저가",
+  MINUTE: "당일 분봉 집계 (장 시작~지금)",
+  DAILY: "그날 일봉의 확정값",
 };
 
 export default function PricePreview({ securityId, priceAt, manual, onManual }) {
@@ -45,10 +45,14 @@ export default function PricePreview({ securityId, priceAt, manual, onManual }) 
     );
   }
 
-  if (!securityId) {
+  if (!securityId || !priceAt) {
     return (
       <div className="pp is-idle">
-        <p className="pp-idle-msg">종목을 고르면 그 시점의 고가·저가를 미리 보여 준다.</p>
+        <p className="pp-idle-msg">
+          {securityId
+            ? "위에서 기준 일자를 고르면 담길 값을 미리 보여 준다."
+            : "종목을 고르면 담을 수 있는 일자와 값이 나온다."}
+        </p>
       </div>
     );
   }
@@ -103,8 +107,13 @@ export default function PricePreview({ securityId, priceAt, manual, onManual }) 
           <dd className="num">{price(data.low_price)}</dd>
         </div>
         <div>
+          {/* 과거 일자면 그날 종가, 오늘이면 최신 분봉 종가다. */}
+          <dt>현재가</dt>
+          <dd className="num">{price(data.current_price)}</dd>
+        </div>
+        <div>
           <dt>출처</dt>
-          <dd>{SOURCE_LABEL[data.price_source] || data.price_source}</dd>
+          <dd className="pp-source">{SOURCE_LABEL[data.price_source] || data.price_source}</dd>
         </div>
       </dl>
       <p className="pp-foot">

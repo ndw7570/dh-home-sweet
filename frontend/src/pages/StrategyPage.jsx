@@ -6,6 +6,7 @@ import EntityForm from "../components/EntityForm";
 import { EditButton } from "../components/EntityModal";
 import Modal from "../components/Modal";
 import Panel from "../components/Panel";
+import PriceBandPanel from "../components/PriceBandPanel";
 import SplitTable from "../components/SplitTable";
 import {
   getTradingStrategy,
@@ -21,7 +22,8 @@ import {
   STRATEGY_METHOD_FIELDS,
   TRADING_STRATEGY_FIELDS,
 } from "../forms/specs";
-import { dateTime, price } from "../lib/format";
+import { dateTime, dateWithWeekday, isoDate, price } from "../lib/format";
+import { bandRatios, pct } from "../lib/priceBand";
 import { useAsync, useAsyncAll } from "../lib/useAsync";
 import { useMultiForm } from "../lib/useMultiForm";
 import "./StrategyPage.css";
@@ -43,6 +45,17 @@ const VIEW_TABS = [
  * 서버가 라벨을 주지 않는 코드값이라 여기서만 최소로 맵을 둔다(`format.js` 의 LEVEL_LABEL 과 같은 성격).
  * 비어 있으면 사람이 직접 적은 값이다.
  */
+/**
+ * 전략 목록을 무엇으로 묶어 볼 것인가.
+ *   일자별  같은 날 세운 전략을 나란히 본다. "그날 무엇을 대비했나" 가 단위다.
+ *   종목별  한 종목의 전략이 시간에 따라 어떻게 바뀌었나를 본다.
+ * 어느 쪽도 목록을 걸러 내지 않는다 — 묶는 방법만 바뀐다.
+ */
+const GROUP_TABS = [
+  { key: "date", label: "일자별" },
+  { key: "security", label: "종목별" },
+];
+
 const PRICE_SOURCE_LABEL = {
   MINUTE: "당일 분봉",
   DAILY: "일봉 확정",
@@ -50,6 +63,7 @@ const PRICE_SOURCE_LABEL = {
 
 export default function StrategyPage() {
   const [view, setView] = useState("STRATEGY");
+  const [groupBy, setGroupBy] = useState("date");
   const [selectedId, setSelectedId] = useState(null);
 
   const list = useAsync(() => listTradingStrategies(), []);
@@ -91,33 +105,48 @@ export default function StrategyPage() {
     return map;
   }, [refs.data]);
 
+  const securityById = useMemo(
+    () => new Map((refs.data?.securities || []).map((s) => [s.id, s])),
+    [refs.data]
+  );
+
+  /**
+   * 전략을 묶는다. 기준일은 **전략의 기준시각**(`reference_at`) 이다 — 실제로 그날 대응하려고
+   * 세운 것이라서다. 없으면 근거 스냅샷의 일자로 물러난다.
+   */
+  const groups = useMemo(() => {
+    const map = new Map();
+    for (const st of list.data || []) {
+      const pd = st.price_data_detail;
+      const key =
+        groupBy === "security"
+          ? pd?.security ?? "__none__"
+          : isoDate(st.reference_at) || isoDate(pd?.price_at) || "__none__";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(st);
+    }
+    const label = (key) => {
+      if (key === "__none__") return groupBy === "security" ? "종목 없음" : "기준일 없음";
+      if (groupBy === "security") {
+        const sec = securityById.get(key);
+        return sec ? `${sec.name} (${sec.symbol})` : `종목 #${key}`;
+      }
+      return dateWithWeekday(key);
+    };
+    return Array.from(map, ([key, items]) => ({ key, label: label(key), items })).sort((a, b) =>
+      // 일자는 최신이 위로, 종목은 이름순.
+      groupBy === "date" ? String(b.key).localeCompare(String(a.key)) : a.label.localeCompare(b.label)
+    );
+  }, [list.data, groupBy, securityById]);
+
   const optionsMap = useMemo(
     () => ({
       securities: (refs.data?.securities || []).map((s) => ({
         value: s.id,
         label: `${s.name} (${s.symbol})`,
       })),
-      // 라벨은 ID · 종목 · 호가 · YY-MM-DD HH:MM 을 한 줄에 —
-      // 전략을 세우던 그때가 언제·어느 종목·어느 가격이었는지 다 보여야 헷갈리지 않는다.
-      // 연도가 빠지면 지난 해 것과 올해 것이 섞여도 눈에 안 잡힌다.
-      priceData: (refs.data?.priceData || []).map((p) => {
-        const sec = securityLabelById.get(p.security) || `#${p.security}`;
-        const t = p.price_at ? new Date(p.price_at) : null;
-        const when =
-          t && !Number.isNaN(t.getTime())
-            ? `${String(t.getFullYear()).slice(-2)}-${String(t.getMonth() + 1).padStart(
-                2,
-                "0"
-              )}-${String(t.getDate()).padStart(2, "0")} ${String(t.getHours()).padStart(
-                2,
-                "0"
-              )}:${String(t.getMinutes()).padStart(2, "0")}`
-            : "—";
-        return {
-          value: p.id,
-          label: `#${p.id}  ${sec}  ${price(p.quote_price)}원  ${when}`,
-        };
-      }),
+      // 가격데이터는 더 이상 드롭다운이 아니다 — 전략 폼이 종목·거래일 목록으로 직접
+      // 고르고(`PriceDataPicker`), 원본 행은 아래 `ctx.priceRows` 로 넘어간다.
       strategies: (list.data || []).map((s) => ({
         value: s.id,
         label: s.policy_name || `전략#${s.id}`,
@@ -186,10 +215,10 @@ export default function StrategyPage() {
                     render: (r) => price(r.low_price),
                   },
                   {
-                    key: "quote_price",
-                    label: "호가",
+                    key: "current_price",
+                    label: "현재가",
                     align: "right",
-                    render: (r) => price(r.quote_price),
+                    render: (r) => price(r.current_price),
                   },
                   {
                     // 고가·저가가 어디서 온 값인지. 수집분을 뜬 것과 사람이 적은 것은
@@ -223,26 +252,68 @@ export default function StrategyPage() {
         {list.data && (
           <>
             <div className="stp-bar">
-              <nav className="stp-list" aria-label="전략 목록">
-                {list.data.map((s) => (
+              <div className="stp-grouptabs" role="group" aria-label="전략 묶는 기준">
+                {GROUP_TABS.map((t) => (
                   <button
-                    key={s.id}
-                    className={`stp-item ${selectedId === s.id ? "is-on" : ""}`}
-                    onClick={() => setSelectedId(s.id)}
+                    key={t.key}
+                    type="button"
+                    className={`stp-grouptab ${groupBy === t.key ? "is-on" : ""}`}
+                    aria-pressed={groupBy === t.key}
+                    onClick={() => setGroupBy(t.key)}
                   >
-                    <strong>{s.policy_name || `전략#${s.id}`}</strong>
-                    <span className="stp-item-meta num">
-                      {s.sector || "업종 미지정"} · {s.method_count}단계
-                    </span>
+                    {t.label}
                   </button>
                 ))}
-              </nav>
+              </div>
               <div className="panel-actions">
                 <button className="btn is-sm" onClick={() => form.openCreate("STRATEGY")}>
                   + 전략
                 </button>
               </div>
             </div>
+
+            <nav className="stp-groups" aria-label="전략 목록">
+              {groups.map((g) => (
+                <section key={g.key} className="stp-group">
+                  <h3 className="stp-group-head">
+                    <span className="num">{g.label}</span>
+                    <span className="stp-group-count num">{g.items.length}건</span>
+                  </h3>
+                  <div className="stp-list">
+                    {g.items.map((s) => {
+                      const pd = s.price_data_detail;
+                      const r = bandRatios(pd);
+                      const sec = pd ? securityById.get(pd.security) : null;
+                      return (
+                        <button
+                          key={s.id}
+                          className={`stp-item ${selectedId === s.id ? "is-on" : ""}`}
+                          onClick={() => setSelectedId(s.id)}
+                        >
+                          <strong>{s.policy_name || `전략#${s.id}`}</strong>
+                          <span className="stp-item-meta num">
+                            {/* 묶은 기준은 머리에 이미 있으니 여기엔 나머지 축을 적는다. */}
+                            {groupBy === "date"
+                              ? sec?.name || s.sector || "종목 미지정"
+                              : isoDate(s.reference_at) || "기준일 없음"}
+                            {" · "}
+                            {s.method_count}단계
+                          </span>
+                          {/* 변동폭 — 금액이 아니라 비율이라 다른 가격대의 전략과도 견줄 수 있다. */}
+                          {r && (
+                            <span className="stp-item-band num">
+                              <span className="is-up">{pct(r.up, 1)}</span>
+                              <span className="stp-item-tilde">~</span>
+                              <span className="is-down">{pct(r.down, 1)}</span>
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </nav>
 
             {list.data.length === 0 ? (
               <Panel title="매수매도전략">
@@ -277,24 +348,14 @@ export default function StrategyPage() {
                       </div>
                     }
                   >
-                    {detail.data.price_data_detail ? (
-                      <div className="stp-price">
-                        <span className="stp-price-label">기준 가격데이터</span>
-                        <span className="num">
-                          고가 {price(detail.data.price_data_detail.high_price)} · 저가{" "}
-                          {price(detail.data.price_data_detail.low_price)} · 호가{" "}
-                          {price(detail.data.price_data_detail.quote_price)}
-                        </span>
-                        <span className="num stp-price-at">
-                          {dateTime(detail.data.price_data_detail.price_at)}
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="stp-noprice">
-                        기준 가격데이터가 없다. 어느 가격을 보고 세운 분할인지 남지 않아,
-                        나중에 이 표를 되짚을 근거가 없다.
-                      </p>
-                    )}
+                    <PriceBandPanel
+                      snapshot={detail.data.price_data_detail}
+                      security={
+                        detail.data.price_data_detail
+                          ? securityById.get(detail.data.price_data_detail.security)
+                          : null
+                      }
+                    />
 
                     <SplitTable
                       methods={detail.data.methods}
@@ -318,6 +379,13 @@ export default function StrategyPage() {
             fields={form.spec.fields}
             instance={form.instance}
             optionsMap={optionsMap}
+            // 일자 목록은 종목**코드**로 봉을 조회한다. 셀렉트 옵션에는 라벨만 있어
+            // 코드가 없으므로 종목 원본을 같이 넘긴다.
+            ctx={{
+              securities: refs.data?.securities || [],
+              // 이미 떠 둔 스냅샷. 같은 날 같은 종목이면 새로 만들지 않고 이걸 재사용한다.
+              priceRows: refs.data?.priceData || [],
+            }}
             onSubmit={form.submit}
             onCancel={form.close}
             onDelete={form.isEdit ? form.remove : undefined}

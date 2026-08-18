@@ -33,6 +33,13 @@
   color: var(--text-primary);
 }
 
+/* 출처는 값이 아니라 설명이다. 숫자와 같은 크기로 두면 값처럼 읽힌다. */
+.pp-source {
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  color: var(--text-secondary) !important;
+}
+
 .pp-foot {
   margin-top: 10px;
   padding-top: 8px;
