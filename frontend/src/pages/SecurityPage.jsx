@@ -5,7 +5,7 @@ import Badge from "../components/Badge";
 import DataTable from "../components/DataTable";
 import EntityForm from "../components/EntityForm";
 import { EditButton } from "../components/EntityModal";
-import { MarketPriceCell, MarketStatusBanner } from "../components/MarketStatus";
+import { LivePriceCell, liveMarketValue, MarketStatusBanner } from "../components/MarketStatus";
 import MetricCard, { MetricRow } from "../components/MetricCard";
 import Modal from "../components/Modal";
 import Panel from "../components/Panel";
@@ -21,7 +21,6 @@ import SoftDeleteToggle, {
 import {
   brokerAccount,
   listBrokerAccounts,
-  listMarketSymbols,
   listSecurities,
   listSecuritiesLoans,
   securitiesLoan,
@@ -71,9 +70,6 @@ export default function SecurityPage() {
       accounts: () => listBrokerAccounts({ soft_delete_mode: mode }),
       securities: () => listSecurities({ soft_delete_mode: mode }),
       loans: () => listSecuritiesLoans({ soft_delete_mode: mode }),
-      // 수집 시세. 종목코드로 잇는다 — securities 는 계좌별로 행이 갈리지만
-      // market_symbols 는 종목코드당 하나라 FK 가 아니라 코드가 접점이다.
-      marketSymbols: () => listMarketSymbols(),
     },
     [mode]
   );
@@ -92,14 +88,6 @@ export default function SecurityPage() {
   const securities = data?.securities || [];
   const loans = data?.loans || [];
   const accounts = data?.accounts || [];
-  const marketSymbols = data?.marketSymbols || [];
-
-  /** 종목코드 → 수집 종목 행. 목록을 그릴 때마다 훑지 않도록 한 번만 만든다. */
-  const marketBySymbol = useMemo(() => {
-    const map = new Map();
-    for (const s of marketSymbols) map.set(String(s.symbol), s);
-    return map;
-  }, [marketSymbols]);
 
   // 삭제된 행에는 차트를 열지 않는다 — 지운 종목의 시세를 그리면 살아 있는 것처럼 읽힌다.
   const chartFor = securities.find((s) => s.id === chartForId && !isDeleted(s)) || null;
@@ -129,7 +117,9 @@ export default function SecurityPage() {
   const aliveLoans = aliveOnly(loans);
   const aliveAccounts = aliveOnly(accounts);
 
-  const totalValue = aliveSecurities.reduce((sum, s) => sum + (s.market_value || 0), 0);
+  // 합계는 **수집 시세 기준**이다. 수기 입력값으로 더하면 실제 자산과 어긋난다
+  // (수기 446,000 / 실제 438,500 처럼 벌어져 있던 적이 있다).
+  const totalValue = aliveSecurities.reduce((sum, s) => sum + liveMarketValue(s), 0);
   const totalLoan = aliveLoans.reduce((sum, l) => sum + Number(l.principal_amount || 0), 0);
   const riskyLoans = aliveLoans.filter(
     (l) => l.collateral_ratio != null && Number(l.collateral_ratio) <= WARN_RATIO
@@ -169,7 +159,7 @@ export default function SecurityPage() {
             <SoftDeleteToggle value={mode} onChange={setMode} id="sp-sdm" />
           </div>
 
-          <MarketStatusBanner symbols={marketSymbols} />
+          <MarketStatusBanner securities={aliveSecurities} />
 
           <SoftDeleteBanner
             mode={mode}
@@ -340,24 +330,18 @@ export default function SecurityPage() {
                   render: (r) => qty(r.computed_holding_quantity),
                 },
                 {
+                  // 수집한 시세를 크게, 사람이 적어 둔 값을 그 아래 작게. 둘이 벌어져 있다는
+                  // 사실 자체가 이 칸의 정보라 한 칸에 같이 둔다 — 떼어 놓으면 비교가 안 된다.
                   key: "current_price",
-                  label: "현재가 (입력)",
+                  label: "현재가",
                   align: "right",
-                  render: (r) => price(r.current_price),
-                },
-                {
-                  // 사람이 적은 현재가 바로 옆에 둔다. 둘이 벌어져 있다는 사실 자체가
-                  // 이 칸의 정보다 — 떨어뜨려 놓으면 비교가 안 된다.
-                  key: "_market",
-                  label: "수집시세",
-                  align: "right",
-                  render: (r) => <MarketPriceCell entry={marketBySymbol.get(String(r.symbol))} />,
+                  render: (r) => <LivePriceCell security={r} />,
                 },
                 {
                   key: "market_value",
                   label: "평가금액",
                   align: "right",
-                  render: (r) => won(r.market_value),
+                  render: (r) => won(liveMarketValue(r)),
                 },
                 {
                   key: "_chart",
@@ -392,7 +376,6 @@ export default function SecurityPage() {
             <SecurityMarketPanel
               key={chartFor.id}
               security={chartFor}
-              entry={marketBySymbol.get(String(chartFor.symbol))}
               onClose={() => setChartForId(null)}
             />
           )}

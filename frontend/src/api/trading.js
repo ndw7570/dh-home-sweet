@@ -174,8 +174,8 @@ export const performanceRecord = crud("performance-record");
 // 목 데이터는 빈 배열로 둔다. 백엔드 인계 문서 기준 지금 봉 테이블이 0건이라
 // **0건이 기본 상태**고, 목에 가짜 봉을 넣으면 화면이 있지도 않은 시세를 그린다.
 
-export const listMarketSymbols = (params = {}) =>
-  wrap(() => api.get("/market-symbol/", { no_page: 1, ...params }), () => []);
+// `market-symbol` 조회 래퍼는 두지 않는다. 종목별 시세는 `securities` 응답의 `live` 로
+// 같이 오므로 화면이 종목코드로 따로 매칭할 일이 없다 — 창구를 둘로 두면 어긋난다.
 
 /**
  * 일봉. **종목 지정이 필수다** — `symbol`(종목코드) 또는 `symbol_id` 없이 부르면 400 이다.
@@ -184,7 +184,11 @@ export const listMarketSymbols = (params = {}) =>
 export const listDailyCandles = (params = {}) =>
   wrap(() => api.get("/market-daily-candle/", { no_page: 1, ...params }), () => []);
 
-/** 분봉. 일봉과 같이 종목 지정이 필수다. `date` 는 KST 기준(`ts` 는 UTC 로 내려온다). */
+/**
+ * 분봉. 일봉과 같이 종목 지정이 필수다.
+ * `date` 필터는 KST 기준이고, 응답의 `ts` 는 오프셋이 붙어 온다(`…T12:40:00+09:00`).
+ * 저장 자체는 UTC 라 표기는 반드시 `clockTime()` 을 거친다 — 문자열을 자르면 안 된다.
+ */
 export const listMinuteCandles = (params = {}) =>
   wrap(() => api.get("/market-minute-candle/", { no_page: 1, ...params }), () => []);
 

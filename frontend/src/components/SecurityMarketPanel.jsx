@@ -25,7 +25,7 @@ const RANGES = [
   { key: "1y", label: "1년", days: 365 },
 ];
 
-export default function SecurityMarketPanel({ security, entry, onClose }) {
+export default function SecurityMarketPanel({ security, onClose }) {
   const [range, setRange] = useState("3m");
   const symbolCode = security?.symbol;
   const days = RANGES.find((r) => r.key === range)?.days ?? 90;
@@ -35,19 +35,25 @@ export default function SecurityMarketPanel({ security, entry, onClose }) {
 
   const { data, error, loading, reload } = useAsyncAll(
     {
+      // 종목코드가 비면 아예 부르지 않는다. `symbol` 이 빠진 채 나가면 서버가 400 을 내고
+      // 화면에는 "불러오지 못했다" 만 남아, 원인이 종목코드라는 걸 알 길이 없다.
       daily: () =>
-        listDailyCandles({ symbol: symbolCode, date_from: dateFrom, date_to: today }),
-      minute: () => listMinuteCandles({ symbol: symbolCode, date: today }),
+        symbolCode
+          ? listDailyCandles({ symbol: symbolCode, date_from: dateFrom, date_to: today })
+          : Promise.resolve([]),
+      minute: () =>
+        symbolCode ? listMinuteCandles({ symbol: symbolCode, date: today }) : Promise.resolve([]),
     },
     [symbolCode, dateFrom, today]
   );
 
   // 왜 비었는지는 상황마다 다르다. "데이터 없음" 한 줄로 뭉치면 사용자가 할 일을 못 찾는다.
-  const emptyHint = !entry
-    ? "이 종목코드로 등록된 수집 종목이 없다. 수집기가 한 번 돌면 종목 행부터 만들어진다."
-    : entry.is_target
-      ? "수집 대상이긴 하다. 아직 한 번도 안 쌓였거나 수집기가 돌기 전이다."
-      : "이 종목은 수집 대상이 아니다 — 종목 수정에서 `관리대상` 을 켜면 다음 수집 주기부터 쌓인다.";
+  // 수집 대상 여부를 정하는 스위치는 이 종목의 `관리대상`(is_active) 하나뿐이다.
+  const emptyHint = !symbolCode
+    ? "이 종목에 종목코드가 없다. 봉은 종목코드로만 조회할 수 있어 아무것도 부르지 않았다."
+    : security.is_active
+    ? "수집 대상이긴 하다. 아직 안 쌓였거나 backfill 이 안 돈 것이다 — 일봉은 `kis_backfill_daily` 로 채운다."
+    : "이 종목은 `관리대상` 이 꺼져 있어 수집되지 않는다. 종목 수정에서 켜면 다음 수집 주기부터 쌓인다.";
 
   return (
     <Panel
@@ -107,7 +113,7 @@ export default function SecurityMarketPanel({ security, entry, onClose }) {
                 label={`${security.name} 당일 분봉`}
                 emptyText="오늘 분봉이 아직 없습니다."
                 emptyHint={
-                  entry?.is_target
+                  security.is_active
                     ? "분봉은 당일치만 쌓인다. 장 시작 전이거나 첫 수집 주기(10분) 전이면 0건이 정상이다."
                     : emptyHint
                 }

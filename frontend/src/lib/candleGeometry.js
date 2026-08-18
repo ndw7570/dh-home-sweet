@@ -32,7 +32,13 @@ export const VOL_Y1 = VOL_Y0 + VOL_H;
 const GAP = 2; // 이웃한 봉 사이의 여백. 테두리 대신 이 빈틈이 봉을 갈라 준다.
 const MAX_BODY = 14;
 
+/**
+ * 값이 없으면 `null`. **빈 값을 먼저 걸러야 한다** — `Number(null)` 과 `Number("")` 은 둘 다
+ * `0` 이라, 그냥 `Number()` 에 넣으면 "고가 없음" 이 "고가 0원" 이 되어 있지도 않은 폭락을
+ * 그린다. 시가 73,000 짜리 봉이 0 까지 꽂히는 그림이 나온다.
+ */
 const num = (v) => {
+  if (v === null || v === undefined || v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 };
