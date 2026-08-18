@@ -2,6 +2,7 @@ from django.db.models import Case, F, IntegerField, Q, Sum, Value, When
 
 from core.constants.filters import SECURITY_FILTER_FIELDS
 from core.views.common import BaseCommonViewSet
+from market_data.services.pricing import annotate_live_price
 from trading_discipline.constants.choices import ActionType, OrderSide
 from trading_discipline.models import Security
 from trading_discipline.serializers.portfolio import (
@@ -45,4 +46,7 @@ class SecurityViewSet(BaseCommonViewSet):
         # annotate 한 번으로 뽑고, 모델 프로퍼티가 이 값을 우선 참조한다.
         if self.action == "list":
             qs = qs.annotate(_fill_qty=_fill_qty_annotation())
-        return qs
+        # 수집한 시세(현재가 스냅샷·분봉·일봉) 를 서브쿼리로 얹는다. 목록·상세 모두 붙인다 —
+        # 상세만 빠지면 "목록에는 시세가 있는데 상세에는 없는" 화면이 된다.
+        # 어느 값을 고를지는 market_data/services/pricing.py 가 정한다.
+        return annotate_live_price(qs)
